@@ -1,0 +1,18 @@
+# Node
+node_modules/
+
+# Env
+.env
+
+# Local secrets (DO NOT COMMIT)
+.secrets/
+
+# Local auth artifacts (DO NOT COMMIT)
+cookies.txt
+login.json
+
+# Logs
+*.log
+
+# Prisma
+prisma/dev.db

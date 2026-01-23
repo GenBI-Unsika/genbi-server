@@ -1,0 +1,43 @@
+{
+  "name": "genbi-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.mjs",
+    "smoke:auth": "node scripts/smoke-auth.mjs http://localhost:4000",
+    "smoke:drive": "node scripts/smoke-drive.mjs http://127.0.0.1:4000"
+  },
+  "dependencies": {
+    "@genbi/contracts": "workspace:*",
+    "@genbi/trpc": "workspace:*",
+    "@prisma/client": "^6.19.1",
+    "@trpc/server": "^11.6.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "google-auth-library": "^10.5.0",
+    "googleapis": "^169.0.0",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "mysql2": "^3.16.0",
+    "nodemailer": "^7.0.11",
+    "pino": "^9.5.0",
+    "pino-http": "^10.4.0",
+    "prisma": "^6.19.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
