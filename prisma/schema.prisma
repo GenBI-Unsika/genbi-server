@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  member
+}
+
+enum RefreshTokenStatus {
+  active
+  revoked
+  expired
+}
+
+enum ScholarshipAdministrasiStatus {
+  MENUNGGU_VERIFIKASI
+  LOLOS_ADMINISTRASI
+  ADMINISTRASI_DITOLAK
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String
+  emailVerifiedAt DateTime?
+  googleSub    String?      @unique
+  role         UserRole     @default(member)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  profile      UserProfile?
+  refreshTokens RefreshToken[]
+  files        FileObject[]
+  emailVerificationToken EmailVerificationToken?
+
+  scholarshipApplications ScholarshipApplication[]
+  scholarshipReviews      ScholarshipApplication[] @relation("ScholarshipReviewedBy")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+model UserProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  name      String?
+  avatar    String?
+  phone     String?
+  facultyId String?
+  studyProgramId String?
+  npm       String?
+  gender    String?
+  birthDate DateTime?
+  semester  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  faculty   Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
+
+  @@index([facultyId])
+  @@index([studyProgramId])
+}
+
+model Faculty {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studyPrograms StudyProgram[]
+  userProfiles  UserProfile[]
+  scholarshipApplications ScholarshipApplication[]
+}
+
+model StudyProgram {
+  id        String   @id @default(uuid())
+  facultyId String
+  code      String   @unique
+  name      String
+  degree    String?  // S1, D3, S2, etc.
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  userProfiles UserProfile[]
+  scholarshipApplications ScholarshipApplication[]
+
+  @@index([facultyId])
+}
+
+model RefreshToken {
+  id            String             @id @default(uuid())
+  userId        String
+  jti           String             @unique
+  tokenHash     String
+  status        RefreshTokenStatus @default(active)
+  createdAt     DateTime           @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  replacedByJti String?
+  ipAddress     String?
+  userAgent     String?
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model FileObject {
+  id           String   @id @default(uuid())
+  createdById  String
+  driveFileId  String   @unique
+  name         String
+  mimeType     String?
+  sizeBytes    Int?
+  createdAt    DateTime @default(now())
+
+  createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([createdById])
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  name      String
+  jabatan   String?
+  division  String
+  photo     String?
+  motivasi  String?
+  cerita    String?
+  faculty   String?
+  major     String?
+  cohort    Int?
+  socials   Json?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, division])
+  @@index([division])
+  @@index([isActive, sortOrder])
+}
+
+model ScholarshipApplication {
+  id                  String                      @id @default(uuid())
+  createdById         String
+  submittedAt         DateTime                    @default(now())
+
+  // Identitas (sinkron dengan form di frontend)
+  name                String
+  email               String
+  birthDate           DateTime?
+  gender              String?
+  nik                 String?
+  phone               String?
+  facultyId           String?
+  studyProgramId      String?
+  npm                 String
+  semester            Int?
+  gpa                 Float?
+  age                 Int?
+
+  // Pengetahuan GenBI
+  knowGenbi           String?
+  knowDesc            String?
+
+  // Deklarasi
+  agree               Boolean                     @default(false)
+
+  // Dokumen/file: mapping key -> fileId/url (disimpan sebagai JSON)
+  files               Json?
+
+  // Status administrasi
+  administrasiStatus  ScholarshipAdministrasiStatus @default(MENUNGGU_VERIFIKASI)
+  reviewedById        String?
+  reviewedAt          DateTime?
+
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+
+  createdBy           User                        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  reviewedBy          User?                       @relation("ScholarshipReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  faculty             Faculty?                    @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  studyProgram        StudyProgram?               @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
+
+  @@unique([npm])
+  @@index([createdById])
+  @@index([administrasiStatus, createdAt])
+  @@index([facultyId])
+  @@index([studyProgramId])
+}
