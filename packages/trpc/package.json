@@ -1,0 +1,13 @@
+{
+  "name": "@genbi/trpc",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@trpc/server": "^11.6.0",
+    "zod": "^3.25.76"
+  }
+}
