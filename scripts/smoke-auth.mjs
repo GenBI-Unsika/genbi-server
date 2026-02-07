@@ -84,9 +84,12 @@ async function runFlow({ label, loginPath, expectRole }) {
     process.exit(1);
   }
 
-  if (expectRole && meBody?.data?.role !== expectRole) {
-    console.error(`${label}_ME_UNEXPECTED_ROLE`, meBody?.data?.role);
-    process.exit(1);
+  if (expectRole) {
+    const allowedRoles = Array.isArray(expectRole) ? expectRole : [expectRole];
+    if (!allowedRoles.includes(meBody?.data?.role)) {
+      console.error(`${label}_ME_UNEXPECTED_ROLE`, meBody?.data?.role);
+      process.exit(1);
+    }
   }
 
   console.log(`${label}_ME_OK`);
@@ -123,6 +126,6 @@ async function runFlow({ label, loginPath, expectRole }) {
 }
 
 await runFlow({ label: 'USER', loginPath: '/auth/login' });
-await runFlow({ label: 'ADMIN', loginPath: '/auth/admin/login', expectRole: 'admin' });
+await runFlow({ label: 'ADMIN', loginPath: '/auth/admin/login', expectRole: ['admin', 'super_admin'] });
 
 console.log('SMOKE_AUTH_DONE');

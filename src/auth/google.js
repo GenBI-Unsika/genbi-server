@@ -8,18 +8,50 @@ let cachedClient = null;
 
 function getClient() {
   if (!env.GOOGLE_CLIENT_ID) throw new HttpError(500, 'Konfigurasi login Google belum tersedia di server.');
-  if (!cachedClient) cachedClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+  const clientIds = env.GOOGLE_CLIENT_ID.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (clientIds.length === 0) throw new HttpError(500, 'Konfigurasi login Google belum tersedia di server.');
+
+  // OAuth2Client can be instantiated with any valid client ID.
+  // We verify the token against all configured audiences.
+  if (!cachedClient) cachedClient = new OAuth2Client(clientIds[0]);
   return cachedClient;
+}
+
+function getAllowedAudiences() {
+  return env.GOOGLE_CLIENT_ID.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export async function verifyGoogleIdToken(idToken) {
   if (!idToken) throw new HttpError(400, 'Token Google tidak ditemukan.');
 
   const client = getClient();
-  const ticket = await client.verifyIdToken({
-    idToken,
-    audience: env.GOOGLE_CLIENT_ID,
-  });
+
+  let ticket;
+  try {
+    ticket = await client.verifyIdToken({
+      idToken,
+      audience: getAllowedAudiences(),
+    });
+  } catch (err) {
+    const msg = String(err?.message || 'Token Google tidak valid.');
+
+    // Common cases from google-auth-library / Google token verification
+    if (/audience|Wrong recipient|wrong recipient/i.test(msg)) {
+      throw new HttpError(401, 'Token Google tidak valid untuk aplikasi ini. Pastikan Google Client ID di frontend sesuai dengan konfigurasi server.');
+    }
+    if (/expired|used too late|Token used too late/i.test(msg)) {
+      throw new HttpError(401, 'Token Google sudah kedaluwarsa. Silakan coba login ulang.');
+    }
+    if (/Wrong number of segments|jwt malformed|malformed|invalid token/i.test(msg)) {
+      throw new HttpError(401, 'Token Google tidak valid. Silakan coba login ulang.');
+    }
+
+    throw new HttpError(401, 'Token Google tidak valid. Silakan coba login ulang.');
+  }
 
   const payload = ticket.getPayload();
   if (!payload) throw new HttpError(401, 'Token Google tidak valid.');

@@ -7,8 +7,10 @@ function parseBearerAuth(req) {
 
   try {
     const decoded = verifyAccessToken(token);
+    const userId = Number(decoded.sub);
+    if (!Number.isInteger(userId)) return null;
     return {
-      userId: decoded.sub,
+      userId,
       role: decoded.role,
     };
   } catch {

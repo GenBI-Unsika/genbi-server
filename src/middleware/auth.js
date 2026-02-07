@@ -1,6 +1,19 @@
 import { HttpError } from '../lib/errors.js';
 import { verifyAccessToken } from '../auth/tokens.js';
 
+// Role hierarchy - higher roles include permissions of lower roles
+const ROLE_HIERARCHY = {
+  super_admin: 6,
+  admin: 5,
+  koordinator: 4,
+  awardee: 3,
+  member: 2,
+  alumni: 1,
+};
+
+// Roles that can access admin panel
+const ADMIN_ROLES = ['super_admin', 'admin', 'koordinator'];
+
 export function requireAuth(req, _res, next) {
   const header = req.headers.authorization || '';
   const [scheme, token] = header.split(' ');
@@ -10,8 +23,16 @@ export function requireAuth(req, _res, next) {
 
   try {
     const decoded = verifyAccessToken(token);
+
+    // JWT 'sub' is defined as a string. Our Prisma schema uses Int IDs.
+    // Convert to number early so downstream Prisma queries don't throw.
+    const userId = Number.parseInt(String(decoded.sub), 10);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return next(new HttpError(401, 'Invalid access token subject'));
+    }
+
     req.auth = {
-      userId: decoded.sub,
+      userId,
       role: decoded.role,
     };
     return next();
@@ -27,3 +48,36 @@ export function requireRole(...roles) {
     return next();
   };
 }
+
+// Check if user has admin-level access (super_admin, admin, or koordinator)
+export function requireAdminAccess(req, _res, next) {
+  if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
+  if (!ADMIN_ROLES.includes(req.auth.role)) {
+    return next(new HttpError(403, 'Akses ditolak. Anda tidak memiliki hak akses admin.'));
+  }
+  return next();
+}
+
+// Check if user is super_admin
+export function requireSuperAdmin(req, _res, next) {
+  if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
+  if (req.auth.role !== 'super_admin') {
+    return next(new HttpError(403, 'Akses ditolak. Hanya super admin yang diizinkan.'));
+  }
+  return next();
+}
+
+// Check if user's role level is at least the specified minimum
+export function requireMinRole(minRole) {
+  return (req, _res, next) => {
+    if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
+    const userLevel = ROLE_HIERARCHY[req.auth.role] || 0;
+    const requiredLevel = ROLE_HIERARCHY[minRole] || 999;
+    if (userLevel < requiredLevel) {
+      return next(new HttpError(403, 'Insufficient permissions'));
+    }
+    return next();
+  };
+}
+
+export { ADMIN_ROLES, ROLE_HIERARCHY };
