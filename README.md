@@ -1,34 +1,87 @@
-# GenBI Backend (Express + MySQL)
+# GenBI Server
 
-## Setup
+Backend API server untuk GenBI Unsika menggunakan Express.js dan Prisma ORM.
 
-1. Copy `.env.example` -> `.env`
-2. Set `CORS_ORIGINS` to your Vite dev URLs
-3. Install deps:
-   - `cd backend`
-   - `npm install`
-4. Run:
-   - `npm run dev`
+## Quick Start
 
-Healthcheck: `GET /api/v1/health`
+```bash
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
+```
 
-## Auth strategy (planned)
+Berjalan di `http://localhost:4000`
 
-- Access token: JWT (short-lived) returned to client, sent as `Authorization: Bearer <token>`
-- Refresh token: stored in httpOnly cookie + hashed in DB; rotated on refresh
-- Cookie `SameSite` will be set for SPA use. On localhost, different ports are still same-site; in production prefer the same parent domain.
+## Environment
 
-## Google Drive storage (planned)
+Buat `.env`:
 
-- Scholarship documents uploaded by backend to a Drive folder using a Service Account
-- File IDs stored in MySQL (store Drive `fileId`, `mimeType`, `size`, and original name)
+```env
+# Server
+PORT=4000
+NODE_ENV=development
 
-### Google Drive prerequisites
+# Database
+DATABASE_URL=mysql://root:password@localhost:3306/genbi_db
 
-1. Create a Google Cloud project
-2. Enable **Google Drive API**
-3. Create a **Service Account** and download its JSON key
-4. Create a folder in Google Drive and **share** it with the Service Account email (Editor)
-5. Put the folder ID into `GDRIVE_FOLDER_ID`
+# JWT
+JWT_ACCESS_SECRET=your-secret-min-32-chars
+JWT_REFRESH_SECRET=your-secret-min-32-chars
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
 
-Security note: keep files private and download via backend proxy.
+# CORS
+CORS_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175
+
+# Google
+GOOGLE_CLIENT_ID=your-google-client-id
+GDRIVE_SERVICE_ACCOUNT_KEY_BASE64=base64-encoded-key
+GDRIVE_FOLDER_ID=your-folder-id
+```
+
+## API Endpoints
+
+| Prefix                  | Description        |
+| ----------------------- | ------------------ |
+| `/api/v1/auth`          | Authentication     |
+| `/api/v1/me`            | User Profile       |
+| `/api/v1/users`         | User Management    |
+| `/api/v1/activities`    | Activities         |
+| `/api/v1/articles`      | Articles           |
+| `/api/v1/teams`         | Team Members       |
+| `/api/v1/divisions`     | Divisions          |
+| `/api/v1/treasury`      | Treasury           |
+| `/api/v1/leaderboard`   | Points Leaderboard |
+| `/api/v1/dispensations` | Dispensations      |
+| `/api/v1/scholarships`  | Scholarships       |
+| `/api/v1/site-settings` | CMS Settings       |
+| `/api/v1/files`         | File Upload        |
+
+## Database
+
+```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Run migrations
+npx prisma migrate deploy
+
+# Reset database (dev only)
+npx prisma migrate reset
+
+# Open Prisma Studio
+npx prisma studio
+```
+
+## Tech Stack
+
+- Node.js + Express.js
+- Prisma ORM
+- MySQL/MariaDB
+- JWT Authentication
+- Google Drive API
+
+## Dokumentasi
+
+Lihat `../Documentation/` untuk dokumentasi lengkap.
