@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
+import { HttpError } from '../lib/errors.js';
 
 const router = Router();
 
@@ -33,7 +34,8 @@ router.get(
 router.get(
   '/faculties/:facultyId/study-programs',
   asyncHandler(async (req, res) => {
-    const { facultyId } = req.params;
+    const facultyId = parseInt(req.params.facultyId, 10);
+    if (isNaN(facultyId)) throw new HttpError(400, 'Faculty ID tidak valid');
 
     const programs = await prisma.studyProgram.findMany({
       where: {

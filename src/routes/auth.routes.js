@@ -12,7 +12,7 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken, sha256Base64 } f
 import { assertAllowedEmailDomain, normalizeEmail } from '../auth/domain.js';
 import { hashToken, makeVerifyToken, sendVerifyEmail, verifyExpiresAt } from '../auth/email.js';
 import { verifyGoogleIdToken } from '../auth/google.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, ADMIN_ROLES } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -20,10 +20,15 @@ const REFRESH_COOKIE_NAME = 'genbi_refresh';
 
 function refreshCookieOptions() {
   const isProd = env.NODE_ENV === 'production';
+  const configuredSameSite = (env.COOKIE_SAMESITE || 'lax').toLowerCase();
+  const secureBase = env.COOKIE_SECURE || isProd;
+  // SameSite=None requires Secure; if not secure (e.g. http dev), fall back to lax.
+  const sameSite = configuredSameSite === 'none' && !secureBase ? 'lax' : configuredSameSite;
+
   return {
     httpOnly: true,
-    secure: env.COOKIE_SECURE || isProd,
-    sameSite: 'lax',
+    secure: sameSite === 'none' ? true : secureBase,
+    sameSite,
     path: '/api/v1/auth',
     domain: env.COOKIE_DOMAIN || undefined,
     maxAge: env.JWT_REFRESH_TTL_SECONDS * 1000,
@@ -37,7 +42,21 @@ function assertEmailVerified(user) {
 }
 
 function assertIsAdmin(user) {
-  if (user.role !== 'admin') throw new HttpError(403, 'Akses ditolak. Akun ini bukan admin.');
+  if (!ADMIN_ROLES.includes(user.role)) {
+    throw new HttpError(403, 'Akses ditolak. Akun ini tidak memiliki hak admin.');
+  }
+}
+
+function defaultPasswordFromEmail(email) {
+  const raw = String(email || '')
+    .trim()
+    .toLowerCase();
+  const at = raw.indexOf('@');
+  if (at <= 0) return null;
+  const local = raw.slice(0, at);
+  const domain = raw.slice(at + 1);
+  const isStudent = domain === 'student.unsika.ac.id' && /^\d{8,}$/.test(local);
+  return isStudent ? local : null;
 }
 
 async function issueSession(user, req, res) {
@@ -279,8 +298,8 @@ router.post(
     let user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
 
     if (!user) {
-      const randomPassword = makeVerifyToken();
-      const passwordHash = await bcrypt.hash(randomPassword, 12);
+      const initialPassword = defaultPasswordFromEmail(email) || makeVerifyToken();
+      const passwordHash = await bcrypt.hash(initialPassword, 12);
       user = await prisma.user.create({
         data: {
           email,
@@ -392,11 +411,19 @@ router.post(
       throw new HttpError(401, 'Sesi login tidak valid. Silakan login ulang.');
     }
 
-    const userId = decoded.sub;
     const jti = decoded.jti;
+    const userId = typeof decoded.sub === 'number' ? decoded.sub : Number.parseInt(String(decoded.sub), 10);
+
+    if (!Number.isInteger(userId)) {
+      throw new HttpError(401, 'Sesi login tidak valid. Silakan login ulang.');
+    }
 
     const row = await prisma.refreshToken.findUnique({ where: { jti } });
     if (!row) throw new HttpError(401, 'Sesi login sudah berakhir. Silakan login ulang.');
+
+    if (row.userId !== userId) {
+      throw new HttpError(401, 'Sesi login tidak valid. Silakan login ulang.');
+    }
 
     const now = new Date();
     if (row.status !== 'active' || row.revokedAt) throw new HttpError(401, 'Sesi login sudah berakhir. Silakan login ulang.');

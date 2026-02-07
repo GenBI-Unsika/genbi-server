@@ -5,7 +5,7 @@ import { createScholarshipApplicationSchema, patchApplicationStatusSchema, setRe
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireAdminAccess, requireMinRole } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -42,7 +42,7 @@ router.get(
 router.patch(
   '/registration',
   requireAuth,
-  requireRole('admin'),
+  requireAdminAccess,
   asyncHandler(async (req, res) => {
     const body = setRegistrationSchema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
@@ -60,7 +60,7 @@ router.patch(
 router.post(
   '/applications',
   requireAuth,
-  requireRole('member', 'admin'),
+  requireMinRole('member'),
   asyncHandler(async (req, res) => {
     const open = await getRegistrationOpen();
     if (!open) throw new HttpError(403, 'Pendaftaran beasiswa sedang ditutup.');
@@ -117,7 +117,7 @@ router.post(
 router.get(
   '/applications',
   requireAuth,
-  requireRole('admin'),
+  requireAdminAccess,
   asyncHandler(async (req, res) => {
     const q = String(req.query?.q || '').trim();
     const status = coerceAdministrasiStatus(req.query?.status);
@@ -148,7 +148,7 @@ router.get(
 router.get(
   '/my-application',
   requireAuth,
-  requireRole('member', 'admin'),
+  requireMinRole('member'),
   asyncHandler(async (req, res) => {
     const row = await prisma.scholarshipApplication.findFirst({
       where: { createdById: req.auth.userId },
@@ -162,9 +162,12 @@ router.get(
 router.get(
   '/applications/:id',
   requireAuth,
-  requireRole('admin'),
+  requireAdminAccess,
   asyncHandler(async (req, res) => {
-    const row = await prisma.scholarshipApplication.findUnique({ where: { id: req.params.id } });
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
+
+    const row = await prisma.scholarshipApplication.findUnique({ where: { id } });
     if (!row) throw new HttpError(404, 'Data beasiswa tidak ditemukan');
     res.json({ data: row });
   }),
@@ -173,7 +176,7 @@ router.get(
 router.patch(
   '/applications/:id/administrasi',
   requireAuth,
-  requireRole('admin'),
+  requireAdminAccess,
   asyncHandler(async (req, res) => {
     const body = patchApplicationStatusSchema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
@@ -181,8 +184,11 @@ router.patch(
     const nextStatus = coerceAdministrasiStatus(body.data.status);
     if (!nextStatus) throw new HttpError(400, 'Status administrasi tidak valid.');
 
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
+
     const updated = await prisma.scholarshipApplication.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         administrasiStatus: nextStatus,
         reviewedById: req.auth.userId,
