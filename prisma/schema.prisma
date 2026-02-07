@@ -7,9 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ========================
+// ENUMS
+// ========================
+
 enum UserRole {
+  super_admin
   admin
+  koordinator
+  awardee
   member
+  alumni
 }
 
 enum RefreshTokenStatus {
@@ -24,201 +32,502 @@ enum ScholarshipAdministrasiStatus {
   ADMINISTRASI_DITOLAK
 }
 
+enum EventType {
+  MEETING
+  WORKSHOP
+  SEMINAR
+  SOCIAL
+  TRAINING
+  ONLINE
+  OFFLINE
+  OTHER
+}
+
+enum PointCategory {
+  KEHADIRAN
+  KONTRIBUSI
+  KEPANITIAAN
+  PRESTASI
+  OTHER
+}
+
+enum PaymentStatus {
+  LUNAS
+  BELUM_LUNAS
+  SEBAGIAN
+}
+
+enum TreasuryTransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum DispensationStatus {
+  DIAJUKAN
+  DIPROSES
+  DISETUJUI
+  DITOLAK
+}
+
+enum ActivityStatus {
+  DRAFT
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ========================
+// CORE MODELS
+// ========================
+
 model User {
-  id           String       @id @default(uuid())
-  email        String       @unique
-  passwordHash String
-  emailVerifiedAt DateTime?
-  googleSub    String?      @unique
-  role         UserRole     @default(member)
-  isActive     Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  passwordHash    String    @map("password_hash")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  googleSub       String?   @unique @map("google_sub")
+  role            UserRole  @default(member)
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  profile      UserProfile?
-  refreshTokens RefreshToken[]
-  files        FileObject[]
-  emailVerificationToken EmailVerificationToken?
+  profile                  UserProfile?
+  refreshTokens            RefreshToken[]
+  files                    FileObject[]
+  emailVerificationToken   EmailVerificationToken?
+  scholarshipApplications  ScholarshipApplication[]
+  scholarshipReviews       ScholarshipApplication[]  @relation("ScholarshipReviewedBy")
+  dispensations            Dispensation[]
+  dispensationReviews      Dispensation[]            @relation("DispensationReviewedBy")
+  articles                 Article[]
+  memberPointsAwarded      MemberPoint[]             @relation("PointAwardedBy")
+  treasuryEntriesRecorded  TreasuryEntry[]           @relation("TreasuryRecordedBy")
+  treasuryTransactions     TreasuryTransaction[]     @relation("TreasuryTransactionCreatedBy")
+  eventsCreated            Event[]
+  activitiesCreated        Activity[]
 
-  scholarshipApplications ScholarshipApplication[]
-  scholarshipReviews      ScholarshipApplication[] @relation("ScholarshipReviewedBy")
+  @@map("users")
 }
 
 model EmailVerificationToken {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  tokenHash String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
+  @@map("email_verification_tokens")
 }
 
 model UserProfile {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  name      String?
-  avatar    String?
-  phone     String?
-  facultyId String?
-  studyProgramId String?
-  npm       String?
-  gender    String?
-  birthDate DateTime?
-  semester  Int?
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique @map("user_id")
+  name              String?
+  avatar            String?
+  phone             String?
+  facultyId         Int?      @map("faculty_id")
+  studyProgramId    Int?      @map("study_program_id")
+  npm               String?
+  gender            String?
+  birthDate         DateTime? @map("birth_date")
+  semester          Int?
+  motivasi          String?
+  bankName          String?   @map("bank_name")
+  bankAccountNumber String?   @map("bank_account_number")
+  bankAccountName   String?   @map("bank_account_name")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  faculty   Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  faculty      Faculty?      @relation(fields: [facultyId], references: [id], onDelete: SetNull)
   studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([studyProgramId])
+  @@map("user_profiles")
 }
 
 model Faculty {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   code      String   @unique
   name      String
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  studyPrograms StudyProgram[]
-  userProfiles  UserProfile[]
-  scholarshipApplications ScholarshipApplication[]
+  studyPrograms            StudyProgram[]
+  userProfiles             UserProfile[]
+  scholarshipApplications  ScholarshipApplication[]
+
+  @@map("faculties")
 }
 
 model StudyProgram {
-  id        String   @id @default(uuid())
-  facultyId String
+  id        Int      @id @default(autoincrement())
+  facultyId Int      @map("faculty_id")
   code      String   @unique
   name      String
-  degree    String?  // S1, D3, S2, etc.
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  degree    String?
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
-  userProfiles UserProfile[]
-  scholarshipApplications ScholarshipApplication[]
+  faculty                  Faculty                  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  userProfiles             UserProfile[]
+  scholarshipApplications  ScholarshipApplication[]
 
   @@index([facultyId])
+  @@map("study_programs")
 }
 
 model RefreshToken {
-  id            String             @id @default(uuid())
-  userId        String
+  id            Int                @id @default(autoincrement())
+  userId        Int                @map("user_id")
   jti           String             @unique
-  tokenHash     String
+  tokenHash     String             @map("token_hash")
   status        RefreshTokenStatus @default(active)
-  createdAt     DateTime           @default(now())
-  expiresAt     DateTime
-  revokedAt     DateTime?
-  replacedByJti String?
-  ipAddress     String?
-  userAgent     String?
+  createdAt     DateTime           @default(now()) @map("created_at")
+  expiresAt     DateTime           @map("expires_at")
+  revokedAt     DateTime?          @map("revoked_at")
+  replacedByJti String?            @map("replaced_by_jti")
+  ipAddress     String?            @map("ip_address")
+  userAgent     String?            @map("user_agent")
 
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 model FileObject {
-  id           String   @id @default(uuid())
-  createdById  String
-  driveFileId  String   @unique
-  name         String
-  mimeType     String?
-  sizeBytes    Int?
-  createdAt    DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  createdById Int      @map("created_by_id")
+  driveFileId String   @unique @map("drive_file_id")
+  name        String
+  mimeType    String?  @map("mime_type")
+  sizeBytes   Int?     @map("size_bytes")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([createdById])
+  @@map("file_objects")
 }
 
 model AppSetting {
   key       String   @id
   value     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+// ========================
+// DIVISION MANAGEMENT
+// ========================
+
+model Division {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  description String?
+  icon        String?
+  gradient    String?
+  bgLight     String?  @map("bg_light")
+  textColor   String?  @map("text_color")
+  borderColor String?  @map("border_color")
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  teamMembers TeamMember[]
+  activities  Activity[]
+
+  @@index([sortOrder])
+  @@index([isActive, sortOrder])
+  @@map("divisions")
 }
 
 model TeamMember {
-  id        String   @id @default(uuid())
-  name      String
-  jabatan   String?
-  division  String
-  photo     String?
-  motivasi  String?
-  cerita    String?
-  faculty   String?
-  major     String?
-  cohort    Int?
-  socials   Json?
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  name       String
+  jabatan    String?
+  divisionId Int       @map("division_id")
+  photo      String?
+  motivasi   String?
+  cerita     String?   @db.Text
+  faculty    String?
+  major      String?
+  cohort     Int?
+  birthDate  DateTime? @map("birth_date")
+  phone      String?
+  email      String?
+  socials    Json?
+  isActive   Boolean   @default(true) @map("is_active")
+  sortOrder  Int       @default(0) @map("sort_order")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  @@unique([name, division])
-  @@index([division])
+  division        Division        @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  memberPoints    MemberPoint[]
+  treasuryEntries TreasuryEntry[]
+
+  @@unique([name, divisionId])
+  @@index([divisionId])
   @@index([isActive, sortOrder])
+  @@index([birthDate])
+  @@map("team_members")
 }
 
-model ScholarshipApplication {
-  id                  String                      @id @default(uuid())
-  createdById         String
-  submittedAt         DateTime                    @default(now())
+// ========================
+// SCHOLARSHIP APPLICATION
+// ========================
 
-  // Identitas (sinkron dengan form di frontend)
+model ScholarshipApplication {
+  id                  Int                           @id @default(autoincrement())
+  createdById         Int                           @map("created_by_id")
+  submittedAt         DateTime                      @default(now()) @map("submitted_at")
+
   name                String
   email               String
-  birthDate           DateTime?
+  birthDate           DateTime?                     @map("birth_date")
   gender              String?
   nik                 String?
   phone               String?
-  facultyId           String?
-  studyProgramId      String?
+  facultyId           Int?                          @map("faculty_id")
+  studyProgramId      Int?                          @map("study_program_id")
   npm                 String
   semester            Int?
   gpa                 Float?
   age                 Int?
 
-  // Pengetahuan GenBI
-  knowGenbi           String?
-  knowDesc            String?
+  knowGenbi           String?                       @map("know_genbi")
+  knowDesc            String?                       @map("know_desc")
 
-  // Deklarasi
-  agree               Boolean                     @default(false)
-
-  // Dokumen/file: mapping key -> fileId/url (disimpan sebagai JSON)
+  agree               Boolean                       @default(false)
   files               Json?
 
-  // Status administrasi
-  administrasiStatus  ScholarshipAdministrasiStatus @default(MENUNGGU_VERIFIKASI)
-  reviewedById        String?
-  reviewedAt          DateTime?
+  administrasiStatus  ScholarshipAdministrasiStatus @default(MENUNGGU_VERIFIKASI) @map("administrasi_status")
+  reviewedById        Int?                          @map("reviewed_by_id")
+  reviewedAt          DateTime?                     @map("reviewed_at")
 
-  createdAt           DateTime                    @default(now())
-  updatedAt           DateTime                    @updatedAt
+  createdAt           DateTime                      @default(now()) @map("created_at")
+  updatedAt           DateTime                      @updatedAt @map("updated_at")
 
-  createdBy           User                        @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  reviewedBy          User?                       @relation("ScholarshipReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
-  faculty             Faculty?                    @relation(fields: [facultyId], references: [id], onDelete: SetNull)
-  studyProgram        StudyProgram?               @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
+  createdBy    User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  reviewedBy   User?         @relation("ScholarshipReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  faculty      Faculty?      @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
 
   @@unique([npm])
   @@index([createdById])
   @@index([administrasiStatus, createdAt])
   @@index([facultyId])
   @@index([studyProgramId])
+  @@map("scholarship_applications")
+}
+
+// ========================
+// PORTAL GENBI MODELS
+// ========================
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   @db.Text
+  type        EventType @default(OTHER)
+  startDate   DateTime  @map("start_date")
+  endDate     DateTime? @map("end_date")
+  location    String?
+  isAllDay    Boolean   @default(false) @map("is_all_day")
+  color       String?
+  createdById Int?      @map("created_by_id")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([startDate])
+  @@index([isActive, startDate])
+  @@map("events")
+}
+
+model MemberPoint {
+  id          Int           @id @default(autoincrement())
+  memberId    Int           @map("member_id")
+  category    PointCategory @default(OTHER)
+  points      Int           @default(0)
+  description String?
+  eventId     Int?          @map("event_id")
+  awardedAt   DateTime      @default(now()) @map("awarded_at")
+  awardedById Int?          @map("awarded_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  awardedBy User?      @relation("PointAwardedBy", fields: [awardedById], references: [id], onDelete: SetNull)
+
+  @@index([memberId])
+  @@index([category])
+  @@index([awardedAt])
+  @@map("member_points")
+}
+
+model TreasuryEntry {
+  id           Int           @id @default(autoincrement())
+  memberId     Int           @map("member_id")
+  period       String
+  amount       Int           @default(0)
+  status       PaymentStatus @default(BELUM_LUNAS)
+  paidAt       DateTime?     @map("paid_at")
+  notes        String?
+  recordedById Int?          @map("recorded_by_id")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  member     TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  recordedBy User?      @relation("TreasuryRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([memberId, period])
+  @@index([memberId])
+  @@index([period])
+  @@index([status])
+  @@map("treasury_entries")
+}
+
+model TreasuryTransaction {
+  id          Int                     @id @default(autoincrement())
+  type        TreasuryTransactionType
+  amount      Int                     @default(0)
+  occurredAt  DateTime                @map("occurred_at")
+  category    String?                 @map("category")
+  description String?                 @db.Text
+  reference   String?                 @map("reference")
+  createdById Int?                    @map("created_by_id")
+  createdAt   DateTime                @default(now()) @map("created_at")
+  updatedAt   DateTime                @updatedAt @map("updated_at")
+
+  createdBy User? @relation("TreasuryTransactionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([occurredAt])
+  @@index([type])
+  @@index([createdById])
+  @@map("treasury_transactions")
+}
+
+// ========================
+// DISPENSATION SYSTEM
+// ========================
+
+model Dispensation {
+  id           Int                 @id @default(autoincrement())
+  userId       Int                 @map("user_id")
+  nama         String
+  npm          String
+  fakultas     String?
+  prodi        String?
+  kegiatan     String
+  tanggal      DateTime
+  alasan       String?             @db.Text
+  status       DispensationStatus  @default(DIAJUKAN)
+  reviewedById Int?                @map("reviewed_by_id")
+  reviewedAt   DateTime?           @map("reviewed_at")
+  reviewNotes  String?             @map("review_notes")
+  fileUrl      String?             @map("file_url")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("DispensationReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([tanggal])
+  @@map("dispensations")
+}
+
+model DispensationTemplate {
+  id         Int      @id @default(autoincrement())
+  fileName   String   @map("file_name")
+  fileUrl    String   @map("file_url")
+  uploadedBy String   @map("uploaded_by")
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("dispensation_templates")
+}
+
+// ========================
+// ACTIVITIES / PROKER
+// ========================
+
+model Activity {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?        @db.Text
+  divisionId  Int?           @map("division_id")
+  startDate   DateTime?      @map("start_date")
+  endDate     DateTime?      @map("end_date")
+  location    String?
+  status      ActivityStatus @default(PLANNED)
+  budget      Int?
+  createdById Int?           @map("created_by_id")
+  isActive    Boolean        @default(true) @map("is_active")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  division  Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  createdBy User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([divisionId])
+  @@index([status])
+  @@index([startDate])
+  @@map("activities")
+}
+
+// ========================
+// ARTICLES / BLOG
+// ========================
+
+model Article {
+  id          Int           @id @default(autoincrement())
+  title       String
+  slug        String        @unique
+  excerpt     String?       @db.Text
+  content     String?       @db.LongText
+  coverImage  String?       @map("cover_image")
+  authorId    Int?          @map("author_id")
+  category    String?
+  tags        Json?
+  status      ArticleStatus @default(DRAFT)
+  publishedAt DateTime?     @map("published_at")
+  viewCount   Int           @default(0) @map("view_count")
+  isActive    Boolean       @default(true) @map("is_active")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([slug])
+  @@index([status])
+  @@index([authorId])
+  @@index([publishedAt])
+  @@map("articles")
 }
