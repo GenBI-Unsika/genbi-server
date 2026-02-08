@@ -4,14 +4,15 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { z } from 'zod';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { HttpError } from '../lib/errors.js';
+import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
-// Public: get all active divisions
+// Publik: ambil semua divisi aktif
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
-    // Check if Division model exists (migration applied)
+    // Cek jika model Division ada (migrasi sudah dijalankan)
     if (!prisma?.division?.findMany) {
       return res.json({ data: [] });
     }
@@ -23,8 +24,8 @@ router.get(
         orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       });
     } catch (e) {
-      // If migration hasn't been applied yet, treat as empty
-      if (e?.code === 'P2021') {
+      // Jika migrasi belum dijalankan, anggap kosong
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -34,7 +35,7 @@ router.get(
   }),
 );
 
-// Admin: get all divisions (including inactive)
+// Admin: ambil semua divisi (termasuk yang tidak aktif)
 router.get(
   '/admin/all',
   requireAuth,
@@ -52,7 +53,7 @@ router.get(
   }),
 );
 
-// Public: get division by key
+// Publik: ambil divisi berdasarkan key
 router.get(
   '/:key',
   asyncHandler(async (req, res) => {
@@ -74,7 +75,7 @@ router.get(
   }),
 );
 
-// Admin: create division
+// Admin: buat divisi
 const createSchema = z.object({
   key: z.string().min(1).max(50),
   name: z.string().min(1).max(100),
@@ -98,7 +99,7 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Check for duplicate key
+    // Cek duplikasi key
     const existing = await prisma.division.findUnique({
       where: { key: body.data.key },
     });
@@ -125,7 +126,7 @@ router.post(
   }),
 );
 
-// Admin: update division
+// Admin: update divisi
 const updateSchema = z.object({
   key: z.string().min(1).max(50).optional(),
   name: z.string().min(1).max(100).optional(),
@@ -152,7 +153,7 @@ router.put(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Check if key is being changed and if new key is unique
+    // Cek jika key diubah dan apakah key baru unik
     if (body.data.key) {
       const existing = await prisma.division.findFirst({
         where: {
@@ -174,7 +175,7 @@ router.put(
   }),
 );
 
-// Admin: delete division
+// Admin: hapus divisi
 router.delete(
   '/:id',
   requireAuth,

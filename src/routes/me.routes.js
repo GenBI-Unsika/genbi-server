@@ -5,6 +5,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth } from '../middleware/auth.js';
+import { finalizeUpload } from '../lib/file-utils.js';
 
 const router = Router();
 
@@ -44,6 +45,7 @@ router.patch(
     const schema = z.object({
       name: z.string().min(1).optional(),
       avatar: z.string().url().nullable().optional(),
+      avatarTempId: z.string().optional(), // NEW: Support staged avatar upload
       birthDate: z.string().datetime().nullable().optional(),
       gender: z.string().nullable().optional(),
       npm: z.string().nullable().optional(),
@@ -60,6 +62,21 @@ router.patch(
     const body = schema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
 
+    // Handle staged avatar upload - finalize if tempId provided
+    let finalAvatar = body.data.avatar;
+    if (body.data.avatarTempId) {
+      try {
+        const finalizedFile = await finalizeUpload({
+          tempId: body.data.avatarTempId,
+          userId: req.auth.userId,
+          folder: 'avatars',
+        });
+        finalAvatar = finalizedFile.publicUrl;
+      } catch (e) {
+        throw new HttpError(400, `Gagal memproses avatar: ${e.message}`);
+      }
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: req.auth.userId },
       include: { profile: true },
@@ -67,12 +84,15 @@ router.patch(
 
     if (!user) throw new HttpError(404, 'User not found');
 
+    // Determine the avatar value to use
+    const avatarValue = body.data.avatarTempId ? finalAvatar : body.data.avatar !== undefined ? body.data.avatar : undefined;
+
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
       create: {
         userId: user.id,
         name: body.data.name,
-        avatar: body.data.avatar,
+        avatar: avatarValue,
         birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
         gender: body.data.gender,
         npm: body.data.npm,
@@ -87,7 +107,7 @@ router.patch(
       },
       update: {
         name: body.data.name !== undefined ? body.data.name : undefined,
-        avatar: body.data.avatar !== undefined ? body.data.avatar : undefined,
+        avatar: avatarValue,
         birthDate: body.data.birthDate !== undefined ? (body.data.birthDate ? new Date(body.data.birthDate) : null) : undefined,
         gender: body.data.gender !== undefined ? body.data.gender : undefined,
         npm: body.data.npm !== undefined ? body.data.npm : undefined,
@@ -110,12 +130,11 @@ router.patch(
   }),
 );
 
-// Get my points (perpointan)
+// Ambil poin saya (perpointan)
 router.get(
   '/points',
   requireAuth,
   asyncHandler(async (req, res) => {
-    // Find team member linked to this user (by email or name match)
     const user = await prisma.user.findUnique({
       where: { id: req.auth.userId },
       include: { profile: true },
@@ -123,7 +142,6 @@ router.get(
 
     if (!user) return res.json({ data: { total: 0, breakdown: [], history: [] } });
 
-    // Try to find team member by name
     const memberName = user.profile?.name;
     let teamMember = null;
 
@@ -137,7 +155,6 @@ router.get(
       return res.json({ data: { total: 0, breakdown: [], history: [] } });
     }
 
-    // Get points
     const points = await prisma.memberPoint.findMany({
       where: { memberId: teamMember.id },
       orderBy: { awardedAt: 'desc' },
@@ -145,7 +162,6 @@ router.get(
 
     const total = points.reduce((sum, p) => sum + p.points, 0);
 
-    // Group by category
     const breakdownMap = {};
     points.forEach((p) => {
       if (!breakdownMap[p.category]) breakdownMap[p.category] = 0;
@@ -170,7 +186,7 @@ router.get(
   }),
 );
 
-// Get my treasury (uang kas)
+// Ambil uang kas saya
 router.get(
   '/treasury',
   requireAuth,
@@ -201,7 +217,7 @@ router.get(
     });
 
     const totalPaid = entries.reduce((sum, e) => sum + e.amount, 0);
-    const expectedMonths = 9; // Oktober - Juni
+    const expectedMonths = 9;
     const monthlyFee = 10000;
     const expectedTotal = expectedMonths * monthlyFee;
 

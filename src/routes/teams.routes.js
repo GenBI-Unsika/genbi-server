@@ -3,11 +3,12 @@ import { z } from 'zod';
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
+import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 
 const router = Router();
 
-// Helper to transform member with division name for backward compatibility
+// Helper untuk transform member dengan nama divisi untuk kompatibilitas ke belakang
 function transformMember(member) {
   return {
     ...member,
@@ -16,7 +17,7 @@ function transformMember(member) {
   };
 }
 
-// Public: get all active team members
+// Publik: ambil semua anggota tim aktif
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
@@ -32,7 +33,7 @@ router.get(
         orderBy: [{ sortOrder: 'asc' }, { division: { name: 'asc' } }, { name: 'asc' }],
       });
     } catch (e) {
-      if (e?.code === 'P2021') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -42,7 +43,7 @@ router.get(
   }),
 );
 
-// Admin: get all team members (including inactive)
+// Admin: ambil semua anggota tim (termasuk tidak aktif)
 router.get(
   '/admin/all',
   requireAuth,
@@ -56,7 +57,7 @@ router.get(
   }),
 );
 
-// Admin: create team member
+// Admin: buat anggota tim
 router.post(
   '/',
   requireAuth,
@@ -66,7 +67,7 @@ router.post(
       name: z.string().min(1),
       jabatan: z.string().nullable().optional(),
       divisionId: z.number().int().positive(),
-      // Also accept division name for backward compatibility
+
       division: z.string().optional(),
       photo: z.string().nullable().optional(),
       motivasi: z.string().nullable().optional(),
@@ -85,7 +86,7 @@ router.post(
     const body = schema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data tidak valid', body.error.flatten());
 
-    // If divisionId not provided but division name is, look up the division
+
     let divisionId = body.data.divisionId;
     if (!divisionId && body.data.division) {
       const div = await prisma.division.findFirst({
@@ -122,7 +123,7 @@ router.post(
   }),
 );
 
-// Admin: update team member
+// Admin: update anggota tim
 router.patch(
   '/:id',
   requireAuth,
@@ -135,7 +136,7 @@ router.patch(
       name: z.string().min(1).optional(),
       jabatan: z.string().nullable().optional(),
       divisionId: z.number().int().positive().optional(),
-      division: z.string().optional(), // backward compatibility
+      division: z.string().optional(),
       photo: z.string().nullable().optional(),
       motivasi: z.string().nullable().optional(),
       cerita: z.string().nullable().optional(),
@@ -156,7 +157,7 @@ router.patch(
     const existing = await prisma.teamMember.findUnique({ where: { id } });
     if (!existing) throw new HttpError(404, 'Anggota tidak ditemukan');
 
-    // Handle division lookup for backward compatibility
+
     let divisionId = body.data.divisionId;
     if (!divisionId && body.data.division) {
       const div = await prisma.division.findFirst({
@@ -191,7 +192,7 @@ router.patch(
   }),
 );
 
-// Admin: delete team member
+// Admin: hapus anggota tim
 router.delete(
   '/:id',
   requireAuth,

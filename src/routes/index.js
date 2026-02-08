@@ -19,12 +19,16 @@ import usersRoutes from './users.routes.js';
 import membersRoutes from './members.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import infoCenterRoutes from './info-center.routes.js';
+import publicRoutes from './public.routes.js';
 
 const router = Router();
 
+// Route publik (tanpa auth) - untuk genbi-client
+router.use('/public', publicRoutes);
+
 router.use('/auth', authRoutes);
 router.use('/files', filesRoutes);
-// Back-compat alias used by some frontends (e.g. admin-genbi)
+// Alias kompatibilitas mundur digunakan oleh beberapa frontend (misal admin-genbi)
 router.use('/upload', filesRoutes);
 router.use('/me', meRoutes);
 router.use('/scholarships', scholarshipsRoutes);

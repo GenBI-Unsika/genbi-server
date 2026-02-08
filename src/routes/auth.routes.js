@@ -22,7 +22,7 @@ function refreshCookieOptions() {
   const isProd = env.NODE_ENV === 'production';
   const configuredSameSite = (env.COOKIE_SAMESITE || 'lax').toLowerCase();
   const secureBase = env.COOKIE_SECURE || isProd;
-  // SameSite=None requires Secure; if not secure (e.g. http dev), fall back to lax.
+  // SameSite=None membutuhkan Secure; jika tidak secure (misal log dev http), fallback ke lax.
   const sameSite = configuredSameSite === 'none' && !secureBase ? 'lax' : configuredSameSite;
 
   return {
@@ -106,7 +106,6 @@ router.post(
 
     const ok = await bcrypt.compare(body.data.password, user.passwordHash);
     if (!ok) {
-      // Check if user was created via Google and hasn't set a manual password
       if (user.googleSub) {
         throw new HttpError(401, 'Akun ini dibuat menggunakan Google. Silakan login dengan tombol "Masuk dengan Google" atau set password manual di halaman profil.');
       }
@@ -138,8 +137,6 @@ router.patch(
     if (!user || !user.isActive) throw new HttpError(401, 'Akun tidak ditemukan atau tidak aktif.');
     assertAllowedEmailDomain(user.email);
 
-    // If the account was created/linked with Google, allow setting a password while authenticated
-    // even if the user doesn't know the (random) passwordHash that was generated server-side.
     if (!user.googleSub) {
       if (!body.data.currentPassword) throw new HttpError(400, 'Password lama wajib diisi.');
       const ok = await bcrypt.compare(body.data.currentPassword, user.passwordHash);
@@ -311,11 +308,11 @@ router.post(
           profile:
             name || picture
               ? {
-                  create: {
-                    name: name || null,
-                    avatar: picture || null,
-                  },
-                }
+                create: {
+                  name: name || null,
+                  avatar: picture || null,
+                },
+              }
               : undefined,
         },
         include: { profile: true },
@@ -324,7 +321,7 @@ router.post(
       if (!user.isActive) throw new HttpError(401, 'Akun dinonaktifkan. Hubungi admin.');
       if (user.googleSub && user.googleSub !== sub) throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
 
-      // Update user and profile with all Google info
+      // Update user dan profile dengan semua info Google
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -332,18 +329,18 @@ router.post(
           emailVerifiedAt: user.emailVerifiedAt || new Date(),
           profile: user.profile
             ? {
-                update: {
-                  avatar: picture || user.profile.avatar,
-                  name: name || user.profile.name,
-                },
-              }
+              update: {
+                avatar: picture || user.profile.avatar,
+                name: name || user.profile.name,
+              },
+            }
             : name || picture
               ? {
-                  create: {
-                    name: name || null,
-                    avatar: picture || null,
-                  },
-                }
+                create: {
+                  name: name || null,
+                  avatar: picture || null,
+                },
+              }
               : undefined,
         },
         include: { profile: true },
@@ -376,18 +373,18 @@ router.post(
         emailVerifiedAt: user0.emailVerifiedAt || new Date(),
         profile: user0.profile
           ? {
-              update: {
-                avatar: picture || user0.profile.avatar,
-                name: name || user0.profile.name,
-              },
-            }
+            update: {
+              avatar: picture || user0.profile.avatar,
+              name: name || user0.profile.name,
+            },
+          }
           : name || picture
             ? {
-                create: {
-                  name: name || null,
-                  avatar: picture || null,
-                },
-              }
+              create: {
+                name: name || null,
+                avatar: picture || null,
+              },
+            }
             : undefined,
       },
       include: { profile: true },
@@ -439,7 +436,7 @@ router.post(
     assertAllowedEmailDomain(user.email);
     assertEmailVerified(user);
 
-    // Rotate refresh token
+
     const { token: nextRefreshToken, jti: nextJti } = signRefreshToken({ userId: user.id });
 
     await prisma.$transaction([
@@ -499,7 +496,7 @@ router.post(
           });
         }
       } catch {
-        // ignore invalid refresh token
+        // abaikan refresh token tidak valid
       }
     }
 

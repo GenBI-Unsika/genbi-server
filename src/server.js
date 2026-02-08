@@ -9,6 +9,9 @@ import { env, corsOrigins } from './config/env.js';
 import { notFound, errorHandler } from './lib/errors.js';
 import apiRoutes from './routes/index.js';
 import { appRouter, createContext } from '@genbi/trpc';
+import { initTempStorage } from './storage/temp-storage.js';
+
+initTempStorage();
 
 const app = express();
 
@@ -26,10 +29,7 @@ app.use(
 
 app.use(
   helmet({
-    // Google Identity Services uses a popup + postMessage flow.
-    // Helmet defaults to COOP: same-origin which breaks this in modern browsers.
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-    // COEP can also cause issues with third-party auth flows; keep it off unless needed.
     crossOriginEmbedderPolicy: false,
   }),
 );
@@ -41,12 +41,10 @@ const origins = corsOrigins();
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // allow non-browser tools
-      if (origins.length === 0) return cb(null, true); // default allow all in dev until configured
+      if (!origin) return cb(null, true);
       if (origins.includes(origin)) return cb(null, true);
       const err = new Error(`CORS blocked for origin: ${origin}`);
-      // Ensure this is treated as a client/configuration issue (not an internal server error)
-      // by downstream error handling.
+
       err.statusCode = 403;
       return cb(err);
     },
@@ -74,5 +72,6 @@ app.use(errorHandler);
 app.listen(env.PORT, env.HOST, () => {
   // eslint-disable-next-line no-console
   const displayHost = env.HOST === '0.0.0.0' ? 'localhost' : env.HOST;
-  console.log(`API listening on http://${displayHost}:${env.PORT}`);
+  // eslint-disable-next-line no-console
+  console.info(`API listening on http://${displayHost}:${env.PORT}`);
 });

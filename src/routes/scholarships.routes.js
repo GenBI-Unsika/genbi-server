@@ -6,16 +6,18 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess, requireMinRole } from '../middleware/auth.js';
+import { isPrismaUniqueConstraintError } from '../lib/prisma-errors.js';
+import { APP_SETTING_KEYS } from '../constants/settings.js';
 
 const router = Router();
 
-const SETTING_KEY_REG_OPEN = 'scholarship_registration_open';
+const SETTING_KEY_REG_OPEN = APP_SETTING_KEYS.SCHOLARSHIP_REGISTRATION_OPEN;
 
 function coerceAdministrasiStatus(input) {
   const raw = String(input || '').trim();
   if (!raw) return null;
 
-  // Accept enum values
+  // Terima nilai enum
   if (['MENUNGGU_VERIFIKASI', 'LOLOS_ADMINISTRASI', 'ADMINISTRASI_DITOLAK'].includes(raw)) return raw;
 
   const s = raw.toLowerCase();
@@ -106,7 +108,7 @@ router.post(
 
       res.status(201).json({ data: created });
     } catch (e) {
-      if (String(e?.code) === 'P2002') {
+      if (isPrismaUniqueConstraintError(e)) {
         throw new HttpError(409, 'NPM sudah terdaftar pada pengajuan beasiswa.');
       }
       throw e;
@@ -126,8 +128,8 @@ router.get(
       ...(status ? { administrasiStatus: status } : {}),
       ...(q
         ? {
-            OR: [{ name: { contains: q } }, { email: { contains: q } }, { npm: { contains: q } }, { studyProgram: { name: { contains: q } } }, { faculty: { name: { contains: q } } }],
-          }
+          OR: [{ name: { contains: q } }, { email: { contains: q } }, { npm: { contains: q } }, { studyProgram: { name: { contains: q } } }, { faculty: { name: { contains: q } } }],
+        }
         : {}),
     };
 

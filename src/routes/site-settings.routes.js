@@ -7,17 +7,18 @@ import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { env } from '../config/env.js';
 import { toDriveUploadHttpErrorMessage, uploadBufferToDrive } from '../storage/gdrive.js';
+import { CMS_SETTING_KEYS } from '../constants/settings.js';
 
 const router = Router();
 
-// Multer for image uploads
+// Multer untuk upload gambar
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB for images
+    fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (_req, file, cb) => {
-    // Only allow image files
+
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -26,30 +27,30 @@ const upload = multer({
   },
 });
 
-// Valid CMS setting keys
-const CMS_KEYS = ['cms_hero', 'cms_about', 'cms_cta', 'cms_branding'];
+// Key setting CMS yang valid
+const CMS_KEYS = CMS_SETTING_KEYS;
 
-// Public: Get a single setting by key (for genbi-client to fetch)
+// Publik: Ambil setting tunggal berdasarkan key (untuk diambil genbi-client)
 router.get(
   '/:key',
   asyncHandler(async (req, res) => {
     const { key } = req.params;
 
-    // Allow reading CMS settings publicly
+
     if (!CMS_KEYS.includes(key)) {
       throw new HttpError(400, 'Key tidak valid');
     }
 
     const row = await prisma.appSetting.findUnique({ where: { key } });
 
-    // Return null value if not found (client will use defaults)
+
     res.json({
       data: row ? { key: row.key, value: row.value } : { key, value: null },
     });
   }),
 );
 
-// Admin: Get all CMS settings at once
+// Admin: Ambil semua setting CMS sekaligus
 router.get(
   '/',
   requireAuth,
@@ -59,7 +60,7 @@ router.get(
       where: { key: { in: CMS_KEYS } },
     });
 
-    // Convert to object for easier consumption
+
     const settings = {};
     for (const key of CMS_KEYS) {
       const row = rows.find((r) => r.key === key);
@@ -70,7 +71,7 @@ router.get(
   }),
 );
 
-// Admin: Update a setting by key
+// Admin: Update setting berdasarkan key
 router.patch(
   '/:key',
   requireAuth,
@@ -87,7 +88,7 @@ router.patch(
       throw new HttpError(400, 'Value tidak boleh kosong');
     }
 
-    // Validate the structure based on key
+
     const validationError = validateSettingValue(key, value);
     if (validationError) {
       throw new HttpError(400, validationError);
@@ -103,7 +104,7 @@ router.patch(
   }),
 );
 
-// Admin: Upload image for CMS (returns the public URL)
+// Admin: Upload gambar untuk CMS (mengembalikan URL publik)
 router.post(
   '/upload',
   requireAuth,
@@ -133,7 +134,7 @@ router.post(
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
-    // Store in FileObject for tracking
+
     const fileRecord = await prisma.fileObject.create({
       data: {
         createdById: req.auth.userId,
@@ -144,8 +145,7 @@ router.post(
       },
     });
 
-    // Return the public Google Drive URL
-    // Note: File must be shared publicly in Drive for this URL to work
+
     const publicUrl = `https://drive.google.com/uc?export=view&id=${driveFile.id}`;
 
     res.status(201).json({
@@ -160,7 +160,7 @@ router.post(
   }),
 );
 
-// Admin: Delete a setting by key (reset to default)
+// Admin: Hapus setting berdasarkan key (reset ke default)
 router.delete(
   '/:key',
   requireAuth,
@@ -173,7 +173,7 @@ router.delete(
     }
 
     await prisma.appSetting.delete({ where: { key } }).catch(() => {
-      // Ignore if not found
+
     });
 
     res.json({ data: { key, deleted: true } });
@@ -181,7 +181,7 @@ router.delete(
 );
 
 /**
- * Validate the value structure based on setting key
+ * Validasi struktur value berdasarkan key setting
  */
 function validateSettingValue(key, value) {
   if (typeof value !== 'object' || value === null) {
@@ -190,25 +190,25 @@ function validateSettingValue(key, value) {
 
   switch (key) {
     case 'cms_hero':
-      // Expected: { title, subtitle, backgroundImage, ctaText, ctaLink }
+
       if (typeof value.title !== 'string') return 'title harus berupa string';
       if (typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
       break;
 
     case 'cms_about':
-      // Expected: { title, description, image, stats: [{ value, label }] }
+
       if (typeof value.title !== 'string') return 'title harus berupa string';
       if (typeof value.description !== 'string') return 'description harus berupa string';
       break;
 
     case 'cms_cta':
-      // Expected: { title, description, buttonText, buttonLink }
+
       if (typeof value.title !== 'string') return 'title harus berupa string';
       if (typeof value.description !== 'string') return 'description harus berupa string';
       break;
 
     case 'cms_branding':
-      // Expected: { siteName, logo, favicon, footerText }
+
       if (typeof value.siteName !== 'string') return 'siteName harus berupa string';
       break;
 

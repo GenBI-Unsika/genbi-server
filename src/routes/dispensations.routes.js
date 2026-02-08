@@ -12,7 +12,7 @@ import { generateWordDocument, prepareDispensationData } from '../lib/docx-gener
 
 const router = Router();
 
-// Multer configuration for template upload
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -25,7 +25,7 @@ const upload = multer({
   },
 });
 
-// Get my dispensations
+
 router.get(
   '/me',
   requireAuth,
@@ -39,7 +39,6 @@ router.get(
   }),
 );
 
-// Get all dispensations (admin only)
 router.get(
   '/',
   requireAuth,
@@ -70,7 +69,7 @@ router.get(
   }),
 );
 
-// Create dispensation
+
 router.post(
   '/',
   requireAuth,
@@ -108,7 +107,7 @@ router.post(
   }),
 );
 
-// Update dispensation status (admin only)
+
 router.patch(
   '/:id/status',
   requireAuth,
@@ -138,7 +137,7 @@ router.patch(
   }),
 );
 
-// Update dispensation (owner only, only while still DIAJUKAN)
+
 router.patch(
   '/:id',
   requireAuth,
@@ -181,7 +180,7 @@ router.patch(
   }),
 );
 
-// Delete dispensation (owner or admin)
+
 router.delete(
   '/:id',
   requireAuth,
@@ -205,9 +204,9 @@ router.delete(
   }),
 );
 
-// ==================== TEMPLATE MANAGEMENT ====================
 
-// Get active template (admin only)
+
+
 router.get(
   '/template/active',
   requireAuth,
@@ -222,7 +221,7 @@ router.get(
   }),
 );
 
-// Upload template (admin only)
+
 router.post(
   '/template/upload',
   requireAuth,
@@ -235,7 +234,7 @@ router.post(
 
     if (!env.GDRIVE_FOLDER_ID) throw new HttpError(500, 'Upload belum tersedia. Hubungi admin.');
 
-    // Upload to Google Drive
+    // Upload ke Google Drive
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
@@ -250,17 +249,17 @@ router.post(
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
-    // Deactivate old templates
+    // Nonaktifkan template lama
     await prisma.dispensationTemplate.updateMany({
       where: { isActive: true },
       data: { isActive: false },
     });
 
-    // Create new template record
+    // Buat record template baru
     const template = await prisma.dispensationTemplate.create({
       data: {
         fileName: req.file.originalname,
-        // Use Drive preview URL for iframe preview on frontend
+        // Gunakan URL preview Drive untuk iframe di frontend
         fileUrl: `https://drive.google.com/file/d/${driveFile.id}/preview`,
         uploadedBy: req.auth.userId,
         isActive: true,
@@ -271,7 +270,7 @@ router.post(
   }),
 );
 
-// Delete template (admin only)
+
 router.delete(
   '/template/:id',
   requireAuth,
@@ -286,7 +285,7 @@ router.delete(
   }),
 );
 
-// Generate letter for approved dispensation (admin only)
+
 router.post(
   '/:id/generate-letter',
   requireAuth,
@@ -304,7 +303,7 @@ router.post(
       throw new HttpError(400, 'Hanya dispensasi yang disetujui yang bisa digenerate suratnya');
     }
 
-    // Get active template
+    // Ambil template aktif
     const template = await prisma.dispensationTemplate.findFirst({
       where: { isActive: true },
       orderBy: { uploadedAt: 'desc' },
@@ -314,29 +313,11 @@ router.post(
       throw new HttpError(400, 'Template surat belum diupload');
     }
 
-    // Download template from Google Drive (temporary implementation)
-    // In production, you should download the template file
-    // For now, we'll return an error with instructions
+    // Download template dari Google Drive (implementasi sementara)
+    // Di produksi, Anda harus mendownload file template itu sendiri
     throw new HttpError(500, 'Fitur generate letter memerlukan template file di server. Silakan hubungi administrator.');
 
-    // TODO: Implement actual document generation
-    // const templateBuffer = await downloadFromGoogleDrive(template.fileUrl);
-    // const data = prepareDispensationData(dispensation);
-    // const generatedDoc = await generateWordDocument(templateBuffer, data);
-    //
-    // const driveFile = await uploadToGoogleDrive({
-    //   buffer: generatedDoc,
-    //   mimetype: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    //   originalname: `surat-dispensasi-${dispensation.npm}-${Date.now()}.docx`,
-    //   folder: 'dispensation-letters',
-    // });
-    //
-    // await prisma.dispensation.update({
-    //   where: { id },
-    //   data: { fileUrl: driveFile.url },
-    // });
-    //
-    // res.json({ data: { fileUrl: driveFile.url }, message: 'Surat berhasil digenerate' });
+
   }),
 );
 

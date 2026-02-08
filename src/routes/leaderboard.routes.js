@@ -3,36 +3,37 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
+import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
-// Helper to format date
+// Helper untuk format tanggal
 const formatDate = (date) => {
   if (!date) return null;
   return new Date(date).toISOString().split('T')[0];
 };
 
-// Get leaderboard with activities (public)
+// Ambil leaderboard dengan aktivitas (publik)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     try {
-      // Get all member points with details
+
       const allPoints = await prisma.memberPoint.findMany({
         orderBy: { awardedAt: 'desc' },
       });
 
-      // Get unique member IDs
+
       const memberIds = [...new Set(allPoints.map((p) => p.memberId))];
 
-      // Get member details including division
+
       const members = await prisma.teamMember.findMany({
         where: { id: { in: memberIds } },
         include: { division: true },
       });
       const memberMap = new Map(members.map((m) => [m.id, m]));
 
-      // Build leaderboard with activities
+
       const leaderboardMap = new Map();
 
       for (const point of allPoints) {
@@ -54,7 +55,7 @@ router.get(
         const entry = leaderboardMap.get(point.memberId);
         entry.points += point.points || 0;
 
-        // Determine type based on category or description
+
         const type = point.category === 'ONLINE' || point.description?.toLowerCase().includes('online') ? 'online' : 'offline';
 
         if (type === 'online') {
@@ -73,19 +74,19 @@ router.get(
         });
       }
 
-      // Convert to array and sort by points
+
       const data = Array.from(leaderboardMap.values())
         .sort((a, b) => b.points - a.points)
         .map((item, idx) => ({
           ...item,
           rank: idx + 1,
-          // Sort activities by date desc
+
           activities: item.activities.sort((a, b) => new Date(b.date) - new Date(a.date)),
         }));
 
       res.json({ data });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -93,7 +94,7 @@ router.get(
   }),
 );
 
-// Get points breakdown by category
+// Ambil rincian poin berdasarkan kategori
 router.get(
   '/breakdown/:memberId',
   asyncHandler(async (req, res) => {
@@ -109,7 +110,7 @@ router.get(
       const data = breakdown.map((b) => ({ category: b.category, points: b._sum.points || 0 }));
       res.json({ data });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -117,7 +118,7 @@ router.get(
   }),
 );
 
-// Add points (admin required) - works with /points endpoint from frontend
+// Tambah poin (perlu admin) - bekerja dengan endpoint /points dari frontend
 router.post(
   '/points',
   requireAuth,
@@ -128,7 +129,7 @@ router.post(
     const memberIdInt = parseInt(memberId, 10);
     if (isNaN(memberIdInt)) throw new HttpError(400, 'Member ID tidak valid');
 
-    // Map type to category
+
     const category = type?.toUpperCase() === 'ONLINE' ? 'KEHADIRAN' : 'KONTRIBUSI';
 
     const entry = await prisma.memberPoint.create({
@@ -145,7 +146,7 @@ router.post(
   }),
 );
 
-// Update point record (admin required)
+// Update record poin (perlu admin)
 router.patch(
   '/points/:memberId/:pointId',
   requireAuth,
@@ -159,7 +160,7 @@ router.patch(
 
     const { name, points, type, date } = req.body;
 
-    // Find the point record
+
     const pointRecord = await prisma.memberPoint.findUnique({
       where: { id: pointId },
     });
@@ -184,7 +185,7 @@ router.patch(
   }),
 );
 
-// Delete point record (admin required)
+// Hapus record poin (perlu admin)
 router.delete(
   '/points/:memberId/:pointId',
   requireAuth,
@@ -196,7 +197,7 @@ router.delete(
     if (isNaN(memberId)) throw new HttpError(400, 'Member ID tidak valid');
     if (isNaN(pointId)) throw new HttpError(400, 'Point ID tidak valid');
 
-    // Find the point record
+    // Cari record poin
     const pointRecord = await prisma.memberPoint.findUnique({
       where: { id: pointId },
     });
@@ -213,7 +214,7 @@ router.delete(
   }),
 );
 
-// Legacy: Add points (admin required)
+// Legacy: Tambah poin (perlu admin)
 router.post(
   '/',
   requireAuth,

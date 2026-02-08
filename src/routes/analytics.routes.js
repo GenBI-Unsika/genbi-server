@@ -14,7 +14,7 @@ let pageViewsTableReady = false;
 async function ensurePageViewsTable() {
   if (pageViewsTableReady) return;
 
-  // Keep this as a constant DDL string (no user input). Using Unsafe is OK here.
+  // Biarkan ini sebagai string DDL konstan (tanpa input user). Menggunakan Unsafe aman di sini.
   const ddl = `
     CREATE TABLE IF NOT EXISTS page_views (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +44,7 @@ function sha256Hex(value) {
 function normalizePath(input) {
   const p = String(input || '/').trim();
   if (!p.startsWith('/')) return '/';
-  // avoid absurdly long paths bloating DB
+  // hindari path yang terlalu panjang yang membebani DB
   return p.length > 255 ? p.slice(0, 255) : p;
 }
 
@@ -58,7 +58,7 @@ function normalizeOptionalText(input, maxLen) {
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
-    // could be a list like "ip1, ip2"
+    // bisa berupa list seperti "ip1, ip2"
     return forwarded.split(',')[0].trim();
   }
   return req.ip || '';
@@ -89,14 +89,14 @@ function clampInt(value, { min, max, fallback }) {
   return Math.max(min, Math.min(max, n));
 }
 
-// Public: track a page view (used by genbi-client)
+// Publik: lacak tampilan halaman (digunakan oleh genbi-client)
 router.post(
   '/track',
   asyncHandler(async (req, res) => {
     try {
       await ensurePageViewsTable();
     } catch {
-      // Best-effort tracking: if DB isn't reachable, don't break the website.
+      // Tracking best-effort: jika DB tidak dapat dijangkau, jangan merusak website.
       const fallbackVisitorId = req?.body?.visitorId ? String(req.body.visitorId) : crypto.randomUUID();
       return res.status(202).json({ data: { visitorId: fallbackVisitorId, tracked: false } });
     }
@@ -127,8 +127,8 @@ router.post(
         VALUES (${visitorId}, ${path}, ${referrer}, ${userAgent}, ${ipHash})
       `;
     } catch {
-      // If DB is down, don't break the website UX; just no tracking.
-      // Still return visitorId so client can persist it.
+      // Jika DB mati, jangan merusak UX website; cukup tidak ada tracking.
+      // Tetap kembalikan visitorId agar klien dapat menyimpannya.
       return res.status(202).json({ data: { visitorId, tracked: false } });
     }
 
@@ -136,7 +136,7 @@ router.post(
   }),
 );
 
-// Admin: traffic series (views + unique visitors)
+// Admin: seri trafik (tampilan + pengunjung unik)
 router.get(
   '/traffic',
   requireAuth,
@@ -150,7 +150,7 @@ router.get(
     const from = new Date(today);
     from.setDate(from.getDate() - (days - 1));
 
-    // Aggregate by date
+    // Agregasi berdasarkan tanggal
     const rows = await prisma.$queryRaw`
       SELECT
         DATE(created_at) AS day,
@@ -164,7 +164,7 @@ router.get(
 
     const byDay = new Map();
     for (const r of rows || []) {
-      // Prisma can return Date or string depending on driver
+      // Prisma bisa mengembalikan Date atau string tergantung driver
       const dayDate = r.day instanceof Date ? r.day : new Date(String(r.day));
       const key = toDateKey(dayDate);
       byDay.set(key, {
@@ -182,7 +182,7 @@ router.get(
       series.push({ day: toIdLabel(d), views: agg.views, insights: agg.insights });
     }
 
-    // Totals for same range
+    // Total untuk rentang yang sama
     const totalsRow = await prisma.$queryRaw`
       SELECT
         COUNT(*) AS views,

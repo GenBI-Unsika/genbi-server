@@ -4,6 +4,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { HttpError } from '../lib/errors.js';
+import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
@@ -37,7 +38,6 @@ const transactionSchema = z.object({
   reference: z.string().trim().max(100).optional().or(z.literal('')),
 });
 
-// Get treasury recap (public)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -73,17 +73,12 @@ router.get(
 
       res.json({ data });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') return res.json({ data: [] });
+      if (isPrismaMissingTableError(e)) return res.json({ data: [] });
       throw e;
     }
   }),
 );
 
-// ========================
-// KAS UMUM (TRANSACTIONS)
-// ========================
-
-// List transactions (admin only)
 router.get(
   '/transactions',
   requireAuth,
@@ -120,7 +115,6 @@ router.get(
   }),
 );
 
-// Transactions summary totals (admin only)
 router.get(
   '/transactions/summary',
   requireAuth,
@@ -165,7 +159,6 @@ router.get(
   }),
 );
 
-// Create transaction (admin only)
 router.post(
   '/transactions',
   requireAuth,
@@ -198,7 +191,6 @@ router.post(
   }),
 );
 
-// Update transaction (admin only)
 router.patch(
   '/transactions/:id',
   requireAuth,
@@ -232,7 +224,6 @@ router.patch(
   }),
 );
 
-// Delete transaction (admin only)
 router.delete(
   '/transactions/:id',
   requireAuth,
@@ -246,7 +237,6 @@ router.delete(
   }),
 );
 
-// Get treasury summary
 router.get(
   '/summary',
   asyncHandler(async (req, res) => {
@@ -265,7 +255,7 @@ router.get(
         },
       });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: { totalCollected: 0, totalEntries: 0, lunas: 0, belumLunas: 0, sebagian: 0 } });
       }
       throw e;
@@ -273,7 +263,6 @@ router.get(
   }),
 );
 
-// Record treasury payment (admin only)
 router.post(
   '/',
   requireAuth,
@@ -292,7 +281,6 @@ router.post(
   }),
 );
 
-// Bulk update treasury for a member (admin only) - handles row-based updates from frontend
 router.put(
   '/member/:memberId',
   requireAuth,
@@ -304,14 +292,12 @@ router.put(
     const { year, ...monthData } = req.body;
     const periodYear = year || new Date().getFullYear().toString();
 
-    // Verify member exists
     const member = await prisma.teamMember.findUnique({
       where: { id: memberId },
       include: { division: true },
     });
     if (!member) throw new HttpError(404, 'Anggota tidak ditemukan');
 
-    // Update each month
     const updates = [];
     for (const month of MONTHS) {
       if (monthData[month] !== undefined) {
@@ -331,7 +317,6 @@ router.put(
 
     await Promise.all(updates);
 
-    // Return updated row data
     const entries = await prisma.treasuryEntry.findMany({
       where: { memberId, period: { startsWith: periodYear } },
     });
@@ -350,7 +335,6 @@ router.put(
   }),
 );
 
-// Delete treasury entry (admin only)
 router.delete(
   '/:memberId/:period',
   requireAuth,

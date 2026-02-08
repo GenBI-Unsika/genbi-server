@@ -4,19 +4,19 @@ import { asyncHandler } from '../lib/async-handler.js';
 const router = Router();
 
 /**
- * Google Calendar Integration Endpoints
+ * Endpoint Integrasi Google Calendar
  *
- * These endpoints provide integration with Google Calendar API.
- * To fully enable, you need to:
+ * Endpoint ini menyediakan integrasi dengan API Google Calendar.
+ * Untuk mengaktifkan sepenuhnya, Anda perlu:
  * 1. Create a Google Cloud project
  * 2. Enable Google Calendar API
  * 3. Create OAuth2 credentials or Service Account
- * 4. Set environment variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+ * 4. Set variabel environment: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
  *
- * For now, these endpoints provide a structure that can be enhanced later.
+ * Untuk saat ini, endpoint ini menyediakan struktur yang dapat ditingkatkan nanti.
  */
 
-// Configuration status
+// Status konfigurasi
 router.get(
   '/config',
   asyncHandler(async (req, res) => {
@@ -27,7 +27,7 @@ router.get(
         isConfigured,
         features: {
           sync: isConfigured,
-          export: true, // Always available - exports to .ics format
+          export: true,
           import: isConfigured,
         },
       },
@@ -35,7 +35,7 @@ router.get(
   }),
 );
 
-// Generate iCal (.ics) file for single event
+// Generate file iCal (.ics) untuk satu acara
 router.get(
   '/export/:eventId',
   asyncHandler(async (req, res) => {
@@ -62,7 +62,7 @@ router.get(
   }),
 );
 
-// Generate iCal (.ics) file for all events
+// Generate file iCal (.ics) untuk semua acara
 router.get(
   '/export',
   asyncHandler(async (req, res) => {
@@ -81,7 +81,7 @@ router.get(
   }),
 );
 
-// Generate Google Calendar URL for adding event
+// Generate URL Google Calendar untuk menambah acara
 router.get(
   '/google-url/:eventId',
   asyncHandler(async (req, res) => {
@@ -105,10 +105,10 @@ router.get(
   }),
 );
 
-// Helper: Generate ICS content for single event
+// Helper: Generate konten ICS untuk satu acara
 function generateICS(event) {
   const startDate = new Date(event.startDate);
-  const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 3600000); // Default 1 hour
+  const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 3600000);
 
   const formatICSDate = (date) => {
     return date
@@ -134,7 +134,7 @@ END:VEVENT
 END:VCALENDAR`;
 }
 
-// Helper: Generate ICS for multiple events
+// Helper: Generate ICS untuk banyak acara
 function generateICSMultiple(events) {
   const eventBlocks = events
     .map((event) => {
@@ -170,7 +170,7 @@ ${eventBlocks}
 END:VCALENDAR`;
 }
 
-// Helper: Generate Google Calendar URL
+// Helper: Generate URL Google Calendar
 function generateGoogleCalendarUrl(event) {
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 3600000);
@@ -193,7 +193,7 @@ function generateGoogleCalendarUrl(event) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-// Helper: Escape special characters for ICS
+// Helper: Escape karakter khusus untuk ICS
 function escapeICS(text) {
   if (!text) return '';
   return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');

@@ -5,7 +5,7 @@ import { HttpError } from '../lib/errors.js';
 
 const router = Router();
 
-// Get all faculties with their study programs
+// Ambil semua fakultas dengan program studinya
 router.get(
   '/faculties',
   asyncHandler(async (req, res) => {
@@ -30,7 +30,7 @@ router.get(
   }),
 );
 
-// Get study programs by faculty ID
+// Ambil program studi berdasarkan ID fakultas
 router.get(
   '/faculties/:facultyId/study-programs',
   asyncHandler(async (req, res) => {
@@ -55,7 +55,7 @@ router.get(
   }),
 );
 
-// Get all study programs (flat list)
+// Ambil semua program studi (list datar)
 router.get(
   '/study-programs',
   asyncHandler(async (req, res) => {

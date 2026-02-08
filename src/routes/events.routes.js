@@ -3,27 +3,28 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
+import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
-// Determine event mode (online/offline) based on type and location
+// Tentukan mode acara (online/offline) berdasarkan tipe dan lokasi
 const getEventMode = (type, location) => {
   const t = (type || '').toLowerCase();
-  // If type explicitly says online or offline
+  // Jika tipe secara eksplisit mengatakan online atau offline
   if (t === 'online') return 'online';
   if (t === 'offline') return 'offline';
-  // Check if location looks like an online link
+  // Cek jika lokasi terlihat seperti link online
   const loc = (location || '').toLowerCase();
   if (loc.includes('http') || loc.includes('zoom') || loc.includes('meet.google') || loc.includes('teams') || loc.includes('webex')) {
     return 'online';
   }
-  // Default to offline for physical events
+  // Default ke offline untuk acara fisik
   return 'offline';
 };
 
-// Map event to frontend format
+// Petakan acara ke format frontend
 const mapEvent = (e) => {
-  // Extract time from startDate
+  // Ambil waktu dari startDate
   const startDate = new Date(e.startDate);
   const timeStr = startDate.toTimeString().slice(0, 5); // HH:MM
   const dateStr = startDate.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -34,7 +35,7 @@ const mapEvent = (e) => {
     title: e.title,
     description: e.description,
     type: e.type?.toLowerCase() || 'other',
-    mode, // 'online' or 'offline' - for filtering
+    mode, // 'online' atau 'offline' - untuk filtering
     date: dateStr,
     time: e.isAllDay ? null : timeStr,
     startDate: e.startDate,
@@ -45,7 +46,7 @@ const mapEvent = (e) => {
   };
 };
 
-// Get all events (public for calendar)
+// Ambil semua acara (publik untuk kalender)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -56,7 +57,7 @@ router.get(
       });
       res.json({ data: events.map(mapEvent) });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -64,7 +65,7 @@ router.get(
   }),
 );
 
-// Get upcoming events
+// Ambil acara mendatang
 router.get(
   '/upcoming',
   asyncHandler(async (req, res) => {
@@ -78,7 +79,7 @@ router.get(
       });
       res.json({ data: events.map(mapEvent) });
     } catch (e) {
-      if (e?.code === 'P2021' || e?.code === 'P2010') {
+      if (isPrismaMissingTableError(e)) {
         return res.json({ data: [] });
       }
       throw e;
@@ -86,7 +87,7 @@ router.get(
   }),
 );
 
-// Create event (admin required)
+// Buat acara (perlu admin)
 router.post(
   '/',
   requireAuth,
@@ -110,7 +111,7 @@ router.post(
   }),
 );
 
-// Update event
+// Update acara
 router.patch(
   '/:id',
   requireAuth,
@@ -138,7 +139,7 @@ router.patch(
   }),
 );
 
-// Delete event (soft delete)
+// Hapus acara (soft delete)
 router.delete(
   '/:id',
   requireAuth,

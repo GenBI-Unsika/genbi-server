@@ -8,7 +8,6 @@ import { requireAuth, requireSuperAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
-// Get all admin users (super_admin only)
 router.get(
   '/',
   requireAuth,
@@ -19,17 +18,14 @@ router.get(
 
     const where = {};
 
-    // Filter by role if specified
     if (role) {
       where.role = role;
     }
 
-    // Filter by active status
     if (isActive !== undefined) {
       where.isActive = isActive === 'true';
     }
 
-    // Search by email or profile name
     if (search) {
       where.OR = [{ email: { contains: search } }, { profile: { name: { contains: search } } }];
     }
@@ -60,7 +56,6 @@ router.get(
       prisma.user.count({ where }),
     ]);
 
-    // Transform for frontend
     const data = users.map((u) => ({
       id: u.id,
       email: u.email,
@@ -81,7 +76,6 @@ router.get(
   }),
 );
 
-// Get single user
 router.get(
   '/:id',
   requireAuth,
@@ -138,7 +132,6 @@ router.get(
   }),
 );
 
-// Create new admin user (super_admin only)
 router.post(
   '/',
   requireAuth,
@@ -157,7 +150,6 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Check if email already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: body.data.email },
     });
@@ -210,7 +202,6 @@ router.post(
   }),
 );
 
-// Update user (super_admin only)
 router.patch(
   '/:id',
   requireAuth,
@@ -233,7 +224,6 @@ router.patch(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id },
     });
@@ -242,7 +232,6 @@ router.patch(
       throw new HttpError(404, 'User tidak ditemukan');
     }
 
-    // Check email uniqueness if changing email
     if (body.data.email && body.data.email !== existingUser.email) {
       const emailExists = await prisma.user.findUnique({
         where: { email: body.data.email },
@@ -252,7 +241,6 @@ router.patch(
       }
     }
 
-    // Prepare update data
     const userData = {};
     if (body.data.email) userData.email = body.data.email;
     if (body.data.role) userData.role = body.data.role;
@@ -308,7 +296,6 @@ router.patch(
   }),
 );
 
-// Delete user (soft delete - super_admin only)
 router.delete(
   '/:id',
   requireAuth,
@@ -317,7 +304,6 @@ router.delete(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    // Prevent self-deletion
     if (req.auth.userId === id) {
       throw new HttpError(400, 'Tidak dapat menghapus akun sendiri');
     }
@@ -330,7 +316,6 @@ router.delete(
       throw new HttpError(404, 'User tidak ditemukan');
     }
 
-    // Soft delete by setting isActive to false
     await prisma.user.update({
       where: { id },
       data: { isActive: false },
@@ -340,7 +325,6 @@ router.delete(
   }),
 );
 
-// Restore user (super_admin only)
 router.post(
   '/:id/restore',
   requireAuth,

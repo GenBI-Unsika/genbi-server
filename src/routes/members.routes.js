@@ -5,8 +5,8 @@ import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 
 const router = Router();
 
-// Admin: list members sourced from real user accounts (created via Kelola User)
-// Roles included by default: awardee/member/alumni
+// Admin: list member dari akun user asli (dibuat via Kelola User)
+// Role yang disertakan secara default: awardee/member/alumni
 router.get(
   '/admin/all',
   requireAuth,
