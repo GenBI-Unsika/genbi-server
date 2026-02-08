@@ -19,7 +19,7 @@ function getServiceAccountFromEnv() {
 }
 
 export function getDriveClient() {
-  // Easiest path without Workspace admin: OAuth (end-user consent) with refresh token.
+
   const oauthClientId = (env.GDRIVE_OAUTH_CLIENT_ID || env.GOOGLE_CLIENT_ID || '').split(',')[0].trim();
 
   if (oauthClientId && env.GDRIVE_OAUTH_CLIENT_SECRET && env.GDRIVE_OAUTH_REFRESH_TOKEN) {
@@ -108,8 +108,7 @@ export async function downloadDriveFileStream(fileId) {
 
 export async function setDriveFilePublicReadable(fileId) {
   const drive = getDriveClient();
-  // Make file accessible to anyone with the link.
-  // Note: in some org settings this may be blocked by admin policy.
+
   await drive.permissions.create({
     fileId,
     supportsAllDrives: true,
