@@ -7,9 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========================
+
 // ENUMS
-// ========================
+
 
 enum UserRole {
   super_admin
@@ -83,9 +83,9 @@ enum ArticleStatus {
   ARCHIVED
 }
 
-// ========================
+
 // CORE MODELS
-// ========================
+
 
 model User {
   id              Int       @id @default(autoincrement())
@@ -132,6 +132,7 @@ model EmailVerificationToken {
 model UserProfile {
   id                Int       @id @default(autoincrement())
   userId            Int       @unique @map("user_id")
+  attachments Json?
   name              String?
   avatar            String?
   phone             String?
@@ -236,9 +237,9 @@ model AppSetting {
   @@map("app_settings")
 }
 
-// ========================
+
 // DIVISION MANAGEMENT
-// ========================
+
 
 model Division {
   id          Int      @id @default(autoincrement())
@@ -294,9 +295,9 @@ model TeamMember {
   @@map("team_members")
 }
 
-// ========================
+
 // SCHOLARSHIP APPLICATION
-// ========================
+
 
 model ScholarshipApplication {
   id                  Int                           @id @default(autoincrement())
@@ -342,9 +343,9 @@ model ScholarshipApplication {
   @@map("scholarship_applications")
 }
 
-// ========================
+
 // PORTAL GENBI MODELS
-// ========================
+
 
 model Event {
   id          Int       @id @default(autoincrement())
@@ -430,9 +431,9 @@ model TreasuryTransaction {
   @@map("treasury_transactions")
 }
 
-// ========================
+
 // DISPENSATION SYSTEM
-// ========================
+
 
 model Dispensation {
   id           Int                 @id @default(autoincrement())
@@ -474,14 +475,15 @@ model DispensationTemplate {
   @@map("dispensation_templates")
 }
 
-// ========================
+
 // ACTIVITIES / PROKER
-// ========================
+
 
 model Activity {
   id          Int            @id @default(autoincrement())
   title       String
   description String?        @db.Text
+  coverImage  String?        @map("cover_image")
   divisionId  Int?           @map("division_id")
   startDate   DateTime?      @map("start_date")
   endDate     DateTime?      @map("end_date")
@@ -495,6 +497,7 @@ model Activity {
 
   division  Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
   createdBy User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  registrations ActivityRegistration[]
 
   @@index([divisionId])
   @@index([status])
@@ -502,9 +505,30 @@ model Activity {
   @@map("activities")
 }
 
-// ========================
+// Activity Registrations (for public event sign-ups)
+model ActivityRegistration {
+  id          Int       @id @default(autoincrement())
+  activityId  Int       @map("activity_id")
+  name        String
+  email       String
+  phone       String?
+  institution String?
+  notes       String?   @db.Text
+  registeredAt DateTime @default(now()) @map("registered_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, email])
+  @@index([activityId])
+  @@index([email])
+  @@map("activity_registrations")
+}
+
+
 // ARTICLES / BLOG
-// ========================
+
 
 model Article {
   id          Int           @id @default(autoincrement())
@@ -513,6 +537,7 @@ model Article {
   excerpt     String?       @db.Text
   content     String?       @db.LongText
   coverImage  String?       @map("cover_image")
+  attachments Json?
   authorId    Int?          @map("author_id")
   category    String?
   tags        Json?
