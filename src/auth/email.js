@@ -91,7 +91,7 @@ export async function sendVerifyEmail({ toEmail, token, expiresAt }) {
 
     // dev fallback: log link to server console
     // eslint-disable-next-line no-console
-    console.log(`[verify-email] to=${toEmail} link=${link || '(missing FRONTEND_CLIENT_BASE_URL)'}`);
+
     return { ok: true, skipped: true, link };
   }
 

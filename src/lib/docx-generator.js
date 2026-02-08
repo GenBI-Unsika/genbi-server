@@ -4,25 +4,25 @@ import fs from 'fs/promises';
 import path from 'path';
 
 /**
- * Generate a Word document from a template with data
- * @param {string} templatePath - Path to the template file
- * @param {object} data - Data to fill in the template
- * @returns {Buffer} - Generated document as buffer
+ * Generate dokumen Word dari template dengan data
+ * @param {string} templatePath - Path ke file template
+ * @param {object} data - Data untuk mengisi template
+ * @returns {Buffer} - Buffer dokumen yang dihasilkan
  */
 export async function generateWordDocument(templatePath, data) {
   try {
-    // Read template file
+    // Baca file template
     const content = await fs.readFile(templatePath);
     const zip = new PizZip(content);
 
-    // Create docxtemplater instance
+    // Buat instance docxtemplater
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
       nullGetter: () => '-',
     });
 
-    // Set the template data
+    // Set data template
     doc.render(data);
 
     // Generate buffer
@@ -39,7 +39,7 @@ export async function generateWordDocument(templatePath, data) {
 }
 
 /**
- * Format date for Indonesian locale
+ * Format tanggal untuk lokal Indonesia
  * @param {Date|string} date
  * @returns {string}
  */
@@ -51,9 +51,9 @@ export function formatDateIndonesian(date) {
 }
 
 /**
- * Prepare dispensation data for template
- * @param {object} dispensation - Dispensation record from database
- * @returns {object} - Formatted data for template
+ * Siapkan data dispensasi untuk template
+ * @param {object} dispensation - Record dispensasi dari database
+ * @returns {object} - Data yang diformat untuk template
  */
 export function prepareDispensationData(dispensation) {
   return {

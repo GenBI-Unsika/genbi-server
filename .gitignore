@@ -16,3 +16,6 @@ login.json
 
 # Prisma
 prisma/dev.db
+
+# Temp uploads (staging files)
+temp-uploads/
