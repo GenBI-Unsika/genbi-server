@@ -8,17 +8,7 @@ datasource db {
 }
 
 
-// ENUMS
-
-
-enum UserRole {
-  super_admin
-  admin
-  koordinator
-  awardee
-  member
-  alumni
-}
+// ENUMS - UserRole removed in favor of Role table
 
 enum RefreshTokenStatus {
   active
@@ -86,6 +76,17 @@ enum ArticleStatus {
 
 // CORE MODELS
 
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique // super_admin, admin, awardee, alumni
+  displayName String   @map("display_name")
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
 
 model User {
   id              Int       @id @default(autoincrement())
@@ -93,7 +94,10 @@ model User {
   passwordHash    String    @map("password_hash")
   emailVerifiedAt DateTime? @map("email_verified_at")
   googleSub       String?   @unique @map("google_sub")
-  role            UserRole  @default(member)
+  
+  roleId          Int       @map("role_id")
+  role            Role      @relation(fields: [roleId], references: [id])
+  
   isActive        Boolean   @default(true) @map("is_active")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -108,12 +112,15 @@ model User {
   dispensationReviews      Dispensation[]            @relation("DispensationReviewedBy")
   articles                 Article[]
   memberPointsAwarded      MemberPoint[]             @relation("PointAwardedBy")
+  treasuryEntries          TreasuryEntry[]
   treasuryEntriesRecorded  TreasuryEntry[]           @relation("TreasuryRecordedBy")
+  memberPoints             MemberPoint[]
   treasuryTransactions     TreasuryTransaction[]     @relation("TreasuryTransactionCreatedBy")
   eventsCreated            Event[]
   activitiesCreated        Activity[]
 
   @@map("users")
+  @@index([roleId])
 }
 
 model EmailVerificationToken {
@@ -142,7 +149,11 @@ model UserProfile {
   gender            String?
   birthDate         DateTime? @map("birth_date")
   semester          Int?
-  motivasi          String?
+
+  jabatan           String?
+  divisionId        Int?      @map("division_id")
+  socials           Json?
+  sortOrder         Int       @default(0) @map("sort_order")
   bankName          String?   @map("bank_name")
   bankAccountNumber String?   @map("bank_account_number")
   bankAccountName   String?   @map("bank_account_name")
@@ -152,6 +163,7 @@ model UserProfile {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   faculty      Faculty?      @relation(fields: [facultyId], references: [id], onDelete: SetNull)
   studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
+  division     Division?     @relation(fields: [divisionId], references: [id], onDelete: SetNull)
 
   @@index([facultyId])
   @@index([studyProgramId])
@@ -177,7 +189,7 @@ model Faculty {
 model StudyProgram {
   id        Int      @id @default(autoincrement())
   facultyId Int      @map("faculty_id")
-  code      String   @unique
+  code      String
   name      String
   degree    String?
   isActive  Boolean  @default(true) @map("is_active")
@@ -256,7 +268,7 @@ model Division {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  teamMembers TeamMember[]
+  userProfiles UserProfile[]
   activities  Activity[]
 
   @@index([sortOrder])
@@ -264,36 +276,7 @@ model Division {
   @@map("divisions")
 }
 
-model TeamMember {
-  id         Int       @id @default(autoincrement())
-  name       String
-  jabatan    String?
-  divisionId Int       @map("division_id")
-  photo      String?
-  motivasi   String?
-  cerita     String?   @db.Text
-  faculty    String?
-  major      String?
-  cohort     Int?
-  birthDate  DateTime? @map("birth_date")
-  phone      String?
-  email      String?
-  socials    Json?
-  isActive   Boolean   @default(true) @map("is_active")
-  sortOrder  Int       @default(0) @map("sort_order")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
 
-  division        Division        @relation(fields: [divisionId], references: [id], onDelete: Cascade)
-  memberPoints    MemberPoint[]
-  treasuryEntries TreasuryEntry[]
-
-  @@unique([name, divisionId])
-  @@index([divisionId])
-  @@index([isActive, sortOrder])
-  @@index([birthDate])
-  @@map("team_members")
-}
 
 
 // SCHOLARSHIP APPLICATION
@@ -371,7 +354,7 @@ model Event {
 
 model MemberPoint {
   id          Int           @id @default(autoincrement())
-  memberId    Int           @map("member_id")
+  userId      Int           @map("user_id")
   category    PointCategory @default(OTHER)
   points      Int           @default(0)
   description String?
@@ -380,10 +363,10 @@ model MemberPoint {
   awardedById Int?          @map("awarded_by_id")
   createdAt   DateTime      @default(now()) @map("created_at")
 
-  member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
   awardedBy User?      @relation("PointAwardedBy", fields: [awardedById], references: [id], onDelete: SetNull)
 
-  @@index([memberId])
+  @@index([userId])
   @@index([category])
   @@index([awardedAt])
   @@map("member_points")
@@ -391,7 +374,7 @@ model MemberPoint {
 
 model TreasuryEntry {
   id           Int           @id @default(autoincrement())
-  memberId     Int           @map("member_id")
+  userId       Int           @map("user_id")
   period       String
   amount       Int           @default(0)
   status       PaymentStatus @default(BELUM_LUNAS)
@@ -401,11 +384,11 @@ model TreasuryEntry {
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
-  member     TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   recordedBy User?      @relation("TreasuryRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
 
-  @@unique([memberId, period])
-  @@index([memberId])
+  @@unique([userId, period])
+  @@index([userId])
   @@index([period])
   @@index([status])
   @@map("treasury_entries")
