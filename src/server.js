@@ -69,9 +69,49 @@ app.use('/api/v1', apiRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(env.PORT, env.HOST, () => {
+const server = app.listen(env.PORT, env.HOST, () => {
   // eslint-disable-next-line no-console
   const displayHost = env.HOST === '0.0.0.0' ? 'localhost' : env.HOST;
   // eslint-disable-next-line no-console
   console.info(`API listening on http://${displayHost}:${env.PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err?.code === 'EADDRINUSE') {
+    // eslint-disable-next-line no-console
+    console.error(`Port ${env.PORT} is already in use. Stop the other process or set PORT to a different value in .env.`);
+    process.exit(1);
+  }
+
+  // eslint-disable-next-line no-console
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
+
+const gracefulShutdown = () => {
+  // eslint-disable-next-line no-console
+  console.info('Received kill signal, shutting down gracefully');
+  server.close(() => {
+    // eslint-disable-next-line no-console
+    console.info('Closed out remaining connections');
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    // eslint-disable-next-line no-console
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);
+
+// Handle nodemon restart signal
+process.on('SIGUSR2', () => {
+  console.info('Received SIGUSR2 (nodemon restart), closing server');
+  server.close(() => {
+    console.info('Server closed');
+    process.kill(process.pid, 'SIGUSR2');
+  });
 });
