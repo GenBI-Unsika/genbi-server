@@ -16,22 +16,24 @@ router.get(
     const user = await prisma.user.findUnique({
       where: { id: req.auth.userId },
       include: {
+        role: true,
         profile: {
           include: {
             faculty: true,
             studyProgram: true,
+            division: true,
           },
         },
       },
     });
 
-    if (!user) return res.status(404).json({ error: { message: 'User not found' } });
+    if (!user) return res.status(401).json({ error: { message: 'User not found (session invalid)' } });
 
     res.json({
       data: {
         id: user.id,
         email: user.email,
-        role: user.role,
+        role: user.role?.name || 'awardee',
         profile: user.profile,
       },
     });
@@ -52,8 +54,10 @@ router.patch(
       facultyId: z.number().int().positive().nullable().optional(),
       studyProgramId: z.number().int().positive().nullable().optional(),
       semester: z.number().int().min(1).max(14).nullable().optional(),
+      divisionId: z.number().int().nullable().optional(),
+      jabatan: z.string().nullable().optional(),
       phone: z.string().nullable().optional(),
-      motivasi: z.string().max(200).nullable().optional(),
+      socials: z.any().nullable().optional(),
       bankName: z.string().max(50).nullable().optional(),
       bankAccountNumber: z.string().max(30).nullable().optional(),
       bankAccountName: z.string().max(100).nullable().optional(),
@@ -99,8 +103,10 @@ router.patch(
         facultyId: body.data.facultyId,
         studyProgramId: body.data.studyProgramId,
         semester: body.data.semester,
+        divisionId: body.data.divisionId,
+        jabatan: body.data.jabatan,
         phone: body.data.phone,
-        motivasi: body.data.motivasi,
+        socials: body.data.socials,
         bankName: body.data.bankName,
         bankAccountNumber: body.data.bankAccountNumber,
         bankAccountName: body.data.bankAccountName,
@@ -114,8 +120,10 @@ router.patch(
         facultyId: body.data.facultyId !== undefined ? body.data.facultyId : undefined,
         studyProgramId: body.data.studyProgramId !== undefined ? body.data.studyProgramId : undefined,
         semester: body.data.semester !== undefined ? body.data.semester : undefined,
+        divisionId: body.data.divisionId !== undefined ? body.data.divisionId : undefined,
+        jabatan: body.data.jabatan !== undefined ? body.data.jabatan : undefined,
         phone: body.data.phone !== undefined ? body.data.phone : undefined,
-        motivasi: body.data.motivasi !== undefined ? body.data.motivasi : undefined,
+        socials: body.data.socials !== undefined ? body.data.socials : undefined,
         bankName: body.data.bankName !== undefined ? body.data.bankName : undefined,
         bankAccountNumber: body.data.bankAccountNumber !== undefined ? body.data.bankAccountNumber : undefined,
         bankAccountName: body.data.bankAccountName !== undefined ? body.data.bankAccountName : undefined,
@@ -123,6 +131,7 @@ router.patch(
       include: {
         faculty: true,
         studyProgram: true,
+        division: true,
       },
     });
 
