@@ -2,26 +2,78 @@ import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
+import { requireAuth as authMiddleware, requireAdminAccess as adminMiddleware } from '../middleware/auth.js';
 
 const router = Router();
 
-// Ambil semua fakultas dengan program studinya
+// === ROLES ===
+router.get(
+  '/roles',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const roles = await prisma.role.findMany({
+      orderBy: { id: 'asc' },
+    });
+    res.json({ data: roles });
+  }),
+);
+
+router.post(
+  '/roles',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { name, displayName, description } = req.body;
+    const role = await prisma.role.create({
+      data: { name, displayName, description },
+    });
+    res.json({ data: role });
+  }),
+);
+
+router.patch(
+  '/roles/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { displayName, description } = req.body;
+    const role = await prisma.role.update({
+      where: { id: parseInt(id) },
+      data: { displayName, description },
+    });
+    res.json({ data: role });
+  }),
+);
+
+router.delete(
+  '/roles/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    await prisma.role.delete({
+      where: { id: parseInt(id) },
+    });
+    res.json({ message: 'Role deleted' });
+  }),
+);
+
+// === FAKULTAS ===
 router.get(
   '/faculties',
   asyncHandler(async (req, res) => {
     const faculties = await prisma.faculty.findMany({
-      where: { isActive: true },
+      // Admin might want to see inactive ones too? For now, let's keep it consistent or allow filter
+      // If public uses this, we should filter. If admin, maybe not.
+      // Let's allow query param ?all=true for admin
+      where: req.query.all === 'true' ? {} : { isActive: true },
       orderBy: { sortOrder: 'asc' },
       include: {
         studyPrograms: {
-          where: { isActive: true },
+          where: req.query.all === 'true' ? {} : { isActive: true },
           orderBy: { sortOrder: 'asc' },
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            degree: true,
-          },
         },
       },
     });
@@ -30,24 +82,58 @@ router.get(
   }),
 );
 
-// Ambil program studi berdasarkan ID fakultas
-router.get(
-  '/faculties/:facultyId/study-programs',
+router.post(
+  '/faculties',
+  authMiddleware,
+  adminMiddleware,
   asyncHandler(async (req, res) => {
-    const facultyId = parseInt(req.params.facultyId, 10);
-    if (isNaN(facultyId)) throw new HttpError(400, 'Faculty ID tidak valid');
+    const { code, name, sortOrder, isActive } = req.body;
+    const faculty = await prisma.faculty.create({
+      data: { code, name, sortOrder: parseInt(sortOrder) || 0, isActive },
+    });
+    res.json({ data: faculty });
+  }),
+);
 
+router.patch(
+  '/faculties/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { code, name, sortOrder, isActive } = req.body;
+    const faculty = await prisma.faculty.update({
+      where: { id: parseInt(id) },
+      data: { code, name, sortOrder: parseInt(sortOrder) || 0, isActive },
+    });
+    res.json({ data: faculty });
+  }),
+);
+
+router.delete(
+  '/faculties/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    // Check if has relations? Prisma might complain or cascade.
+    // Schema says delete cascade for StudyPrograms, but SetNull for UserProfiles.
+    await prisma.faculty.delete({
+      where: { id: parseInt(id) },
+    });
+    res.json({ message: 'Faculty deleted' });
+  }),
+);
+
+// === PROGRAM STUDI ===
+router.get(
+  '/study-programs',
+  asyncHandler(async (req, res) => {
     const programs = await prisma.studyProgram.findMany({
-      where: {
-        facultyId,
-        isActive: true,
-      },
-      orderBy: { sortOrder: 'asc' },
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        degree: true,
+      where: req.query.all === 'true' ? {} : { isActive: true },
+      orderBy: [{ facultyId: 'asc' }, { sortOrder: 'asc' }],
+      include: {
+        faculty: true,
       },
     });
 
@@ -55,25 +141,63 @@ router.get(
   }),
 );
 
-// Ambil semua program studi (list datar)
-router.get(
+router.post(
   '/study-programs',
+  authMiddleware,
+  adminMiddleware,
   asyncHandler(async (req, res) => {
-    const programs = await prisma.studyProgram.findMany({
-      where: { isActive: true },
-      orderBy: [{ facultyId: 'asc' }, { sortOrder: 'asc' }],
-      include: {
-        faculty: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
+    const { code, name, degree, facultyId, sortOrder, isActive } = req.body;
+    const program = await prisma.studyProgram.create({
+      data: {
+        code,
+        name,
+        degree,
+        facultyId: parseInt(facultyId),
+        sortOrder: parseInt(sortOrder) || 0,
+        isActive,
       },
     });
+    res.json({ data: program });
+  }),
+);
 
-    res.json({ data: programs });
+router.patch(
+  '/study-programs/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    console.log('[DEBUG] PATCH /study-programs/:id', id, req.body);
+    const { code, name, degree, facultyId, sortOrder, isActive } = req.body;
+
+    const program = await prisma.studyProgram.update({
+      where: { id: parseInt(id) },
+      data: {
+        code,
+        name,
+        degree,
+        // Only update facultyId if provided and valid.
+        // If faultyId is provided but invalid integer, it might still crash or be 0.
+        // Better to check if it's a valid number string/int.
+        ...(facultyId ? { facultyId: parseInt(facultyId) } : {}),
+        sortOrder: sortOrder !== undefined ? (parseInt(sortOrder) || 0) : undefined,
+        isActive,
+      },
+    });
+    res.json({ data: program });
+  }),
+);
+
+router.delete(
+  '/study-programs/:id',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    await prisma.studyProgram.delete({
+      where: { id: parseInt(id) },
+    });
+    res.json({ message: 'Study Program deleted' });
   }),
 );
 
