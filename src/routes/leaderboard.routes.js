@@ -27,9 +27,9 @@ router.get(
       const memberIds = [...new Set(allPoints.map((p) => p.memberId))];
 
 
-      const members = await prisma.teamMember.findMany({
+      const members = await prisma.user.findMany({
         where: { id: { in: memberIds } },
-        include: { division: true },
+        include: { profile: { include: { division: true } } },
       });
       const memberMap = new Map(members.map((m) => [m.id, m]));
 
@@ -41,10 +41,10 @@ router.get(
           const member = memberMap.get(point.memberId);
           leaderboardMap.set(point.memberId, {
             id: point.memberId,
-            name: member?.name || 'Unknown',
-            division: member?.division?.name || '-',
-            jabatan: member?.jabatan || '-',
-            photo: member?.photo,
+            name: member?.profile?.name || member?.email || 'Unknown',
+            division: member?.profile?.division?.name || '-',
+            jabatan: member?.profile?.jabatan || '-',
+            photo: member?.profile?.avatar,
             points: 0,
             online: 0,
             offline: 0,

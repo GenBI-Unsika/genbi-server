@@ -43,10 +43,21 @@ router.get(
   asyncHandler(async (req, res) => {
     const { year } = req.query;
     try {
-      const members = await prisma.teamMember.findMany({
-        where: { isActive: true },
-        include: { division: true },
-        orderBy: [{ division: { name: 'asc' } }, { name: 'asc' }],
+      const members = await prisma.user.findMany({
+        where: {
+          role: { name: { in: ['awardee', 'admin', 'super_admin'] } },
+          isActive: true,
+          // Optional: filter by those who have profile setup
+        },
+        include: {
+          profile: {
+            include: { division: true },
+          },
+        },
+        orderBy: [
+          { profile: { division: { name: 'asc' } } },
+          { profile: { name: 'asc' } }
+        ],
       });
 
       const periodPrefix = year || new Date().getFullYear().toString();
@@ -56,15 +67,21 @@ router.get(
 
       const entryMap = new Map();
       entries.forEach((e) => {
-        if (!entryMap.has(e.memberId)) entryMap.set(e.memberId, new Map());
+        if (!entryMap.has(e.userId)) entryMap.set(e.userId, new Map());
         const monthNum = parseInt(e.period.split('-')[1], 10);
         const monthName = getMonthName(monthNum);
-        if (monthName) entryMap.get(e.memberId).set(monthName, e.amount);
+        if (monthName) entryMap.get(e.userId).set(monthName, e.amount);
       });
 
       const data = members.map((m, idx) => {
         const memberEntries = entryMap.get(m.id) || new Map();
-        const row = { id: m.id, no: idx + 1, nama: m.name, jabatan: m.jabatan || m.division?.name };
+        const row = {
+          id: m.id,
+          no: idx + 1,
+          nama: m.profile?.name || m.email,
+          jabatan: m.profile?.jabatan || m.profile?.division?.name || '-',
+          division: m.profile?.division?.name
+        };
         MONTHS.forEach((month) => {
           row[month] = memberEntries.get(month) || 0;
         });
@@ -89,11 +106,11 @@ router.get(
 
     const where = range
       ? {
-          occurredAt: {
-            gte: range.start,
-            lt: range.end,
-          },
-        }
+        occurredAt: {
+          gte: range.start,
+          lt: range.end,
+        },
+      }
       : {};
 
     const rows = await prisma.treasuryTransaction.findMany({
@@ -124,11 +141,11 @@ router.get(
     const range = dateRangeFromQuery({ year, month });
     const where = range
       ? {
-          occurredAt: {
-            gte: range.start,
-            lt: range.end,
-          },
-        }
+        occurredAt: {
+          gte: range.start,
+          lt: range.end,
+        },
+      }
       : {};
 
     const [incomeAgg, expenseAgg] = await Promise.all([
@@ -273,9 +290,9 @@ router.post(
     if (isNaN(memberIdInt)) throw new HttpError(400, 'Member ID tidak valid');
 
     const entry = await prisma.treasuryEntry.upsert({
-      where: { memberId_period: { memberId: memberIdInt, period } },
+      where: { userId_period: { userId: memberIdInt, period } },
       update: { amount: amount || 0, status: status || 'LUNAS', paidAt: new Date(), notes },
-      create: { memberId: memberIdInt, period, amount: amount || 0, status: status || 'LUNAS', paidAt: new Date(), notes, recordedById: req.auth?.userId },
+      create: { userId: memberIdInt, period, amount: amount || 0, status: status || 'LUNAS', paidAt: new Date(), notes, recordedById: req.auth?.userId },
     });
     res.status(201).json({ data: entry });
   }),
@@ -292,9 +309,11 @@ router.put(
     const { year, ...monthData } = req.body;
     const periodYear = year || new Date().getFullYear().toString();
 
-    const member = await prisma.teamMember.findUnique({
+    const member = await prisma.user.findUnique({
       where: { id: memberId },
-      include: { division: true },
+      include: {
+        profile: { include: { division: true } }
+      },
     });
     if (!member) throw new HttpError(404, 'Anggota tidak ditemukan');
 
@@ -307,9 +326,9 @@ router.put(
 
         updates.push(
           prisma.treasuryEntry.upsert({
-            where: { memberId_period: { memberId, period } },
+            where: { userId_period: { userId: memberId, period } },
             update: { amount, status: amount > 0 ? 'LUNAS' : 'BELUM_LUNAS', paidAt: new Date() },
-            create: { memberId, period, amount, status: amount > 0 ? 'LUNAS' : 'BELUM_LUNAS', paidAt: new Date(), recordedById: req.auth?.userId },
+            create: { userId: memberId, period, amount, status: amount > 0 ? 'LUNAS' : 'BELUM_LUNAS', paidAt: new Date(), recordedById: req.auth?.userId },
           }),
         );
       }
@@ -318,10 +337,14 @@ router.put(
     await Promise.all(updates);
 
     const entries = await prisma.treasuryEntry.findMany({
-      where: { memberId, period: { startsWith: periodYear } },
+      where: { userId: memberId, period: { startsWith: periodYear } },
     });
 
-    const row = { id: memberId, nama: member.name, jabatan: member.jabatan || member.division?.name };
+    const row = {
+      id: memberId,
+      nama: member.profile?.name || member.email,
+      jabatan: member.profile?.jabatan || member.profile?.division?.name
+    };
     MONTHS.forEach((m) => {
       row[m] = 0;
     });
@@ -346,12 +369,12 @@ router.delete(
     const { period } = req.params;
 
     const existing = await prisma.treasuryEntry.findUnique({
-      where: { memberId_period: { memberId, period } },
+      where: { userId_period: { userId: memberId, period } },
     });
     if (!existing) throw new HttpError(404, 'Data kas tidak ditemukan');
 
     await prisma.treasuryEntry.delete({
-      where: { memberId_period: { memberId, period } },
+      where: { userId_period: { userId: memberId, period } },
     });
 
     res.json({ message: 'Data kas berhasil dihapus' });
