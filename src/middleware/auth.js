@@ -3,16 +3,14 @@ import { verifyAccessToken } from '../auth/tokens.js';
 
 // Hirarki role - role yang lebih tinggi mencakup izin role yang lebih rendah
 const ROLE_HIERARCHY = {
-  super_admin: 6,
-  admin: 5,
-  koordinator: 4,
+  super_admin: 5,
+  admin: 4,
   awardee: 3,
-  member: 2,
   alumni: 1,
 };
 
 // Role yang dapat mengakses panel admin
-const ADMIN_ROLES = ['super_admin', 'admin', 'koordinator'];
+const ADMIN_ROLES = ['super_admin', 'admin'];
 
 export function requireAuth(req, _res, next) {
   const header = req.headers.authorization || '';
@@ -33,7 +31,7 @@ export function requireAuth(req, _res, next) {
 
     req.auth = {
       userId,
-      role: decoded.role,
+      role: decoded.role, // Assuming token payload now contains role name string
     };
     return next();
   } catch {
@@ -49,7 +47,7 @@ export function requireRole(...roles) {
   };
 }
 
-// Cek jika user memiliki akses level admin (super_admin, admin, atau koordinator)
+// Cek jika user memiliki akses level admin (super_admin, admin)
 export function requireAdminAccess(req, _res, next) {
   if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
   if (!ADMIN_ROLES.includes(req.auth.role)) {
