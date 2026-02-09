@@ -18,7 +18,6 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (_req, file, cb) => {
-
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
@@ -36,13 +35,11 @@ router.get(
   asyncHandler(async (req, res) => {
     const { key } = req.params;
 
-
     if (!CMS_KEYS.includes(key)) {
       throw new HttpError(400, 'Key tidak valid');
     }
 
     const row = await prisma.appSetting.findUnique({ where: { key } });
-
 
     res.json({
       data: row ? { key: row.key, value: row.value } : { key, value: null },
@@ -59,7 +56,6 @@ router.get(
     const rows = await prisma.appSetting.findMany({
       where: { key: { in: CMS_KEYS } },
     });
-
 
     const settings = {};
     for (const key of CMS_KEYS) {
@@ -87,7 +83,6 @@ router.patch(
     if (value === undefined || value === null) {
       throw new HttpError(400, 'Value tidak boleh kosong');
     }
-
 
     const validationError = validateSettingValue(key, value);
     if (validationError) {
@@ -134,7 +129,6 @@ router.post(
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
-
     const fileRecord = await prisma.fileObject.create({
       data: {
         createdById: req.auth.userId,
@@ -144,7 +138,6 @@ router.post(
         sizeBytes: driveFile.size ? Number(driveFile.size) : file.size,
       },
     });
-
 
     const publicUrl = `https://drive.google.com/uc?export=view&id=${driveFile.id}`;
 
@@ -172,9 +165,7 @@ router.delete(
       throw new HttpError(400, 'Key tidak valid');
     }
 
-    await prisma.appSetting.delete({ where: { key } }).catch(() => {
-
-    });
+    await prisma.appSetting.delete({ where: { key } }).catch(() => {});
 
     res.json({ data: { key, deleted: true } });
   }),
@@ -190,30 +181,74 @@ function validateSettingValue(key, value) {
 
   switch (key) {
     case 'cms_hero':
-
-      if (typeof value.title !== 'string') return 'title harus berupa string';
-      if (typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
+      // Validate hero content
+      if (value.headline !== undefined && typeof value.headline !== 'string') return 'headline harus berupa string';
+      if (value.subheadline !== undefined && typeof value.subheadline !== 'string') return 'subheadline harus berupa string';
       break;
 
     case 'cms_about':
-
-      if (typeof value.title !== 'string') return 'title harus berupa string';
-      if (typeof value.description !== 'string') return 'description harus berupa string';
+      // Validate about content
+      if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
+      if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
       break;
 
     case 'cms_cta':
-
-      if (typeof value.title !== 'string') return 'title harus berupa string';
-      if (typeof value.description !== 'string') return 'description harus berupa string';
+      // Validate CTA content
+      if (value.text !== undefined && typeof value.text !== 'string') return 'text harus berupa string';
+      if (value.buttonText !== undefined && typeof value.buttonText !== 'string') return 'buttonText harus berupa string';
       break;
 
     case 'cms_branding':
+      // Validate branding
+      if (value.siteName !== undefined && typeof value.siteName !== 'string') return 'siteName harus berupa string';
+      break;
 
-      if (typeof value.siteName !== 'string') return 'siteName harus berupa string';
+    case 'cms_vision_mission':
+      // Validate vision & mission
+      if (value.vision !== undefined && typeof value.vision !== 'string') return 'vision harus berupa string';
+      if (value.missions !== undefined && !Array.isArray(value.missions)) return 'missions harus berupa array';
+      break;
+
+    case 'cms_faqs':
+      // Validate FAQs
+      if (value.items !== undefined && !Array.isArray(value.items)) return 'items harus berupa array';
+      break;
+
+    case 'cms_testimonials':
+      // Validate testimonials
+      if (value.items !== undefined && !Array.isArray(value.items)) return 'items harus berupa array';
+      break;
+
+    case 'cms_footer':
+      // Validate footer content
+      if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
+      if (value.address !== undefined && typeof value.address !== 'string') return 'address harus berupa string';
+      if (value.socialLinks !== undefined && !Array.isArray(value.socialLinks)) return 'socialLinks harus berupa array';
+      break;
+
+    case 'cms_scholarship':
+      // Validate scholarship section
+      if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
+      if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
+      break;
+
+    case 'cms_hero_avatars':
+      // Validate hero avatars
+      if (value.avatars !== undefined && !Array.isArray(value.avatars)) return 'avatars harus berupa array';
+      break;
+
+    case 'cms_scholarship_page':
+      // Validate scholarship page content (persyaratan beasiswa)
+      if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
+      if (value.subtitle !== undefined && typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
+      if (value.requirements !== undefined && !Array.isArray(value.requirements)) return 'requirements harus berupa array';
+      if (value.documents !== undefined && !Array.isArray(value.documents)) return 'documents harus berupa array';
+      if (value.isOpen !== undefined && typeof value.isOpen !== 'boolean') return 'isOpen harus berupa boolean';
       break;
 
     default:
-      return 'Key tidak dikenal';
+      // Allow any valid object for unrecognized keys that are still in CMS_KEYS
+      break;
   }
 
   return null; // Valid
