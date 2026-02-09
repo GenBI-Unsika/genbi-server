@@ -14,10 +14,18 @@ router.get(
   asyncHandler(async (req, res) => {
     const { role, search, isActive } = req.query;
 
-    const allowedRoles = ['awardee', 'member', 'alumni'];
-    const where = {
-      role: role ? String(role) : { in: allowedRoles },
-    };
+    const allowedRoles = ['super_admin', 'admin', 'awardee'];
+
+    // Logic: if role is specific, use it. if not, allow allowedRoles.
+    // Querying related table in Prisma:
+    // where: { role: { name: ... } }
+
+    const where = {};
+    if (role) {
+      where.role = { name: String(role) };
+    } else {
+      where.role = { name: { in: allowedRoles } };
+    }
 
     if (isActive !== undefined) {
       where.isActive = String(isActive) === 'true';
@@ -34,7 +42,7 @@ router.get(
       select: {
         id: true,
         email: true,
-        role: true,
+        role: true, // Select the relation
         isActive: true,
         createdAt: true,
         profile: {
@@ -53,7 +61,7 @@ router.get(
     const data = users.map((u) => ({
       id: u.id,
       email: u.email,
-      role: u.role,
+      role: u.role?.name || 'member', // Map to string
       isActive: u.isActive,
       createdAt: u.createdAt,
       name: u.profile?.name || null,
