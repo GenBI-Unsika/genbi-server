@@ -41,7 +41,7 @@ export const appRouter = t.router({
     get: protectedProcedure.query(async ({ ctx }) => {
       const user = await prisma.user.findUnique({
         where: { id: ctx.auth.userId },
-        include: { profile: true },
+        include: { profile: true, role: true },
       });
 
       if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
@@ -49,7 +49,7 @@ export const appRouter = t.router({
       return {
         id: user.id,
         email: user.email,
-        role: user.role,
+        role: user.role?.name || 'awardee',
         profile: user.profile,
       };
     }),
