@@ -20,4 +20,30 @@ router.get(
   }),
 );
 
+// Admin: simpan konten Info Center
+router.put(
+  '/',
+  requireAuth,
+  requireAdminAccess,
+  asyncHandler(async (req, res) => {
+    const { sections } = req.body;
+    // Validasi basic
+    if (!Array.isArray(sections)) {
+      res.status(400);
+      throw new Error('Sections must be an array');
+    }
+
+    // Simpan ke AppSetting
+    // Kita wrap dalam object { sections: [...] } agar konsisten
+    const value = { sections };
+    await prisma.appSetting.upsert({
+      where: { key: APP_SETTING_KEYS.INFO_CENTER },
+      update: { value },
+      create: { key: APP_SETTING_KEYS.INFO_CENTER, value },
+    });
+
+    res.json({ message: 'Info Center updated', data: value });
+  }),
+);
+
 export default router;
