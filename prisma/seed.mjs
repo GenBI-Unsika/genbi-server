@@ -26,108 +26,103 @@ const FACULTIES_AND_PROGRAMS = [
     code: 'FH',
     name: 'Fakultas Hukum',
     programs: [
-      { code: 'IH-S2', name: 'Ilmu Hukum', degree: 'S2', ppp: '102' },
-      { code: 'IH-S1', name: 'Ilmu Hukum', degree: 'S1', ppp: '101' },
+      { code: 'IH', name: 'Ilmu Hukum', degree: 'S1' },
+      { code: 'IH', name: 'Ilmu Hukum', degree: 'S2' },
     ],
   },
   {
     code: 'FE',
     name: 'Fakultas Ekonomi',
     programs: [
-      { code: 'MJ-S2', name: 'Manajemen', degree: 'S2', ppp: '205' },
-      { code: 'MJ-S1', name: 'Manajemen', degree: 'S1', ppp: '201' },
-      { code: 'AK-S1', name: 'Akuntansi', degree: 'S1', ppp: '202' },
-      { code: 'AK-D3', name: 'Akuntansi', degree: 'D3', ppp: '203' },
+      { code: 'MNJ', name: 'Manajemen', degree: 'S1' },
+      { code: 'MNJ', name: 'Manajemen', degree: 'S2' },
+      { code: 'AK', name: 'Akuntansi', degree: 'S1' },
+      { code: 'AK', name: 'Akuntansi', degree: 'D3' },
     ],
   },
   {
     code: 'FKIP',
     name: 'Fakultas Keguruan dan Ilmu Pendidikan',
     programs: [
-      { code: 'PM', name: 'Pendidikan Matematika', degree: 'S1', ppp: '301' },
-      { code: 'PLS', name: 'Pendidikan Luar Sekolah', degree: 'S1', ppp: '302' },
-      { code: 'PBSI', name: 'Pendidikan Bahasa & Sastra Indonesia', degree: 'S1', ppp: '303' },
-      { code: 'PJKR', name: 'Pendidikan Jasmani, Kesehatan & Rekreasi', degree: 'S1', ppp: '304' },
-      { code: 'PBI', name: 'Pendidikan Bahasa Inggris', degree: 'S1', ppp: '305' },
+      { code: 'PMTK', name: 'Pendidikan Matematika', degree: 'S1' },
+      { code: 'PLS', name: 'Pendidikan Luar Sekolah', degree: 'S1' },
+      { code: 'PBSI', name: 'Pendidikan Bahasa & Sastra Indonesia', degree: 'S1' },
+      { code: 'PJKR', name: 'Pendidikan Jasmani, Kesehatan & Rekreasi', degree: 'S1' },
+      { code: 'PBI', name: 'Pendidikan Bahasa Inggris', degree: 'S1' },
     ],
   },
   {
-    code: 'FP',
+    code: 'FAPERTA',
     name: 'Fakultas Pertanian',
     programs: [
-      { code: 'AGT', name: 'Agroteknologi', degree: 'S1', ppp: '401' },
-      { code: 'AGB', name: 'Agribisnis', degree: 'S1', ppp: '402' },
+      { code: 'AGT', name: 'Agroteknologi', degree: 'S1' },
+      { code: 'AGB', name: 'Agribisnis', degree: 'S1' },
     ],
   },
   {
     code: 'FT',
     name: 'Fakultas Teknik',
     programs: [
-      { code: 'TK', name: 'Teknik Kimia', degree: 'S1', ppp: '501' },
-      { code: 'TE', name: 'Teknik Elektro', degree: 'S1', ppp: '502' },
-      { code: 'TM-S1', name: 'Teknik Mesin', degree: 'S1', ppp: '503' },
-      { code: 'TI', name: 'Teknik Industri', degree: 'S1', ppp: '504' },
-      { code: 'TL', name: 'Teknik Lingkungan', degree: 'S1', ppp: '505' },
-      { code: 'TM-D3', name: 'Teknik Mesin', degree: 'D3', ppp: '506' },
+      { code: 'TK', name: 'Teknik Kimia', degree: 'S1' },
+      { code: 'TE', name: 'Teknik Elektro', degree: 'S1' },
+      { code: 'TM', name: 'Teknik Mesin', degree: 'S1' },
+      { code: 'TI', name: 'Teknik Industri', degree: 'S1' },
+      { code: 'TL', name: 'Teknik Lingkungan', degree: 'S1' },
+      { code: 'TM', name: 'Teknik Mesin', degree: 'D3' },
     ],
   },
   {
-    code: 'FIKR',
+    code: 'FASILKOM',
     name: 'Fakultas Ilmu Komputer',
     programs: [
-      { code: 'TIF', name: 'Teknik Informatika', degree: 'S1', ppp: '601' },
-      { code: 'SI', name: 'Sistem Informasi', degree: 'S1', ppp: '602' },
+      { code: 'IF', name: 'Informatika', degree: 'S1' },
+      { code: 'SI', name: 'Sistem Informasi', degree: 'S1' },
     ],
   },
   {
     code: 'FISIP',
     name: 'Fakultas Ilmu Sosial dan Ilmu Politik',
     programs: [
-      { code: 'IK', name: 'Ilmu Komunikasi', degree: 'S1', ppp: '701' },
-      { code: 'IP', name: 'Ilmu Pemerintahan', degree: 'S1', ppp: '702' },
-      { code: 'HI', name: 'Hubungan Internasional', degree: 'S1', ppp: '703' },
+      { code: 'ILKOM', name: 'Ilmu Komunikasi', degree: 'S1' },
+      { code: 'IP', name: 'Ilmu Pemerintahan', degree: 'S1' },
+      { code: 'HI', name: 'Hubungan Internasional', degree: 'S1' },
     ],
   },
   {
     code: 'FAI',
     name: 'Fakultas Agama Islam',
     programs: [
-      { code: 'PAI-S2', name: 'Pendidikan Agama Islam', degree: 'S2', ppp: '804' },
-      { code: 'PAI-S1', name: 'Pendidikan Agama Islam', degree: 'S1', ppp: '801' },
-      { code: 'MPI', name: 'Manajemen Pendidikan Islam', degree: 'S1', ppp: '802' },
-      { code: 'PIAUD', name: 'Pendidikan Islam Anak Usia Dini', degree: 'S1', ppp: '803' },
+      { code: 'PAI', name: 'Pendidikan Agama Islam', degree: 'S1' },
+      { code: 'PAI', name: 'Pendidikan Agama Islam', degree: 'S2' },
+      { code: 'MPI', name: 'Manajemen Pendidikan Islam', degree: 'S1' },
+      { code: 'PIAUD', name: 'Pendidikan Islam Anak Usia Dini', degree: 'S1' },
     ],
   },
   {
     code: 'FIKES',
     name: 'Fakultas Ilmu Kesehatan',
     programs: [
-      { code: 'IKOR', name: 'Ilmu Keolahragaan', degree: 'S1', ppp: '901' },
-      { code: 'IGZ', name: 'Ilmu Gizi', degree: 'S1', ppp: '902' },
-      { code: 'FAR', name: 'Farmasi', degree: 'S1', ppp: '903' },
-      { code: 'KEB-D3', name: 'Kebidanan', degree: 'D3', ppp: '904' },
+      { code: 'IKOR', name: 'Ilmu Keolahragaan', degree: 'S1' },
+      { code: 'GZ', name: 'Ilmu Gizi', degree: 'S1' },
+      { code: 'FAR', name: 'Farmasi', degree: 'S1' },
+      { code: 'KBD', name: 'Kebidanan', degree: 'D3' },
     ],
   },
 ];
 
 // Helper to find PPP by major name
 function findPPP(majorName) {
-  for (const f of FACULTIES_AND_PROGRAMS) {
-    for (const p of f.programs) {
-      if (p.name.toLowerCase() === majorName.toLowerCase()) return p.ppp;
-      // Partial match or alias handling if strictly needed
-      if (majorName.toLowerCase().includes(p.name.toLowerCase())) return p.ppp;
-    }
-  }
-  return '999'; // Default/Unknown
-}
-
-// Helper to find Program ID by PPP
-async function findProgramIdByPPP(ppp, prisma) {
-  // We don't store PPP in DB currently, but we seed strictly.
-  // We can find by code if we map back, OR just find by name in the loop.
-  // Better: Store a map during seeding.
-  return null;
+  // Static mapping for common ones if ppp is missing from the new list
+  const pppMap = {
+    'ilmu hukum': '101',
+    'manajemen': '201',
+    'akuntansi': '202',
+    'pendidikan matematika': '301',
+    'teknik informatika': '601',
+    'sistem informasi': '602',
+    // ... basic fallback
+  };
+  return pppMap[majorName.toLowerCase()] || '999';
 }
 
 
@@ -200,8 +195,37 @@ const DIVISIONS = [
   },
 ];
 
+
+
+const DUMMY_ARTICLES = [
+  {
+    title: 'Tips Lolos Beasiswa Bank Indonesia 2026',
+    excerpt: 'Simak tips dan trik jitu untuk lolos seleksi beasiswa Bank Indonesia tahun 2026 mulai dari administrasi hingga wawancara.',
+    content: '<h1>Tips Lolos Beasiswa BI</h1><p>Beasiswa Bank Indonesia adalah salah satu beasiswa prestasi yang paling diminati...</p>',
+    status: 'PUBLISHED',
+  },
+  {
+    title: 'GenBI Unsika Gelar Workshop Digital Marketing',
+    excerpt: 'Divisi Kewirausahaan GenBI Unsika menyelenggarakan workshop digital marketing untuk para pelaku UMKM di Karawang.',
+    content: '<h1>Workshop Digital Marketing</h1><p>Workshop ini bertujuan untuk meningkatkan kapasitas pelaku UMKM dalam memasarkan produk secara digital...</p>',
+    status: 'PUBLISHED',
+  },
+  {
+    title: 'Aksi Bersih Pantai Bersama GenBI',
+    excerpt: 'Sebagai bentuk kepedulian lingkungan, GenBI Unsika melaksanakan aksi bersih pantai di kawasan pantai utara Karawang.',
+    content: '<h1>Aksi Bersih Pantai</h1><p>Lingkungan yang bersih adalah tanggung jawab kita bersama...</p>',
+    status: 'PUBLISHED',
+  },
+];
+
 async function main() {
   console.log('🌱 Starting database seeding...\n');
+
+  // 0. Cleanup existing data (optional, but requested for "bersih")
+  console.log('🧹 Cleaning up faculties and study programs...');
+  await prisma.studyProgram.deleteMany();
+  await prisma.faculty.deleteMany();
+  console.log('✅ Cleanup complete.\n');
 
   // 1. Seed Roles
   console.log('🔰 Seeding Roles...');
@@ -230,24 +254,34 @@ async function main() {
     facultyMap.set(faculty.code, faculty.id);
 
     for (const [progIndex, program] of facultyData.programs.entries()) {
-      const prog = await prisma.studyProgram.upsert({
-        where: { code: program.code },
-        update: {
-          name: program.name,
-          degree: program.degree,
-          facultyId: faculty.id,
-          sortOrder: progIndex,
-          isActive: true, // We don't store PPP in schema yet, just use for NPM gen
-        },
-        create: {
-          code: program.code,
-          name: program.name,
-          degree: program.degree,
-          facultyId: faculty.id,
-          sortOrder: progIndex,
-          isActive: true,
-        },
+      // Find existing program by code within this faculty
+      const existingProg = await prisma.studyProgram.findFirst({
+        where: { code: program.code, facultyId: faculty.id },
       });
+
+      let prog;
+      if (existingProg) {
+        prog = await prisma.studyProgram.update({
+          where: { id: existingProg.id },
+          data: {
+            name: program.name,
+            degree: program.degree,
+            sortOrder: progIndex,
+            isActive: true,
+          },
+        });
+      } else {
+        prog = await prisma.studyProgram.create({
+          data: {
+            code: program.code,
+            name: program.name,
+            degree: program.degree,
+            facultyId: faculty.id,
+            sortOrder: progIndex,
+            isActive: true,
+          },
+        });
+      }
       programMap.set(program.name.toLowerCase(), prog.id); // Map name to ID
     }
   }
@@ -270,28 +304,7 @@ async function main() {
 
   // 4. Seed Users
   console.log('👥 Seeding Users...');
-  const adminEmail = required('SEED_ADMIN_EMAIL');
-  const adminPassword = required('SEED_ADMIN_PASSWORD');
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
-
-  // Seed Super Admin
-  await prisma.user.upsert({
-    where: { email: adminEmail.toLowerCase() },
-    update: {
-      roleId: roleMap.get('super_admin'),
-      isActive: true,
-      passwordHash,
-      emailVerifiedAt: new Date(),
-    },
-    create: {
-      email: adminEmail.toLowerCase(),
-      roleId: roleMap.get('super_admin'),
-      isActive: true,
-      passwordHash,
-      emailVerifiedAt: new Date(),
-      profile: { create: { name: 'Super Admin GenBI' } },
-    },
-  });
+  const passwordHash = await bcrypt.hash('password', 12);
 
   // Prepare for NPM Generation
   // YY 1063 PPP NNNN
@@ -440,6 +453,30 @@ async function main() {
       isActive: true,
     }
   });
+
+  // 7. Seed Articles
+  console.log('✍️ Seeding initial articles...');
+  for (const art of DUMMY_ARTICLES) {
+    const slug = art.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    await prisma.article.upsert({
+      where: { slug },
+      update: {
+        ...art,
+        slug,
+        authorId: createdUsers[0]?.id || null, // Assign to first seeded user
+      },
+      create: {
+        title: art.title,
+        slug,
+        excerpt: art.excerpt,
+        content: art.content,
+        status: art.status,
+        authorId: createdUsers[0]?.id || null,
+        publishedAt: art.status === 'PUBLISHED' ? new Date() : null,
+      },
+    });
+  }
+  console.log('✅ Articles seeded.\n');
 
   console.log('✅ Database seeding completed successfully!\n');
 }

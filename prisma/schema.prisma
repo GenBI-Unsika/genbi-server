@@ -463,20 +463,24 @@ model DispensationTemplate {
 
 
 model Activity {
-  id          Int            @id @default(autoincrement())
-  title       String
-  description String?        @db.Text
-  coverImage  String?        @map("cover_image")
-  divisionId  Int?           @map("division_id")
-  startDate   DateTime?      @map("start_date")
-  endDate     DateTime?      @map("end_date")
-  location    String?
-  status      ActivityStatus @default(PLANNED)
-  budget      Int?
-  createdById Int?           @map("created_by_id")
-  isActive    Boolean        @default(true) @map("is_active")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String?        @db.Text
+  coverImage      String?        @map("cover_image")
+  theme           String?        // Tema untuk Proker
+  publicationDate DateTime?      @map("publication_date") // Tanggal publikasi untuk Proker
+  attachments     Json?          // Multi-file attachments (photos, documents, etc.)
+  benefits        Json?          // Manfaat kegiatan (array of strings)
+  divisionId      Int?           @map("division_id")
+  startDate       DateTime?      @map("start_date")
+  endDate         DateTime?      @map("end_date")
+  location        String?
+  status          ActivityStatus @default(PLANNED)
+  budget          Int?
+  createdById     Int?           @map("created_by_id")
+  isActive        Boolean        @default(true) @map("is_active")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
 
   division  Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
   createdBy User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
@@ -510,32 +514,31 @@ model ActivityRegistration {
 }
 
 
+
 // ARTICLES / BLOG
 
 
-model Article {
-  id          Int           @id @default(autoincrement())
-  title       String
-  slug        String        @unique
-  excerpt     String?       @db.Text
-  content     String?       @db.LongText
-  coverImage  String?       @map("cover_image")
-  attachments Json?
-  authorId    Int?          @map("author_id")
-  category    String?
-  tags        Json?
-  status      ArticleStatus @default(DRAFT)
-  publishedAt DateTime?     @map("published_at")
-  viewCount   Int           @default(0) @map("view_count")
-  isActive    Boolean       @default(true) @map("is_active")
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
 
-  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+model Article {
+  id          Int              @id @default(autoincrement())
+  title       String
+  slug        String           @unique
+  excerpt     String?          @db.Text
+  content     String?          @db.LongText
+  coverImage  String?          @map("cover_image")
+  attachments Json?
+  authorId    Int?             @map("author_id")
+  status      ArticleStatus    @default(DRAFT)
+  publishedAt DateTime?        @map("published_at")
+  viewCount   Int              @default(0) @map("view_count")
+  isActive    Boolean          @default(true) @map("is_active")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  author   User?             @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([slug])
   @@index([status])
-  @@index([authorId])
   @@index([publishedAt])
   @@map("articles")
 }
