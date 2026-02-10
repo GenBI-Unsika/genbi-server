@@ -67,7 +67,7 @@ const defaultTestimonials = [
     name: 'Alumni GenBI',
     role: 'Ketua Umum 2023',
     quote: 'GenBI memberikan pengalaman organisasi yang luar biasa dan kesempatan untuk berkontribusi kepada masyarakat.',
-    photo_profile: 'https://ui-avatars.com/api/?name=Alumni+1&background=random',
+    photo_profile: '',
   },
 ];
 
@@ -213,7 +213,6 @@ router.get(
       status: 'PUBLISHED',
     };
 
-    if (category) where.category = category;
     if (search) {
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }];
     }
@@ -230,8 +229,6 @@ router.get(
           slug: true,
           excerpt: true,
           coverImage: true,
-          category: true,
-          tags: true,
           publishedAt: true,
           viewCount: true,
           author: {
@@ -250,11 +247,9 @@ router.get(
       slug: a.slug,
       excerpt: a.excerpt,
       image: a.coverImage,
-      category: a.category,
-      tags: a.tags,
       date: a.publishedAt,
       author: a.author?.profile?.name || 'GenBI Unsika',
-      badge: a.category || 'Artikel',
+      badge: 'Artikel',
       href: `/articles/${a.slug}`,
     }));
 
@@ -387,41 +382,151 @@ router.get(
 router.get(
   '/teams',
   asyncHandler(async (req, res) => {
-    const { period, divisionId } = req.query;
+    const { divisionId, search } = req.query;
 
-    const where = { isActive: true };
-    if (period) where.period = period;
+    const where = {
+      isActive: true,
+      role: { name: { in: ['awardee', 'admin', 'super_admin'] } },
+    };
+
     if (divisionId) {
-      const divId = parseInt(divisionId, 10);
-      if (!isNaN(divId)) where.divisionId = divId;
+      where.profile = { divisionId: parseInt(divisionId, 10) };
     }
 
-    const teams = await prisma.team.findMany({
+    if (search) {
+      where.profile = {
+        ...where.profile,
+        OR: [{ name: { contains: search } }, { jabatan: { contains: search } }, { studyProgram: { name: { contains: search } } }],
+      };
+    }
+
+    const users = await prisma.user.findMany({
       where,
-      orderBy: [{ period: 'desc' }, { sortOrder: 'asc' }],
       include: {
-        division: true,
-        user: {
-          select: {
-            profile: {
-              select: { name: true, avatar: true },
-            },
+        profile: {
+          include: {
+            division: true,
+            faculty: true,
+            studyProgram: true,
           },
         },
+        role: true,
       },
+      orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
 
-    const data = teams.map((t) => ({
-      id: t.id,
-      name: t.user?.profile?.name || t.name,
-      position: t.position,
-      division: t.division?.name || null,
-      period: t.period,
-      image: t.user?.profile?.avatar || t.photo,
-      socialMedia: t.socialMedia,
+    const data = users.map((u) => ({
+      id: u.id,
+      name: u.profile?.name || u.email?.split('@')[0],
+      position: u.profile?.jabatan || null,
+      jabatan: u.profile?.jabatan || null,
+      division: u.profile?.division?.name || null,
+      image: u.profile?.avatar || null,
+      photo: u.profile?.avatar || null,
+      major: u.profile?.studyProgram?.name || null,
+      studyProgram: u.profile?.studyProgram?.name || null,
+      faculty: u.profile?.faculty?.name || null,
+      socials: u.profile?.socials || null,
+      socialMedia: u.profile?.socials || null,
     }));
 
     res.json({ data });
+  }),
+);
+
+// GLOBAL SEARCH
+
+router.get(
+  '/search',
+  asyncHandler(async (req, res) => {
+    const { q } = req.query;
+
+    if (!q || q.length < 2) {
+      return res.json({ data: [] });
+    }
+
+    const [articles, activities, members] = await Promise.all([
+      // Search Articles
+      prisma.article.findMany({
+        where: {
+          isActive: true,
+          status: 'PUBLISHED',
+          OR: [{ title: { contains: q } }, { excerpt: { contains: q } }],
+        },
+        take: 5,
+        select: { id: true, title: true, slug: true, coverImage: true },
+      }),
+      // Search Activities (Events/Proker)
+      prisma.activity.findMany({
+        where: {
+          isActive: true,
+          OR: [{ title: { contains: q } }, { description: { contains: q } }],
+        },
+        take: 5,
+        select: { id: true, title: true, coverImage: true, status: true },
+      }),
+      // Search Members
+      prisma.user.findMany({
+        where: {
+          isActive: true,
+          role: { name: { in: ['awardee', 'admin', 'super_admin'] } },
+          profile: {
+            OR: [{ name: { contains: q } }, { jabatan: { contains: q } }],
+          },
+        },
+        take: 5,
+        include: { profile: { select: { name: true, avatar: true, jabatan: true } } },
+      }),
+    ]);
+
+    const staticPages = [
+      { title: 'Beranda', href: '/' },
+      { title: 'Tentang Kami', href: '/history' },
+      { title: 'Sejarah GenBI', href: '/history' },
+      { title: 'Struktur Organisasi (Tim)', href: '/teams' },
+      { title: 'Beasiswa Bank Indonesia', href: '/scholarship' },
+      { title: 'Pendaftaran Beasiswa', href: '/scholarship/register' },
+      { title: 'Event & Kegiatan', href: '/events' },
+      { title: 'Program Kerja (Proker)', href: '/proker' },
+      { title: 'Artikel & Berita', href: '/articles' },
+      { title: 'Login / Masuk', href: '/signin' },
+      { title: 'Daftar Akun', href: '/signup' },
+    ];
+
+    const matchedPages = staticPages.filter((page) => page.title.toLowerCase().includes(q.toLowerCase()));
+
+    const results = [
+      ...matchedPages.map((p) => ({
+        id: `page-${p.href}`,
+        title: p.title,
+        type: 'Menu',
+        image: null, // Could add a generic icon if needed, or frontend handles null
+        href: p.href,
+      })),
+      ...articles.map((a) => ({
+        id: a.id,
+        title: a.title,
+        type: 'Artikel',
+        image: a.coverImage,
+        href: `/articles/${a.slug}`,
+      })),
+      ...activities.map((a) => ({
+        id: a.id,
+        title: a.title,
+        type: a.status === 'FINISHED' ? 'Program Kerja' : 'Event',
+        image: a.coverImage,
+        href: a.status === 'FINISHED' ? `/proker/${a.id}` : `/events/${a.id}`,
+      })),
+      ...members.map((m) => ({
+        id: m.id,
+        title: m.profile?.name || m.email?.split('@')[0],
+        type: m.profile?.jabatan || 'Anggota',
+        image: m.profile?.avatar,
+        href: `/teams`, // Teams page filters aren't deep-linkable easily yet, but we can point there
+      })),
+    ];
+
+    res.json({ data: results });
   }),
 );
 
@@ -438,7 +543,8 @@ router.get(
         name: true,
         description: true,
         icon: true,
-        color: true,
+        gradient: true,
+        textColor: true,
       },
     });
 

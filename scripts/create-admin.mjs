@@ -42,10 +42,17 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
+  // Resolve role name to role ID
+  const roleRecord = await prisma.role.findUnique({ where: { name: role } });
+  if (!roleRecord) {
+    console.error(`Role '${role}' not found in database. Make sure roles are seeded first.`);
+    process.exit(2);
+  }
+
   const user = await prisma.user.upsert({
     where: { email },
     update: {
-      role,
+      roleId: roleRecord.id,
       isActive: true,
       passwordHash,
       emailVerifiedAt: shouldMarkVerified ? new Date() : undefined,
@@ -61,12 +68,12 @@ async function main() {
     create: {
       email,
       passwordHash,
-      role,
+      roleId: roleRecord.id,
       isActive: true,
       emailVerifiedAt: shouldMarkVerified ? new Date() : undefined,
       profile: name ? { create: { name } } : undefined,
     },
-    select: { id: true, email: true, role: true, isActive: true, emailVerifiedAt: true },
+    select: { id: true, email: true, roleId: true, role: true, isActive: true, emailVerifiedAt: true },
   });
 
   console.log('Admin user ready:');

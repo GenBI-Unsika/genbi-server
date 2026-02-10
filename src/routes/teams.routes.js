@@ -4,6 +4,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
+import { finalizeUpload } from '../lib/file-utils.js';
 
 const router = Router();
 
@@ -17,9 +18,9 @@ function transformUserToMember(user) {
     division: user.profile?.division?.name || null,
     divisionKey: user.profile?.division?.key || null,
     photo: user.profile?.avatar || null,
-    photo: user.profile?.avatar || null,
     faculty: user.profile?.faculty?.name || null,
     major: user.profile?.studyProgram?.name || null,
+    studyProgram: user.profile?.studyProgram?.name || null,
     cohort: user.profile?.semester, // Mapping approximate
     birthDate: user.profile?.birthDate || null,
     phone: user.profile?.phone || null,
@@ -33,7 +34,6 @@ function transformUserToMember(user) {
     gender: user.profile?.gender || null,
   };
 }
-
 
 // Public: get users with specific roles
 router.get(
@@ -50,15 +50,11 @@ router.get(
             division: true,
             faculty: true,
             studyProgram: true,
-          }
+          },
         },
         role: true,
       },
-      orderBy: [
-        { profile: { sortOrder: 'asc' } },
-        { profile: { division: { name: 'asc' } } },
-        { profile: { name: 'asc' } }
-      ],
+      orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
 
     res.json({ data: users.map(transformUserToMember) });
@@ -81,15 +77,11 @@ router.get(
             division: true,
             faculty: true,
             studyProgram: true,
-          }
+          },
         },
         role: true,
       },
-      orderBy: [
-        { profile: { sortOrder: 'asc' } },
-        { profile: { division: { name: 'asc' } } },
-        { profile: { name: 'asc' } }
-      ],
+      orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
     res.json({ data: users.map(transformUserToMember) });
   }),
@@ -107,7 +99,7 @@ router.post(
       divisionId: z.number().int().positive(),
       division: z.string().optional(),
       photo: z.string().nullable().optional(),
-      photo: z.string().nullable().optional(),
+      photoTempId: z.string().optional(),
       faculty: z.string().nullable().optional(),
       major: z.string().nullable().optional(),
       cohort: z.number().int().nullable().optional(),
@@ -143,12 +135,16 @@ router.post(
 
     if (user) {
       // Update existing user to awardee
+      const updateRoleName = body.data.role || 'awardee';
+      const updateRoleRecord = await prisma.role.findUnique({ where: { name: updateRoleName } });
+      if (!updateRoleRecord) throw new HttpError(400, 'Role tidak valid');
+
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
-          role: body.data.role || 'awardee',
+          roleId: updateRoleRecord.id,
           isActive: body.data.isActive ?? true,
-        }
+        },
       });
     } else {
       // Create new user
@@ -166,8 +162,19 @@ router.post(
           roleId: roleRecord.id, // Use roleId
           isActive: body.data.isActive ?? true,
           emailVerifiedAt: new Date(),
-        }
+        },
       });
+    }
+
+    // Finalize photo if staged
+    let photo = body.data.photo;
+    if (body.data.photoTempId) {
+      const finalized = await finalizeUpload({
+        tempId: body.data.photoTempId,
+        userId: req.auth.userId,
+        folder: 'profiles/avatars',
+      });
+      photo = finalized.publicUrl;
     }
 
     // Upsert Profile
@@ -179,8 +186,7 @@ router.post(
         npm: body.data.npm,
         divisionId,
         jabatan: body.data.jabatan,
-        avatar: body.data.photo,
-        avatar: body.data.photo,
+        avatar: photo,
         phone: body.data.phone,
         birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
         sortOrder: body.data.sortOrder || 0,
@@ -192,21 +198,20 @@ router.post(
         npm: body.data.npm,
         divisionId,
         jabatan: body.data.jabatan,
-        avatar: body.data.photo,
-        avatar: body.data.photo,
+        avatar: photo,
         phone: body.data.phone,
         birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
         sortOrder: body.data.sortOrder || 0,
         socials: body.data.socials || undefined,
-      }
+      },
     });
 
     // Re-fetch full object
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
-        profile: { include: { division: true, faculty: true, studyProgram: true } }
-      }
+        profile: { include: { division: true, faculty: true, studyProgram: true } },
+      },
     });
 
     res.status(201).json({ data: transformUserToMember(fullUser) });
@@ -228,7 +233,7 @@ router.patch(
       divisionId: z.number().int().positive().optional(),
       division: z.string().optional(),
       photo: z.string().nullable().optional(),
-      photo: z.string().nullable().optional(),
+      photoTempId: z.string().optional(),
       faculty: z.string().nullable().optional(),
       major: z.string().nullable().optional(),
       cohort: z.number().int().nullable().optional(),
@@ -272,8 +277,19 @@ router.patch(
 
     await prisma.user.update({
       where: { id },
-      data: updateData
+      data: updateData,
     });
+
+    // Finalize photo if staged
+    let finalPhoto = body.data.photo;
+    if (body.data.photoTempId) {
+      const finalized = await finalizeUpload({
+        tempId: body.data.photoTempId,
+        userId: req.auth.userId,
+        folder: 'profiles/avatars',
+      });
+      finalPhoto = finalized.publicUrl;
+    }
 
     // Update Profile
     await prisma.userProfile.upsert({
@@ -288,20 +304,19 @@ router.patch(
         npm: body.data.npm,
         divisionId,
         jabatan: body.data.jabatan,
-        avatar: body.data.photo,
-        avatar: body.data.photo,
+        avatar: finalPhoto,
         phone: body.data.phone,
         birthDate: body.data.birthDate !== undefined ? (body.data.birthDate ? new Date(body.data.birthDate) : null) : undefined,
         sortOrder: body.data.sortOrder,
         socials: body.data.socials,
-      }
+      },
     });
 
     const fullUser = await prisma.user.findUnique({
       where: { id },
       include: {
-        profile: { include: { division: true, faculty: true, studyProgram: true } }
-      }
+        profile: { include: { division: true, faculty: true, studyProgram: true } },
+      },
     });
 
     res.json({ data: transformUserToMember(fullUser) });
@@ -310,8 +325,8 @@ router.patch(
 
 // Admin: hapus anggota (Soft delete / Deactivate or Hard Delete?)
 // Assuming hard delete for "hapus anggota" context, or just remove role/profile info?
-// For now: Deactivate user or Delete user? 
-// Let's just delete the user record to be consistent with previous "Delete TeamMember" behavior, 
+// For now: Deactivate user or Delete user?
+// Let's just delete the user record to be consistent with previous "Delete TeamMember" behavior,
 // BUT this is dangerous if they have other data.
 // Better: Clear Profile Division info and set role to 'member' (regular user) instead of deleting Account.
 router.delete(
@@ -326,12 +341,15 @@ router.delete(
     // await prisma.user.delete({ where: { id } });
 
     // Option 2: Downgrade to regular member (Safe)
+    const memberRole = await prisma.role.findUnique({ where: { name: 'member' } });
+    if (!memberRole) throw new HttpError(500, 'Role member tidak ditemukan');
+
     await prisma.user.update({
       where: { id },
       data: {
-        role: 'member',
+        roleId: memberRole.id,
         isActive: false,
-      }
+      },
     });
 
     // Also clear specific profile fields? Maybe not needed.
@@ -352,4 +370,3 @@ router.get(
 );
 
 export default router;
-
