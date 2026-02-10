@@ -21,6 +21,7 @@ import analyticsRoutes from './analytics.routes.js';
 import infoCenterRoutes from './info-center.routes.js';
 import publicRoutes from './public.routes.js';
 
+
 const router = Router();
 
 // Route publik (tanpa auth) - untuk genbi-client
@@ -47,5 +48,6 @@ router.use('/users', usersRoutes);
 router.use('/members', membersRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/info-center', infoCenterRoutes);
+
 
 export default router;

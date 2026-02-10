@@ -129,8 +129,19 @@ router.delete(
 router.get(
   '/study-programs',
   asyncHandler(async (req, res) => {
+    const { all, facultyId } = req.query;
+
+    const where = all === 'true' ? {} : { isActive: true };
+
+    if (facultyId) {
+      const parsedId = parseInt(facultyId);
+      if (!isNaN(parsedId)) {
+        where.facultyId = parsedId;
+      }
+    }
+
     const programs = await prisma.studyProgram.findMany({
-      where: req.query.all === 'true' ? {} : { isActive: true },
+      where,
       orderBy: [{ facultyId: 'asc' }, { sortOrder: 'asc' }],
       include: {
         faculty: true,

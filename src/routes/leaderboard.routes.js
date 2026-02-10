@@ -18,14 +18,11 @@ router.get(
   '/',
   asyncHandler(async (req, res) => {
     try {
-
       const allPoints = await prisma.memberPoint.findMany({
         orderBy: { awardedAt: 'desc' },
       });
 
-
-      const memberIds = [...new Set(allPoints.map((p) => p.memberId))];
-
+      const memberIds = [...new Set(allPoints.map((p) => p.userId))];
 
       const members = await prisma.user.findMany({
         where: { id: { in: memberIds } },
@@ -33,14 +30,13 @@ router.get(
       });
       const memberMap = new Map(members.map((m) => [m.id, m]));
 
-
       const leaderboardMap = new Map();
 
       for (const point of allPoints) {
-        if (!leaderboardMap.has(point.memberId)) {
-          const member = memberMap.get(point.memberId);
-          leaderboardMap.set(point.memberId, {
-            id: point.memberId,
+        if (!leaderboardMap.has(point.userId)) {
+          const member = memberMap.get(point.userId);
+          leaderboardMap.set(point.userId, {
+            id: point.userId,
             name: member?.profile?.name || member?.email || 'Unknown',
             division: member?.profile?.division?.name || '-',
             jabatan: member?.profile?.jabatan || '-',
@@ -52,9 +48,8 @@ router.get(
           });
         }
 
-        const entry = leaderboardMap.get(point.memberId);
+        const entry = leaderboardMap.get(point.userId);
         entry.points += point.points || 0;
-
 
         const type = point.category === 'ONLINE' || point.description?.toLowerCase().includes('online') ? 'online' : 'offline';
 
@@ -73,7 +68,6 @@ router.get(
           category: point.category,
         });
       }
-
 
       const data = Array.from(leaderboardMap.values())
         .sort((a, b) => b.points - a.points)
@@ -104,7 +98,7 @@ router.get(
 
       const breakdown = await prisma.memberPoint.groupBy({
         by: ['category'],
-        where: { memberId },
+        where: { userId: memberId },
         _sum: { points: true },
       });
       const data = breakdown.map((b) => ({ category: b.category, points: b._sum.points || 0 }));
@@ -129,17 +123,16 @@ router.post(
     const memberIdInt = parseInt(memberId, 10);
     if (isNaN(memberIdInt)) throw new HttpError(400, 'Member ID tidak valid');
 
-
     const category = type?.toUpperCase() === 'ONLINE' ? 'KEHADIRAN' : 'KONTRIBUSI';
 
     const entry = await prisma.memberPoint.create({
       data: {
-        memberId: memberIdInt,
+        userId: memberIdInt,
         category,
         points: parseInt(points, 10) || 0,
         description: name,
         awardedAt: date ? new Date(date) : new Date(),
-        awardedBy: req.auth?.userId,
+        awardedById: req.auth?.userId,
       },
     });
     res.status(201).json({ data: entry });
@@ -160,12 +153,11 @@ router.patch(
 
     const { name, points, type, date } = req.body;
 
-
     const pointRecord = await prisma.memberPoint.findUnique({
       where: { id: pointId },
     });
 
-    if (!pointRecord || pointRecord.memberId !== memberId) {
+    if (!pointRecord || pointRecord.userId !== memberId) {
       return res.status(404).json({ error: 'Point record not found' });
     }
 
@@ -202,7 +194,7 @@ router.delete(
       where: { id: pointId },
     });
 
-    if (!pointRecord || pointRecord.memberId !== memberId) {
+    if (!pointRecord || pointRecord.userId !== memberId) {
       return res.status(404).json({ error: 'Point record not found' });
     }
 
@@ -229,12 +221,12 @@ router.post(
 
     const entry = await prisma.memberPoint.create({
       data: {
-        memberId: memberIdInt,
+        userId: memberIdInt,
         category: category || 'OTHER',
         points: points || 0,
         description,
         eventId: eventIdInt,
-        awardedBy: req.auth?.userId,
+        awardedById: req.auth?.userId,
       },
     });
     res.status(201).json({ data: entry });

@@ -69,7 +69,7 @@ export async function finalizeUpload({ tempId, userId, folder }) {
       name: driveFile.name || tempMeta.originalName,
       mimeType: driveFile.mimeType || tempMeta.mimeType,
       sizeBytes: driveFile.size ? Number(driveFile.size) : tempMeta.size,
-      folder: folder || null,
+      // Note: folder is used for Drive organization but not stored in DB
     },
   });
 

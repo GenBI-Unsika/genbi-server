@@ -4,6 +4,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
+import { finalizeUpload } from '../lib/file-utils.js';
 
 const router = Router();
 
@@ -90,6 +91,9 @@ router.post(
       title: z.string().min(1, 'Judul wajib diisi'),
       description: z.string().optional(),
       coverImage: z.string().trim().max(500).nullable().optional(),
+      theme: z.string().max(255).nullable().optional(), // Tema untuk Proker
+      publicationDate: z.string().nullable().optional(), // Tanggal publikasi untuk Proker
+      benefits: z.array(z.string()).nullable().optional(), // Manfaat kegiatan
       attachments: z
         .object({
           photos: z.array(attachmentFileSchema).optional(),
@@ -106,12 +110,13 @@ router.post(
         .passthrough()
         .nullable()
         .optional(),
-      divisionId: z.number().int().positive().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-      location: z.string().optional(),
+      divisionId: z.number().int().positive().nullable().optional(),
+      startDate: z.string().nullable().optional(),
+      endDate: z.string().nullable().optional(),
+      location: z.string().nullable().optional(),
       status: z.enum(['DRAFT', 'PLANNED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
-      budget: z.number().optional(),
+      budget: z.number().nullable().optional(),
+      coverImageTempId: z.string().optional(), // New field for staged upload
     });
 
     const body = schema.safeParse(req.body);
@@ -119,18 +124,56 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
+    // Process attachments and cover image finalization
+    let coverImage = body.data.coverImage;
+    if (body.data.coverImageTempId) {
+      const finalized = await finalizeUpload({
+        tempId: body.data.coverImageTempId,
+        userId: req.auth.userId,
+        folder: 'activities/covers',
+      });
+      coverImage = finalized.publicUrl;
+    }
+
+    // Handle attachments - they might already be finalized objects or tempIds from earlier
+    let attachments = body.data.attachments || null;
+    if (attachments) {
+      const photos = await Promise.all(
+        (attachments.photos || []).map(async (p) => {
+          if (p.tempId) {
+            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: 'activities/photos' });
+            return { name: p.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
+          }
+          return p;
+        }),
+      );
+      const documents = await Promise.all(
+        (attachments.documents || []).map(async (d) => {
+          if (d.tempId) {
+            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: 'activities/documents' });
+            return { name: d.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
+          }
+          return d;
+        }),
+      );
+      attachments = { photos, documents, links: attachments.links || [] };
+    }
+
     const activity = await prisma.activity.create({
       data: {
         title: body.data.title,
         description: body.data.description,
-        coverImage: body.data.coverImage ?? null,
-        attachments: body.data.attachments ?? undefined,
-        divisionId: body.data.divisionId,
+        coverImage: coverImage ?? null,
+        theme: body.data.theme ?? null,
+        publicationDate: body.data.publicationDate ? new Date(body.data.publicationDate) : null,
+        benefits: body.data.benefits ?? null,
+        attachments: attachments ?? null,
+        divisionId: body.data.divisionId ?? null,
         startDate: body.data.startDate ? new Date(body.data.startDate) : null,
         endDate: body.data.endDate ? new Date(body.data.endDate) : null,
-        location: body.data.location,
+        location: body.data.location ?? null,
         status: body.data.status || 'PLANNED',
-        budget: body.data.budget,
+        budget: body.data.budget ?? null,
         createdById: req.auth.userId,
       },
       include: { division: true },
@@ -154,21 +197,61 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    const { title, description, coverImage, attachments, divisionId, startDate, endDate, location, status, budget, isActive } = req.body;
+    const {
+      title, description, coverImage, coverImageTempId, theme, publicationDate,
+      benefits, attachments, divisionId, startDate, endDate, location, status,
+      budget, isActive
+    } = req.body;
+
+    let finalCoverImage = coverImage;
+    if (coverImageTempId) {
+      const finalized = await finalizeUpload({
+        tempId: coverImageTempId,
+        userId: req.auth.userId,
+        folder: 'activities/covers',
+      });
+      finalCoverImage = finalized.publicUrl;
+    }
+
+    let finalAttachments = attachments;
+    if (attachments) {
+      const photos = await Promise.all(
+        (attachments.photos || []).map(async (p) => {
+          if (p.tempId) {
+            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: 'activities/photos' });
+            return { name: p.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
+          }
+          return p;
+        }),
+      );
+      const documents = await Promise.all(
+        (attachments.documents || []).map(async (d) => {
+          if (d.tempId) {
+            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: 'activities/documents' });
+            return { name: d.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
+          }
+          return d;
+        }),
+      );
+      finalAttachments = { photos, documents, links: attachments.links || [] };
+    }
 
     const activity = await prisma.activity.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
         ...(description !== undefined && { description }),
-        ...(coverImage !== undefined && { coverImage: coverImage || null }),
-        ...(attachments !== undefined && { attachments: attachments || null }),
+        ...(finalCoverImage !== undefined && { coverImage: finalCoverImage || null }),
+        ...(theme !== undefined && { theme: theme || null }),
+        ...(publicationDate !== undefined && { publicationDate: publicationDate ? new Date(publicationDate) : null }),
+        ...(benefits !== undefined && { benefits: benefits || null }),
+        ...(finalAttachments !== undefined && { attachments: finalAttachments || null }),
         ...(divisionId !== undefined && { divisionId: divisionId ? parseInt(divisionId, 10) : null }),
         ...(startDate !== undefined && { startDate: startDate ? new Date(startDate) : null }),
         ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(location !== undefined && { location }),
+        ...(location !== undefined && { location: location || null }),
         ...(status !== undefined && { status }),
-        ...(budget !== undefined && { budget }),
+        ...(budget !== undefined && { budget: budget || null }),
         ...(isActive !== undefined && { isActive }),
       },
       include: { division: true },

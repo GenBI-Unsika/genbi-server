@@ -35,7 +35,6 @@ router.get(
       where.status = 'PUBLISHED';
     }
 
-    if (category) where.category = category;
     if (search) {
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }, { content: { contains: search } }];
     }
@@ -52,8 +51,6 @@ router.get(
           slug: true,
           excerpt: true,
           coverImage: true,
-          category: true,
-          tags: true,
           status: true,
           publishedAt: true,
           viewCount: true,
@@ -174,8 +171,6 @@ router.post(
       content: z.string().optional(),
       coverImage: z.string().nullable().optional(),
       coverImageTempId: z.string().optional(), // NEW: Accept staged cover image
-      category: z.string().optional(),
-      tags: z.array(z.string()).optional(),
       status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
       attachments: attachmentsSchema.optional(),
     });
@@ -269,8 +264,6 @@ router.post(
         excerpt: body.data.excerpt,
         content: body.data.content,
         coverImage: coverImageUrl ?? undefined,
-        category: body.data.category,
-        tags: body.data.tags || [],
         attachments: Object.keys(attachments).length > 0 ? attachments : undefined,
         status: body.data.status || 'DRAFT',
         authorId: req.auth.userId,
@@ -291,7 +284,7 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    const { title, excerpt, content, coverImage, coverImageTempId, category, tags, status, isActive, attachments } = req.body;
+    const { title, excerpt, content, coverImage, coverImageTempId, status, isActive, attachments } = req.body;
 
     const currentArticle = await prisma.article.findUnique({ where: { id } });
     if (!currentArticle) {
@@ -384,8 +377,6 @@ router.patch(
         ...(excerpt !== undefined && { excerpt }),
         ...(content !== undefined && { content }),
         ...((finalCoverImage !== undefined || coverImageTempId) && { coverImage: finalCoverImage }),
-        ...(category !== undefined && { category }),
-        ...(tags !== undefined && { tags }),
         ...(processedAttachments !== undefined && { attachments: processedAttachments }),
         ...(status !== undefined && { status, publishedAt }),
         ...(isActive !== undefined && { isActive }),

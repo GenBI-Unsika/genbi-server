@@ -12,7 +12,6 @@ import { generateWordDocument, prepareDispensationData } from '../lib/docx-gener
 
 const router = Router();
 
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
@@ -24,7 +23,6 @@ const upload = multer({
     cb(null, true);
   },
 });
-
 
 router.get(
   '/me',
@@ -69,7 +67,6 @@ router.get(
   }),
 );
 
-
 router.post(
   '/',
   requireAuth,
@@ -107,7 +104,6 @@ router.post(
   }),
 );
 
-
 router.patch(
   '/:id/status',
   requireAuth,
@@ -136,7 +132,6 @@ router.patch(
     res.json({ data: dispensation });
   }),
 );
-
 
 router.patch(
   '/:id',
@@ -180,7 +175,6 @@ router.patch(
   }),
 );
 
-
 router.delete(
   '/:id',
   requireAuth,
@@ -193,8 +187,8 @@ router.delete(
       throw new HttpError(404, 'Dispensasi tidak ditemukan');
     }
 
-    const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
-    if (dispensation.userId !== req.auth.userId && !ADMIN_ROLES.includes(user?.role)) {
+    const user = await prisma.user.findUnique({ where: { id: req.auth.userId }, include: { role: true } });
+    if (dispensation.userId !== req.auth.userId && !ADMIN_ROLES.includes(user?.role?.name)) {
       throw new HttpError(403, 'Forbidden');
     }
 
@@ -203,9 +197,6 @@ router.delete(
     res.json({ message: 'Dispensasi berhasil dihapus' });
   }),
 );
-
-
-
 
 router.get(
   '/template/active',
@@ -220,7 +211,6 @@ router.get(
     res.json({ data: template });
   }),
 );
-
 
 router.post(
   '/template/upload',
@@ -261,7 +251,7 @@ router.post(
         fileName: req.file.originalname,
         // Gunakan URL preview Drive untuk iframe di frontend
         fileUrl: `https://drive.google.com/file/d/${driveFile.id}/preview`,
-        uploadedBy: req.auth.userId,
+        uploadedBy: String(req.auth.userId),
         isActive: true,
       },
     });
@@ -269,7 +259,6 @@ router.post(
     res.status(201).json({ data: template, message: 'Template berhasil diupload' });
   }),
 );
-
 
 router.delete(
   '/template/:id',
@@ -284,7 +273,6 @@ router.delete(
     res.json({ message: 'Template berhasil dihapus' });
   }),
 );
-
 
 router.post(
   '/:id/generate-letter',
@@ -316,8 +304,6 @@ router.post(
     // Download template dari Google Drive (implementasi sementara)
     // Di produksi, Anda harus mendownload file template itu sendiri
     throw new HttpError(500, 'Fitur generate letter memerlukan template file di server. Silakan hubungi administrator.');
-
-
   }),
 );
 

@@ -388,7 +388,7 @@ router.post(
         name: driveFile.name || metadata.originalName,
         mimeType: driveFile.mimeType || metadata.mimeType,
         sizeBytes: driveFile.size ? Number(driveFile.size) : metadata.size,
-        folder: folder || null,
+        // Note: folder is for Drive organization only, not stored in DB
       },
     });
 
@@ -474,7 +474,7 @@ router.post(
             name: driveFile.name || metadata.originalName,
             mimeType: driveFile.mimeType || metadata.mimeType,
             sizeBytes: driveFile.size ? Number(driveFile.size) : metadata.size,
-            folder: item.folder || null,
+            // Note: folder is for Drive organization only, not stored in DB
           },
         });
 

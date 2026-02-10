@@ -144,30 +144,16 @@ router.get(
   '/points',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const user = await prisma.user.findUnique({
-      where: { id: req.auth.userId },
-      include: { profile: true },
-    });
-
-    if (!user) return res.json({ data: { total: 0, breakdown: [], history: [] } });
-
-    const memberName = user.profile?.name;
-    let teamMember = null;
-
-    if (memberName) {
-      teamMember = await prisma.teamMember.findFirst({
-        where: { name: { contains: memberName.split(' ')[0] } },
-      });
-    }
-
-    if (!teamMember) {
-      return res.json({ data: { total: 0, breakdown: [], history: [] } });
-    }
+    const userId = req.auth.userId;
 
     const points = await prisma.memberPoint.findMany({
-      where: { memberId: teamMember.id },
+      where: { userId },
       orderBy: { awardedAt: 'desc' },
     });
+
+    if (!points.length) {
+      return res.json({ data: { total: 0, breakdown: [], history: [] } });
+    }
 
     const total = points.reduce((sum, p) => sum + p.points, 0);
 
@@ -200,30 +186,16 @@ router.get(
   '/treasury',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const user = await prisma.user.findUnique({
-      where: { id: req.auth.userId },
-      include: { profile: true },
-    });
-
-    if (!user) return res.json({ data: { entries: [], summary: { paid: 0, unpaid: 0 } } });
-
-    const memberName = user.profile?.name;
-    let teamMember = null;
-
-    if (memberName) {
-      teamMember = await prisma.teamMember.findFirst({
-        where: { name: { contains: memberName.split(' ')[0] } },
-      });
-    }
-
-    if (!teamMember) {
-      return res.json({ data: { entries: [], summary: { paid: 0, unpaid: 0 } } });
-    }
+    const userId = req.auth.userId;
 
     const entries = await prisma.treasuryEntry.findMany({
-      where: { memberId: teamMember.id },
+      where: { userId },
       orderBy: { period: 'asc' },
     });
+
+    if (!entries.length) {
+      return res.json({ data: { entries: [], summary: { paid: 0, unpaid: 0 } } });
+    }
 
     const totalPaid = entries.reduce((sum, e) => sum + e.amount, 0);
     const expectedMonths = 9;

@@ -6,6 +6,7 @@ const ROLE_HIERARCHY = {
   super_admin: 5,
   admin: 4,
   awardee: 3,
+  member: 3, // alias untuk awardee - anggota aktif GenBI
   alumni: 1,
 };
 

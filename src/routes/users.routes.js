@@ -5,6 +5,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireSuperAdmin, requireAdminAccess } from '../middleware/auth.js';
+import { finalizeUpload } from '../lib/file-utils.js';
 
 const router = Router();
 
@@ -120,7 +121,6 @@ router.get(
             birthDate: true,
             semester: true,
             jabatan: true,
-            jabatan: true,
             socials: true,
             bankName: true,
             bankAccountNumber: true,
@@ -148,7 +148,6 @@ router.get(
       birthDate: user.profile?.birthDate || null,
       semester: user.profile?.semester || null,
 
-      jabatan: user.profile?.jabatan || null,
       jabatan: user.profile?.jabatan || null,
       socials: user.profile?.socials || null,
       bankName: user.profile?.bankName || null,
@@ -189,7 +188,7 @@ router.post(
 
       birthDate: z.string().optional().nullable(),
       jabatan: z.string().optional().nullable(),
-      jabatan: z.string().optional().nullable(),
+      avatarTempId: z.string().optional(),
       socials: z.any().optional().nullable(),
       bankName: z.string().optional().nullable(),
       bankAccountNumber: z.string().optional().nullable(),
@@ -234,7 +233,7 @@ router.post(
 
             birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
             jabatan: body.data.jabatan || null,
-            jabatan: body.data.jabatan || null,
+            avatar: body.data.avatarTempId ? (await finalizeUpload({ tempId: body.data.avatarTempId, userId: req.auth.userId, folder: 'profiles/avatars' })).publicUrl : null,
             socials: body.data.socials || null,
             bankName: body.data.bankName || null,
             bankAccountNumber: body.data.bankAccountNumber || null,
@@ -294,7 +293,8 @@ router.patch(
 
       birthDate: z.string().optional().nullable(),
       jabatan: z.string().optional().nullable(),
-      jabatan: z.string().optional().nullable(),
+      avatar: z.string().optional().nullable(),
+      avatarTempId: z.string().optional(),
       socials: z.any().optional().nullable(),
       bankName: z.string().optional().nullable(),
       bankAccountNumber: z.string().optional().nullable(),
@@ -351,6 +351,17 @@ router.patch(
     if (body.data.bankAccountNumber !== undefined) profileData.bankAccountNumber = body.data.bankAccountNumber || null;
     if (body.data.bankAccountName !== undefined) profileData.bankAccountName = body.data.bankAccountName || null;
 
+    if (body.data.avatarTempId) {
+      const finalized = await finalizeUpload({
+        tempId: body.data.avatarTempId,
+        userId: req.auth.userId,
+        folder: 'profiles/avatars',
+      });
+      profileData.avatar = finalized.publicUrl;
+    } else if (body.data.avatar !== undefined) {
+      profileData.avatar = body.data.avatar || null;
+    }
+
     if (body.data.studyProgramId !== undefined) {
       profileData.studyProgramId = body.data.studyProgramId || null;
       if (body.data.studyProgramId) {
@@ -376,11 +387,11 @@ router.patch(
         profile:
           Object.keys(profileData).length > 0
             ? {
-              upsert: {
-                create: profileData,
-                update: profileData,
-              },
-            }
+                upsert: {
+                  create: profileData,
+                  update: profileData,
+                },
+              }
             : undefined,
       },
       select: {
