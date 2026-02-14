@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
+import { APP_SETTING_KEYS } from '../constants/settings.js';
+import { HttpError } from '../lib/errors.js';
+import { verifyScholarshipAnnouncementToken } from '../auth/tokens.js';
 
 const router = Router();
-
-// DEFAULT DATA FOR CMS-MANAGED CONTENT (used when DB has no data)
 
 const defaultHeroAvatars = [
   'https://ui-avatars.com/api/?name=User+1&background=random',
@@ -135,8 +136,6 @@ const defaultScholarshipPage = {
   ],
 };
 
-// CMS-MANAGED PUBLIC ROUTES
-
 router.get(
   '/hero-avatars',
   asyncHandler(async (req, res) => {
@@ -195,17 +194,77 @@ router.get(
   '/scholarship-page',
   asyncHandler(async (req, res) => {
     const setting = await prisma.appSetting.findUnique({ where: { key: 'cms_scholarship_page' } });
-    const data = setting?.value || defaultScholarshipPage;
+    const regRow = await prisma.appSetting.findUnique({ where: { key: APP_SETTING_KEYS.SCHOLARSHIP_REGISTRATION_OPEN } });
+    const open = Boolean(regRow?.value?.open);
+
+    const data = {
+      ...(setting?.value || defaultScholarshipPage),
+      // Status pendaftaran ditentukan oleh /scholarships/registration (di-handle admin), bukan CMS.
+      isOpen: open,
+    };
+
     res.json({ data });
   }),
 );
 
-// ARTIKEL PUBLIK
+function scholarshipIsFinal({ administrasiStatus, interviewStatus }) {
+  const isPassed = administrasiStatus === 'LOLOS_ADMINISTRASI' && interviewStatus === 'LOLOS_WAWANCARA';
+  const isFailed = administrasiStatus === 'ADMINISTRASI_DITOLAK' || interviewStatus === 'GAGAL_WAWANCARA';
+  return isPassed || isFailed;
+}
+
+// Public: get scholarship announcement data by signed token (for QR/share link)
+router.get(
+  '/scholarship-announcement',
+  asyncHandler(async (req, res) => {
+    const token = String(req.query?.t || '').trim();
+    if (!token) throw new HttpError(400, 'Token tidak ditemukan');
+
+    let payload;
+    try {
+      payload = verifyScholarshipAnnouncementToken(token);
+    } catch {
+      throw new HttpError(401, 'Token tidak valid atau sudah kedaluwarsa');
+    }
+
+    const appId = Number(payload?.aid);
+    const userId = Number(payload?.sub);
+    if (!Number.isInteger(appId) || appId <= 0) throw new HttpError(400, 'Token tidak valid');
+    if (!Number.isInteger(userId) || userId <= 0) throw new HttpError(400, 'Token tidak valid');
+
+    const app = await prisma.scholarshipApplication.findUnique({
+      where: { id: appId },
+      include: {
+        faculty: true,
+        studyProgram: true,
+      },
+    });
+    if (!app) throw new HttpError(404, 'Data beasiswa tidak ditemukan');
+    if (app.createdById !== userId) throw new HttpError(403, 'Token tidak memiliki akses');
+    if (!scholarshipIsFinal(app)) throw new HttpError(400, 'Pengumuman belum final');
+
+    res.json({
+      data: {
+        id: app.id,
+        name: app.name || '',
+        npm: app.npm || '',
+        semester: app.semester || '',
+        year: app.year,
+        batch: app.batch,
+        administrasiStatus: app.administrasiStatus,
+        interviewStatus: app.interviewStatus,
+        interviewLocation: app.interviewLocation || '',
+        faculty: app.faculty ? { name: app.faculty.name } : null,
+        studyProgram: app.studyProgram ? { name: app.studyProgram.name } : null,
+      },
+    });
+  }),
+);
 
 router.get(
   '/articles',
   asyncHandler(async (req, res) => {
-    const { category, page = 1, limit = 12, search } = req.query;
+    const { category, page = 1, limit = 12, search, startDate, endDate, sortBy, sortOrder, popularFirst = 'true' } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
@@ -217,10 +276,29 @@ router.get(
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }];
     }
 
+    // Filter tanggal
+    if (startDate || endDate) {
+      where.publishedAt = {};
+      if (startDate) where.publishedAt.gte = new Date(startDate);
+      if (endDate) where.publishedAt.lte = new Date(endDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+    if (popularFirst === 'true') {
+      orderBy.push({ viewCount: 'desc' });
+    }
+
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      orderBy.push({ publishedAt: 'desc' });
+    }
+
     const [articles, total] = await Promise.all([
       prisma.article.findMany({
         where,
-        orderBy: { publishedAt: 'desc' },
+        orderBy,
         skip,
         take: parseInt(limit),
         select: {
@@ -265,12 +343,10 @@ router.get(
   }),
 );
 
-// EVENT PUBLIK (dari kegiatan dengan status akan datang/berlangsung)
-
 router.get(
   '/events',
   asyncHandler(async (req, res) => {
-    const { page = 1, limit = 12 } = req.query;
+    const { page = 1, limit = 12, startDate: filterStartDate, endDate: filterEndDate, sortBy, sortOrder } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -280,10 +356,25 @@ router.get(
       status: { in: ['PLANNED', 'ONGOING'] },
     };
 
+    // Filter tanggal
+    if (filterStartDate || filterEndDate) {
+      where.startDate = {};
+      if (filterStartDate) where.startDate.gte = new Date(filterStartDate);
+      if (filterEndDate) where.startDate.lte = new Date(filterEndDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      orderBy.push({ startDate: 'asc' });
+    }
+
     const [activities, total] = await Promise.all([
       prisma.activity.findMany({
         where,
-        orderBy: { startDate: 'asc' },
+        orderBy,
         skip,
         take: parseInt(limit),
         include: { division: true },
@@ -320,12 +411,10 @@ router.get(
   }),
 );
 
-// PROGRAM PUBLIK (proker - semua kegiatan selesai)
-
 router.get(
   '/programs',
   asyncHandler(async (req, res) => {
-    const { divisionId, page = 1, limit = 12, search } = req.query;
+    const { divisionId, page = 1, limit = 12, search, startDate: filterStartDate, endDate: filterEndDate, sortBy, sortOrder } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {
@@ -341,10 +430,25 @@ router.get(
       where.OR = [{ title: { contains: search } }, { description: { contains: search } }];
     }
 
+    // Filter tanggal
+    if (filterStartDate || filterEndDate) {
+      where.startDate = {};
+      if (filterStartDate) where.startDate.gte = new Date(filterStartDate);
+      if (filterEndDate) where.startDate.lte = new Date(filterEndDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      orderBy.push({ startDate: 'desc' });
+    }
+
     const [activities, total] = await Promise.all([
       prisma.activity.findMany({
         where,
-        orderBy: { startDate: 'desc' },
+        orderBy,
         skip,
         take: parseInt(limit),
         include: { division: true },
@@ -376,8 +480,6 @@ router.get(
     });
   }),
 );
-
-// TIM PUBLIK
 
 router.get(
   '/teams',
@@ -433,8 +535,6 @@ router.get(
     res.json({ data });
   }),
 );
-
-// GLOBAL SEARCH
 
 router.get(
   '/search',
@@ -529,8 +629,6 @@ router.get(
     res.json({ data: results });
   }),
 );
-
-// DIVISI PUBLIK
 
 router.get(
   '/divisions',

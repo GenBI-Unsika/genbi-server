@@ -5,6 +5,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { finalizeUpload } from '../lib/file-utils.js';
+import { FOLDER_ACTIVITY_COVERS, FOLDER_ACTIVITY_PHOTOS, FOLDER_ACTIVITY_DOCUMENTS } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -12,7 +13,7 @@ const router = Router();
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { status, divisionId, page = 1, limit = 20, search } = req.query;
+    const { status, divisionId, page = 1, limit = 20, search, startDate, endDate, sortBy, sortOrder } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = { isActive: true };
@@ -25,10 +26,25 @@ router.get(
       where.OR = [{ title: { contains: search } }, { description: { contains: search } }];
     }
 
+    // Filter tanggal
+    if (startDate || endDate) {
+      where.startDate = {};
+      if (startDate) where.startDate.gte = new Date(startDate);
+      if (endDate) where.startDate.lte = new Date(endDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      orderBy.push({ startDate: 'desc' });
+    }
+
     const [activities, total] = await Promise.all([
       prisma.activity.findMany({
         where,
-        orderBy: { startDate: 'desc' },
+        orderBy,
         skip,
         take: parseInt(limit),
         include: { division: true },
@@ -130,7 +146,7 @@ router.post(
       const finalized = await finalizeUpload({
         tempId: body.data.coverImageTempId,
         userId: req.auth.userId,
-        folder: 'activities/covers',
+        folder: FOLDER_ACTIVITY_COVERS,
       });
       coverImage = finalized.publicUrl;
     }
@@ -141,7 +157,7 @@ router.post(
       const photos = await Promise.all(
         (attachments.photos || []).map(async (p) => {
           if (p.tempId) {
-            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: 'activities/photos' });
+            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: FOLDER_ACTIVITY_PHOTOS });
             return { name: p.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
           }
           return p;
@@ -150,7 +166,7 @@ router.post(
       const documents = await Promise.all(
         (attachments.documents || []).map(async (d) => {
           if (d.tempId) {
-            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: 'activities/documents' });
+            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: FOLDER_ACTIVITY_DOCUMENTS });
             return { name: d.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
           }
           return d;
@@ -197,18 +213,14 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    const {
-      title, description, coverImage, coverImageTempId, theme, publicationDate,
-      benefits, attachments, divisionId, startDate, endDate, location, status,
-      budget, isActive
-    } = req.body;
+    const { title, description, coverImage, coverImageTempId, theme, publicationDate, benefits, attachments, divisionId, startDate, endDate, location, status, budget, isActive } = req.body;
 
     let finalCoverImage = coverImage;
     if (coverImageTempId) {
       const finalized = await finalizeUpload({
         tempId: coverImageTempId,
         userId: req.auth.userId,
-        folder: 'activities/covers',
+        folder: FOLDER_ACTIVITY_COVERS,
       });
       finalCoverImage = finalized.publicUrl;
     }
@@ -218,7 +230,7 @@ router.patch(
       const photos = await Promise.all(
         (attachments.photos || []).map(async (p) => {
           if (p.tempId) {
-            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: 'activities/photos' });
+            const f = await finalizeUpload({ tempId: p.tempId, userId: req.auth.userId, folder: FOLDER_ACTIVITY_PHOTOS });
             return { name: p.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
           }
           return p;
@@ -227,7 +239,7 @@ router.patch(
       const documents = await Promise.all(
         (attachments.documents || []).map(async (d) => {
           if (d.tempId) {
-            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: 'activities/documents' });
+            const f = await finalizeUpload({ tempId: d.tempId, userId: req.auth.userId, folder: FOLDER_ACTIVITY_DOCUMENTS });
             return { name: d.name || f.name, url: f.publicUrl, type: f.mimeType, size: f.sizeBytes };
           }
           return d;

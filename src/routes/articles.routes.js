@@ -5,6 +5,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess, ADMIN_ROLES } from '../middleware/auth.js';
 import { finalizeUpload, getPublicFileUrl } from '../lib/file-utils.js';
+import { FOLDER_ARTICLE_COVERS, FOLDER_ARTICLE_PHOTOS, FOLDER_ARTICLE_DOCUMENTS } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -22,10 +23,10 @@ function generateSlug(title) {
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { category, page = 1, limit = 10, search, status } = req.query;
+    const { category, page = 1, limit = 10, search, status, startDate, endDate, sortBy, sortOrder, popularFirst } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Hanya tampilkan artikel yang dipublikasikan untuk publik, semua untuk admin
+    // Filter dasar
     const where = { isActive: true };
 
     // Default ke PUBLISHED untuk akses publik
@@ -39,10 +40,35 @@ router.get(
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }, { content: { contains: search } }];
     }
 
+    // Filter tanggal
+    if (startDate || endDate) {
+      where.publishedAt = {};
+      if (startDate) where.publishedAt.gte = new Date(startDate);
+      if (endDate) where.publishedAt.lte = new Date(endDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+
+    if (popularFirst === 'true') {
+      // Prioritaskan artikel populer (> 50 views)
+      // Sayangnya Prisma tidak support CASE WHEN di orderBy, 
+      // jadi kita gunakan viewCount desc sebagai proxy atau sort manual di route ini.
+      // Kita gunakan viewCount desc dahulu jika popularFirst diminta.
+      orderBy.push({ viewCount: 'desc' });
+    }
+
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      // Default sort
+      orderBy.push({ publishedAt: 'desc' });
+    }
+
     const [articles, total] = await Promise.all([
       prisma.article.findMany({
         where,
-        orderBy: { publishedAt: 'desc' },
+        orderBy,
         skip,
         take: parseInt(limit),
         select: {
@@ -54,6 +80,75 @@ router.get(
           status: true,
           publishedAt: true,
           viewCount: true,
+          author: {
+            select: {
+              id: true,
+              email: true,
+              profile: { select: { name: true, avatar: true } },
+            },
+          },
+        },
+      }),
+      prisma.article.count({ where }),
+    ]);
+
+    res.json({
+      data: articles,
+      meta: { total, page: parseInt(page), limit: parseInt(limit), totalPages: Math.ceil(total / parseInt(limit)) },
+    });
+  }),
+);
+
+// Ambil semua artikel untuk admin (termasuk draft)
+router.get(
+  '/manage',
+  requireAuth,
+  requireAdminAccess,
+  asyncHandler(async (req, res) => {
+    const { page = 1, limit = 20, search, status, startDate, endDate, sortBy, sortOrder } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = { isActive: true };
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (search) {
+      where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }, { content: { contains: search } }];
+    }
+
+    // Filter tanggal
+    if (startDate || endDate) {
+      where.createdAt = {}; // Admin usually filters by creation date or update date
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+
+    // Sorting
+    const orderBy = [];
+    if (sortBy) {
+      orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
+    } else {
+      orderBy.push({ updatedAt: 'desc' }); // Order by recently updated for admin
+    }
+
+    const [articles, total] = await Promise.all([
+      prisma.article.findMany({
+        where,
+        orderBy,
+        skip,
+        take: parseInt(limit),
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          coverImage: true,
+          status: true,
+          publishedAt: true,
+          viewCount: true,
+          createdAt: true,
           author: {
             select: {
               id: true,
@@ -187,7 +282,7 @@ router.post(
         const finalizedFile = await finalizeUpload({
           tempId: body.data.coverImageTempId,
           userId: req.auth.userId,
-          folder: 'articles/covers',
+          folder: FOLDER_ARTICLE_COVERS,
         });
         coverImageUrl = finalizedFile.publicUrl;
       } catch (e) {
@@ -205,7 +300,7 @@ router.post(
             const finalizedFile = await finalizeUpload({
               tempId: photo.tempId,
               userId: req.auth.userId,
-              folder: 'articles/photos',
+              folder: FOLDER_ARTICLE_PHOTOS,
             });
             processedPhotos.push({
               name: photo.name || finalizedFile.name,
@@ -232,7 +327,7 @@ router.post(
             const finalizedFile = await finalizeUpload({
               tempId: doc.tempId,
               userId: req.auth.userId,
-              folder: 'articles/documents',
+              folder: FOLDER_ARTICLE_DOCUMENTS,
             });
             processedDocs.push({
               name: doc.name || finalizedFile.name,
@@ -298,7 +393,7 @@ router.patch(
         const finalizedFile = await finalizeUpload({
           tempId: coverImageTempId,
           userId: req.auth.userId,
-          folder: 'articles/covers',
+          folder: FOLDER_ARTICLE_COVERS,
         });
         finalCoverImage = finalizedFile.publicUrl;
       } catch (e) {
@@ -319,7 +414,7 @@ router.patch(
               const finalizedFile = await finalizeUpload({
                 tempId: photo.tempId,
                 userId: req.auth.userId,
-                folder: 'articles/photos',
+                folder: FOLDER_ARTICLE_PHOTOS,
               });
               processedPhotos.push({
                 name: photo.name || finalizedFile.name,
@@ -345,7 +440,7 @@ router.patch(
               const finalizedFile = await finalizeUpload({
                 tempId: doc.tempId,
                 userId: req.auth.userId,
-                folder: 'articles/documents',
+                folder: FOLDER_ARTICLE_DOCUMENTS,
               });
               processedDocs.push({
                 name: doc.name || finalizedFile.name,
