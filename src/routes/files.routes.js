@@ -7,7 +7,7 @@ import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireMinRole } from '../middleware/auth.js';
 import { env } from '../config/env.js';
 import { signFileToken, verifyFileToken } from '../auth/tokens.js';
-import { downloadDriveFileStream, setDriveFilePublicReadable, toDriveUploadHttpErrorMessage, uploadBufferToDrive } from '../storage/gdrive.js';
+import { downloadDriveFileStream, setDriveFilePublicReadable, toDriveUploadHttpErrorMessage, uploadBufferToDrive, getOrCreateDriveFolderPath } from '../storage/gdrive.js';
 import { saveTempFile, getTempFileStream, readTempFile, deleteTempFile, getTempFile } from '../storage/temp-storage.js';
 
 const router = Router();
@@ -30,13 +30,31 @@ router.post(
     const file = req.file;
     if (!file) throw new HttpError(400, 'Missing file (multipart field name: file)');
 
+    // Support organized folder structure via query/body params
+    // e.g. POST /files?folder=Beasiswa/Periode-2026/1234567-NamaLengkap
+    const folderPath = req.query?.folder || req.body?.folder || '';
+
+    let targetFolderId = env.GDRIVE_FOLDER_ID;
+    if (folderPath) {
+      try {
+        const segments = String(folderPath).split('/').filter(Boolean);
+        if (segments.length > 0) {
+          targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to create folder path, uploading to root:', e.message);
+        // Fall back to root folder
+      }
+    }
+
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
         name: file.originalname,
         mimeType: file.mimetype,
         buffer: file.buffer,
-        parentFolderId: env.GDRIVE_FOLDER_ID,
+        parentFolderId: targetFolderId,
       });
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -341,7 +359,8 @@ router.post(
   requireAuth,
   requireMinRole('member'),
   asyncHandler(async (req, res) => {
-    const { tempId, folder } = req.body;
+    const tempId = req.body?.tempId;
+    const folder = req.body?.folder;
 
     if (!tempId) {
       throw new HttpError(400, 'tempId wajib diisi');
@@ -368,13 +387,26 @@ router.post(
 
     const metadata = tempMeta;
 
+    // Resolve target folder if folder path is specified
+    let targetFolderId = env.GDRIVE_FOLDER_ID;
+    if (folder) {
+      try {
+        const segments = String(folder).split('/').filter(Boolean);
+        if (segments.length > 0) {
+          targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
+        }
+      } catch (e) {
+        console.warn('Failed to create folder path during finalize, using root:', e.message);
+      }
+    }
+
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
         name: metadata.originalName,
         mimeType: metadata.mimeType,
         buffer,
-        parentFolderId: env.GDRIVE_FOLDER_ID,
+        parentFolderId: targetFolderId,
       });
     } catch (e) {
       console.error('Google Drive upload failed', e);
@@ -426,7 +458,7 @@ router.post(
   requireAuth,
   requireMinRole('member'),
   asyncHandler(async (req, res) => {
-    const { files } = req.body; // Array dari { tempId, folder? }
+    const files = req.body?.files; // Array dari { tempId, folder? }
 
     if (!Array.isArray(files) || files.length === 0) {
       throw new HttpError(400, 'files array wajib diisi');
@@ -460,12 +492,31 @@ router.post(
 
         const metadata = tempMeta;
 
-        const driveFile = await uploadBufferToDrive({
-          name: metadata.originalName,
-          mimeType: metadata.mimeType,
-          buffer,
-          parentFolderId: env.GDRIVE_FOLDER_ID,
-        });
+        // Resolve target folder if specified
+        let targetFolderId = env.GDRIVE_FOLDER_ID;
+        if (item.folder) {
+          try {
+            const segments = String(item.folder).split('/').filter(Boolean);
+            if (segments.length > 0) {
+              targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
+            }
+          } catch (e) {
+            console.warn('Failed to create folder path during bulk finalize:', e.message);
+          }
+        }
+
+        let driveFile;
+        try {
+          driveFile = await uploadBufferToDrive({
+            name: metadata.originalName,
+            mimeType: metadata.mimeType,
+            buffer,
+            parentFolderId: targetFolderId,
+          });
+        } catch (e) {
+          console.error('Google Drive upload failed (bulk)', e);
+          throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
+        }
 
         const created = await prisma.fileObject.create({
           data: {
@@ -500,7 +551,7 @@ router.post(
           name: created.name,
         });
       } catch (e) {
-        errors.push({ tempId: item.tempId, error: e.message || 'Upload failed' });
+        errors.push({ tempId: item?.tempId, error: e?.message || 'Upload failed' });
       }
     }
 

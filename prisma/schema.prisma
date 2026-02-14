@@ -22,6 +22,13 @@ enum ScholarshipAdministrasiStatus {
   ADMINISTRASI_DITOLAK
 }
 
+enum ScholarshipInterviewStatus {
+  MENUNGGU_JADWAL
+  DIJADWALKAN
+  LOLOS_WAWANCARA
+  GAGAL_WAWANCARA
+}
+
 enum EventType {
   MEETING
   WORKSHOP
@@ -108,6 +115,7 @@ model User {
   emailVerificationToken   EmailVerificationToken?
   scholarshipApplications  ScholarshipApplication[]
   scholarshipReviews       ScholarshipApplication[]  @relation("ScholarshipReviewedBy")
+  scholarshipInterviewReviews ScholarshipApplication[] @relation("ScholarshipInterviewReviewedBy")
   dispensations            Dispensation[]
   dispensationReviews      Dispensation[]            @relation("DispensationReviewedBy")
   articles                 Article[]
@@ -249,6 +257,22 @@ model AppSetting {
   @@map("app_settings")
 }
 
+// Analytics (created/used by raw SQL in analytics.routes.js)
+model PageView {
+  id        Int      @id @default(autoincrement())
+  visitorId String   @db.VarChar(64) @map("visitor_id")
+  path      String   @db.VarChar(255)
+  referrer  String?  @db.VarChar(512)
+  userAgent String?  @db.VarChar(512) @map("user_agent")
+  ipHash    String?  @db.Char(64) @map("ip_hash")
+  createdAt DateTime @db.DateTime(3) @default(now()) @map("created_at")
+
+  @@index([createdAt], map: "idx_created_at")
+  @@index([path], map: "idx_path")
+  @@index([visitorId], map: "idx_visitor_id")
+  @@map("page_views")
+}
+
 
 // DIVISION MANAGEMENT
 
@@ -287,6 +311,9 @@ model ScholarshipApplication {
   createdById         Int                           @map("created_by_id")
   submittedAt         DateTime                      @default(now()) @map("submitted_at")
 
+  year                Int                           @map("year")
+  batch               Int                           @default(1) @map("batch")
+
   name                String
   email               String
   birthDate           DateTime?                     @map("birth_date")
@@ -301,7 +328,7 @@ model ScholarshipApplication {
   age                 Int?
 
   knowGenbi           String?                       @map("know_genbi")
-  knowDesc            String?                       @map("know_desc")
+  knowDesc            String?                       @db.Text @map("know_desc")
 
   agree               Boolean                       @default(false)
   files               Json?
@@ -310,17 +337,29 @@ model ScholarshipApplication {
   reviewedById        Int?                          @map("reviewed_by_id")
   reviewedAt          DateTime?                     @map("reviewed_at")
 
+  // Interview fields
+  interviewStatus     ScholarshipInterviewStatus    @default(MENUNGGU_JADWAL) @map("interview_status")
+  interviewDate       DateTime?                     @map("interview_date")
+  interviewTime       String?                       @map("interview_time")
+  interviewLocation   String?                       @db.Text @map("interview_location")
+  interviewNotes      String?                       @db.Text @map("interview_notes")
+  interviewReviewedById Int?                        @map("interview_reviewed_by_id")
+  interviewReviewedAt DateTime?                     @map("interview_reviewed_at")
+
   createdAt           DateTime                      @default(now()) @map("created_at")
   updatedAt           DateTime                      @updatedAt @map("updated_at")
 
   createdBy    User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
   reviewedBy   User?         @relation("ScholarshipReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  interviewReviewedBy User?  @relation("ScholarshipInterviewReviewedBy", fields: [interviewReviewedById], references: [id], onDelete: SetNull)
   faculty      Faculty?      @relation(fields: [facultyId], references: [id], onDelete: SetNull)
   studyProgram StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
 
-  @@unique([npm])
+  @@unique([createdById, year, batch])
+  @@unique([npm, year, batch])
   @@index([createdById])
   @@index([administrasiStatus, createdAt])
+  @@index([interviewStatus])
   @@index([facultyId])
   @@index([studyProgramId])
   @@map("scholarship_applications")
@@ -541,4 +580,23 @@ model Article {
   @@index([status])
   @@index([publishedAt])
   @@map("articles")
+}
+
+
+// NEWSLETTER SUBSCRIBERS
+
+
+model Subscriber {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String?
+  isActive      Boolean   @default(true) @map("is_active")
+  subscribedAt  DateTime  @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([isActive])
+  @@map("subscribers")
 }

@@ -7,8 +7,9 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess, ADMIN_ROLES } from '../middleware/auth.js';
 import { env } from '../config/env.js';
-import { toDriveUploadHttpErrorMessage, uploadBufferToDrive } from '../storage/gdrive.js';
+import { toDriveUploadHttpErrorMessage, uploadBufferToDrive, getOrCreateDriveFolderPath } from '../storage/gdrive.js';
 import { generateWordDocument, prepareDispensationData } from '../lib/docx-generator.js';
+import { FOLDER_DISPENSATION_TEMPLATES, toFolderSegments } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -225,13 +226,21 @@ router.post(
     if (!env.GDRIVE_FOLDER_ID) throw new HttpError(500, 'Upload belum tersedia. Hubungi admin.');
 
     // Upload ke Google Drive
+    // Resolve Dispensasi folder
+    let targetFolderId = env.GDRIVE_FOLDER_ID;
+    try {
+      targetFolderId = await getOrCreateDriveFolderPath(toFolderSegments(FOLDER_DISPENSATION_TEMPLATES), env.GDRIVE_FOLDER_ID);
+    } catch {
+      /* fall back to root */
+    }
+
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
         name: `template-dispensasi-${Date.now()}${path.extname(req.file.originalname)}`,
         mimeType: req.file.mimetype,
         buffer: req.file.buffer,
-        parentFolderId: env.GDRIVE_FOLDER_ID,
+        parentFolderId: targetFolderId,
       });
     } catch (e) {
       // eslint-disable-next-line no-console

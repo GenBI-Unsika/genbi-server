@@ -6,6 +6,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth } from '../middleware/auth.js';
 import { finalizeUpload } from '../lib/file-utils.js';
+import { FOLDER_PROFILE_AVATARS } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -73,7 +74,7 @@ router.patch(
         const finalizedFile = await finalizeUpload({
           tempId: body.data.avatarTempId,
           userId: req.auth.userId,
-          folder: 'avatars',
+          folder: FOLDER_PROFILE_AVATARS,
         });
         finalAvatar = finalizedFile.publicUrl;
       } catch (e) {
