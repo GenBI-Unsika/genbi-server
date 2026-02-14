@@ -5,6 +5,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { finalizeUpload } from '../lib/file-utils.js';
+import { FOLDER_PROFILE_AVATARS } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -172,7 +173,7 @@ router.post(
       const finalized = await finalizeUpload({
         tempId: body.data.photoTempId,
         userId: req.auth.userId,
-        folder: 'profiles/avatars',
+        folder: FOLDER_PROFILE_AVATARS,
       });
       photo = finalized.publicUrl;
     }
@@ -286,7 +287,7 @@ router.patch(
       const finalized = await finalizeUpload({
         tempId: body.data.photoTempId,
         userId: req.auth.userId,
-        folder: 'profiles/avatars',
+        folder: FOLDER_PROFILE_AVATARS,
       });
       finalPhoto = finalized.publicUrl;
     }

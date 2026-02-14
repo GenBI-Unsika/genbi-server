@@ -4,8 +4,11 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '../db/prisma.js';
 import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
+import { normalizeEmail, assertAllowedEmailDomain } from '../auth/domain.js';
+import { hashToken, makeVerifyToken, sendVerifyEmail, verifyExpiresAt } from '../auth/email.js';
 import { requireAuth, requireSuperAdmin, requireAdminAccess } from '../middleware/auth.js';
 import { finalizeUpload } from '../lib/file-utils.js';
+import { FOLDER_PROFILE_AVATARS } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -200,8 +203,15 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
+    const email = normalizeEmail(body.data.email);
+    try {
+      assertAllowedEmailDomain(email);
+    } catch (err) {
+      throw new HttpError(err?.statusCode || 403, err?.message || 'Email tidak diizinkan');
+    }
+
     const existingUser = await prisma.user.findUnique({
-      where: { email: body.data.email },
+      where: { email },
     });
 
     if (existingUser) {
@@ -216,7 +226,7 @@ router.post(
 
     const user = await prisma.user.create({
       data: {
-        email: body.data.email,
+        email,
         passwordHash,
         roleId: roleRecord.id,
         isActive: true,
@@ -233,7 +243,7 @@ router.post(
 
             birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
             jabatan: body.data.jabatan || null,
-            avatar: body.data.avatarTempId ? (await finalizeUpload({ tempId: body.data.avatarTempId, userId: req.auth.userId, folder: 'profiles/avatars' })).publicUrl : null,
+            avatar: body.data.avatarTempId ? (await finalizeUpload({ tempId: body.data.avatarTempId, userId: req.auth.userId, folder: FOLDER_PROFILE_AVATARS })).publicUrl : null,
             socials: body.data.socials || null,
             bankName: body.data.bankName || null,
             bankAccountNumber: body.data.bankAccountNumber || null,
@@ -255,6 +265,34 @@ router.post(
         },
       },
     });
+
+    // Create verification token and send email (mirrors /auth/register behavior)
+    const token = makeVerifyToken();
+    const tokenHash = hashToken(token);
+    const expiresAt = verifyExpiresAt();
+
+    await prisma.emailVerificationToken.upsert({
+      where: { userId: user.id },
+      update: { tokenHash, expiresAt },
+      create: { userId: user.id, tokenHash, expiresAt },
+    });
+
+    try {
+      await sendVerifyEmail({ toEmail: email, token, expiresAt });
+    } catch {
+      // Keep DB clean if email sending fails
+      try {
+        await prisma.emailVerificationToken.delete({ where: { userId: user.id } });
+      } catch {
+        // ignore
+      }
+      try {
+        await prisma.user.delete({ where: { id: user.id } });
+      } catch {
+        // ignore
+      }
+      throw new HttpError(500, 'Gagal mengirim email verifikasi. Periksa konfigurasi SMTP.');
+    }
 
     res.status(201).json({
       data: {
@@ -355,7 +393,7 @@ router.patch(
       const finalized = await finalizeUpload({
         tempId: body.data.avatarTempId,
         userId: req.auth.userId,
-        folder: 'profiles/avatars',
+        folder: FOLDER_PROFILE_AVATARS,
       });
       profileData.avatar = finalized.publicUrl;
     } else if (body.data.avatar !== undefined) {

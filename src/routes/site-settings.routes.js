@@ -6,8 +6,9 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { env } from '../config/env.js';
-import { toDriveUploadHttpErrorMessage, uploadBufferToDrive } from '../storage/gdrive.js';
+import { toDriveUploadHttpErrorMessage, uploadBufferToDrive, getOrCreateDriveFolderPath } from '../storage/gdrive.js';
 import { CMS_SETTING_KEYS } from '../constants/settings.js';
+import { FOLDER_CMS_IMAGES, toFolderSegments } from '../constants/drive-folders.js';
 
 const router = Router();
 
@@ -115,13 +116,21 @@ router.post(
       throw new HttpError(400, 'File tidak ditemukan');
     }
 
+    // Resolve CMS folder
+    let targetFolderId = env.GDRIVE_FOLDER_ID;
+    try {
+      targetFolderId = await getOrCreateDriveFolderPath(toFolderSegments(FOLDER_CMS_IMAGES), env.GDRIVE_FOLDER_ID);
+    } catch {
+      /* fall back to root */
+    }
+
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
         name: `cms_${Date.now()}_${file.originalname}`,
         mimeType: file.mimetype,
         buffer: file.buffer,
-        parentFolderId: env.GDRIVE_FOLDER_ID,
+        parentFolderId: targetFolderId,
       });
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -190,6 +199,14 @@ function validateSettingValue(key, value) {
       // Validate about content
       if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
       if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
+      break;
+
+    case 'cms_history':
+      // Validate history page content
+      if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
+      if (value.subtitle !== undefined && typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
+      if (value.image !== undefined && typeof value.image !== 'string') return 'image harus berupa string';
+      if (value.body !== undefined && typeof value.body !== 'string') return 'body harus berupa string';
       break;
 
     case 'cms_cta':

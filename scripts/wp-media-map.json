@@ -1,0 +1,1142 @@
+{
+  "version": 1,
+  "createdAt": "2026-02-10T15:16:49.552Z",
+  "map": {
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/09/strategi_bisnis_di_pandemi_covid-19.jpg": {
+      "fileObjectId": 2,
+      "publicUrl": "/api/v1/files/2/public",
+      "driveFileId": "1cJCOf9tZIm-l8DRPE6a1TEOzEFbh-oLq",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 69376
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/09/enjoyable_quarantine_with_beloved_family.jpg": {
+      "fileObjectId": 3,
+      "publicUrl": "/api/v1/files/3/public",
+      "driveFileId": "1oOwiA9JN4XWq-v6YhOcUq2veiSzuZnE-",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 265938
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/wp-1601708573480.jpeg": {
+      "fileObjectId": 4,
+      "publicUrl": "/api/v1/files/4/public",
+      "driveFileId": "1kwjm8bKzrSZ6BZGlud0bXDX8rQpZFpQ-",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 56632
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/20201011_111517.jpg": {
+      "fileObjectId": 5,
+      "publicUrl": "/api/v1/files/5/public",
+      "driveFileId": "1JgS4nZWmVSh4Agszx5IHI1xFZTeDngHA",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 45510
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/15966302_1289021981155394_7090038520880366109_n.jpg": {
+      "fileObjectId": 6,
+      "publicUrl": "/api/v1/files/6/public",
+      "driveFileId": "1qTTx2L3Rura4UCZxteY8N21_PT47jc6b",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 42512
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/qris-header.png": {
+      "fileObjectId": 7,
+      "publicUrl": "/api/v1/files/7/public",
+      "driveFileId": "1L_9bOd4x38R5bzhdhnLBCo7zqMkTsrjN",
+      "mimeType": "image/png",
+      "sizeBytes": 871208
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/qris-penerapan.jpg": {
+      "fileObjectId": 8,
+      "publicUrl": "/api/v1/files/8/public",
+      "driveFileId": "1OsYYCmFoCZh7Lpp0UBlMKnstiaUqOm6_",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 223641
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/10/berita-warga-pangkalpinang-diminta-tanam-pohon-7665_a.jpg": {
+      "fileObjectId": 9,
+      "publicUrl": "/api/v1/files/9/public",
+      "driveFileId": "1pj88wrPRa-OCv3xc8Ye9lE52QNKu9bpb",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 15275
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/wp-1604206055613.jpeg": {
+      "fileObjectId": 10,
+      "publicUrl": "/api/v1/files/10/public",
+      "driveFileId": "1aEd-joWQ-kbynzwbu1ZmP_cL0RznLPkh",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 119408
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/ukmk2-2.png": {
+      "fileObjectId": 11,
+      "publicUrl": "/api/v1/files/11/public",
+      "driveFileId": "1XxlLtcPJSQXhmiwQoj9J2L9Nu_P0dR-b",
+      "mimeType": "image/png",
+      "sizeBytes": 133054
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/wp-1605345128232.jpeg": {
+      "fileObjectId": 12,
+      "publicUrl": "/api/v1/files/12/public",
+      "driveFileId": "1jt0a8aRTjKHeufmqHuqdpV3tkselJR4t",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 161702
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/x1024xq80-.jpg.pagespeed.ic_.ul0ncs9_yk.jpeg": {
+      "fileObjectId": 13,
+      "publicUrl": "/api/v1/files/13/public",
+      "driveFileId": "1qMuIbFqmcepWL0HB4Bn5fGZVPBslv10d",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 26995
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/bi-7-days-reverse-repo-rate.jpg": {
+      "fileObjectId": 14,
+      "publicUrl": "/api/v1/files/14/public",
+      "driveFileId": "1URgKnBhQj6QF0MB9H1r3PLpmcBGpAbsC",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 10704
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/wp-1606713354605.jpeg": {
+      "fileObjectId": 15,
+      "publicUrl": "/api/v1/files/15/public",
+      "driveFileId": "1QNDkMBc-46xDpLjuU34Dp8iR8bfZjsOz",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 293546
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/11/strategi-awal-memulai-usaha-vkkshb8ika.jpg": {
+      "fileObjectId": 16,
+      "publicUrl": "/api/v1/files/16/public",
+      "driveFileId": "1l_VN1wnLKcY-RVySPI1WGDYmbw4eR2RJ",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 10987
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/12/whatsapp-image-2020-12-23-at-08.59.59.jpeg": {
+      "fileObjectId": 17,
+      "publicUrl": "/api/v1/files/17/public",
+      "driveFileId": "1EH2tk3aAOKY1D3fcKFR2lI3TNmlfVcPj",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 66384
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/01/image_editor_output_image-795754622-1609864542608.png": {
+      "fileObjectId": 18,
+      "publicUrl": "/api/v1/files/18/public",
+      "driveFileId": "1GhLKH1JBZm1M6WknsZZ5au2lwfxy0wBs",
+      "mimeType": "image/png",
+      "sizeBytes": 330469
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/01/image_editor_output_image1579574448-1610114969871.png": {
+      "fileObjectId": 19,
+      "publicUrl": "/api/v1/files/19/public",
+      "driveFileId": "1r69HLT3Zmt99aHIhn0Ohi3H-td0C8wJz",
+      "mimeType": "image/png",
+      "sizeBytes": 254070
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/01/image_editor_output_image-1497174338-1610181562582.png": {
+      "fileObjectId": 20,
+      "publicUrl": "/api/v1/files/20/public",
+      "driveFileId": "1QQgkX5QS2o7k-ZRigNTj8a8H8V8ZjH9v",
+      "mimeType": "image/png",
+      "sizeBytes": 239535
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/01/mental-health-women-vector_53876-61377.jpg": {
+      "fileObjectId": 21,
+      "publicUrl": "/api/v1/files/21/public",
+      "driveFileId": "15ewbd-IsD0Ekw1vH2AAzYQ2KlRSKNG0M",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 57966
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/01/top-view-disposable-medical-masks-hand-with-gloves_23-2148764798.jpg": {
+      "fileObjectId": 22,
+      "publicUrl": "/api/v1/files/22/public",
+      "driveFileId": "1Sl_pAT3Wk6nyF6s9Pai95J4Udb-aWY4P",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 64660
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/20210206_013449.jpeg": {
+      "fileObjectId": 23,
+      "publicUrl": "/api/v1/files/23/public",
+      "driveFileId": "1A2DmwXu1a8DejX3W8o7BGm07_4oHtigB",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 54563
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image.png": {
+      "fileObjectId": 24,
+      "publicUrl": "/api/v1/files/24/public",
+      "driveFileId": "1jl_Elj_KIm0osWQTfm7NRMDD5cYVzCnh",
+      "mimeType": "image/png",
+      "sizeBytes": 31630
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image-1.png": {
+      "fileObjectId": 25,
+      "publicUrl": "/api/v1/files/25/public",
+      "driveFileId": "1hBgz8L_0qW-O9EnXu8OwJrREzihItiLR",
+      "mimeType": "image/png",
+      "sizeBytes": 44537
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image-3.png": {
+      "fileObjectId": 26,
+      "publicUrl": "/api/v1/files/26/public",
+      "driveFileId": "1WRfLOoxPuqeTkE8QQ2U2T77JQwwQiRul",
+      "mimeType": "image/png",
+      "sizeBytes": 45900
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image-5.png": {
+      "fileObjectId": 27,
+      "publicUrl": "/api/v1/files/27/public",
+      "driveFileId": "10szmLW_BFnFL2jfOCtYchPwqb9xSYAtQ",
+      "mimeType": "image/png",
+      "sizeBytes": 26881
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image-7.png": {
+      "fileObjectId": 28,
+      "publicUrl": "/api/v1/files/28/public",
+      "driveFileId": "1Hii1q_3JcAme2vmgmwi3MzciivgKyp46",
+      "mimeType": "image/png",
+      "sizeBytes": 41918
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/whatsapp-image-2021-02-15-at-17.54.52.jpeg": {
+      "fileObjectId": 29,
+      "publicUrl": "/api/v1/files/29/public",
+      "driveFileId": "1a-2Kdcg4IXx4K4bmhXBhiokNTR-VCDnz",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 48272
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/image_editor_output_image1436807395-1613394850123.jpg": {
+      "fileObjectId": 30,
+      "publicUrl": "/api/v1/files/30/public",
+      "driveFileId": "1fDCvfad3pfed6JJOYG5j0-5voEZRImhI",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 62610
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/02/kepik-dan-semut-merupakan-musuh-alami-kutu-daun-atau-aphids.jpg": {
+      "fileObjectId": 31,
+      "publicUrl": "/api/v1/files/31/public",
+      "driveFileId": "1Q-e-aZXoe2Qk6B_5zn84m2XgKq1Dkh9y",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 92377
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/06/image_editor_output_image-1604255543-1624342823602.jpg": {
+      "fileObjectId": 32,
+      "publicUrl": "/api/v1/files/32/public",
+      "driveFileId": "1nzGeQ3Z1KCMIerlHldysyaE_GMOnUAQs",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 103526
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/06/image_editor_output_image2145725668-1624343399545.jpg": {
+      "fileObjectId": 33,
+      "publicUrl": "/api/v1/files/33/public",
+      "driveFileId": "1dWRMgnzuZqcOqch4vd_p-U8YglyVb1RE",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 227754
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/06/images28129.jpeg": {
+      "fileObjectId": 34,
+      "publicUrl": "/api/v1/files/34/public",
+      "driveFileId": "1TUSN8_m0mhUjjYvF-Ffjz98Kx5DtlY7R",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 43221
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/06/images28229.jpeg": {
+      "fileObjectId": 35,
+      "publicUrl": "/api/v1/files/35/public",
+      "driveFileId": "1bV4Mf3MnIhzvhHxu-XhlpUA6QBra-PZP",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 54169
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/begonia-rex.jpg": {
+      "fileObjectId": 36,
+      "publicUrl": "/api/v1/files/36/public",
+      "driveFileId": "15KL-WT8eNN8updhZxWDffOZapAGtttsE",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 235157
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/string-of-pearls.jpg": {
+      "fileObjectId": 37,
+      "publicUrl": "/api/v1/files/37/public",
+      "driveFileId": "16V3TAblb0-7A8GI9k3qBmpV-iv0VkkD8",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 107574
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/english-ivy.jpg": {
+      "fileObjectId": 38,
+      "publicUrl": "/api/v1/files/38/public",
+      "driveFileId": "1n7aSadYxHNxR1pgs6lWLM9uGONMq9Nvq",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 8110
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/kaktus.jpeg": {
+      "fileObjectId": 39,
+      "publicUrl": "/api/v1/files/39/public",
+      "driveFileId": "1nBzDSxe3OvH_wt1WIm-6fkTatPwQTHSe",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 23755
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/jade-plant.jpg": {
+      "fileObjectId": 40,
+      "publicUrl": "/api/v1/files/40/public",
+      "driveFileId": "153Gzpr2cVdkfjDx0ehv0thkcUKEG4icP",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 8021
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/tillandsia-air-plant-02-1200-630-fb-01312019-min.jpg": {
+      "fileObjectId": 41,
+      "publicUrl": "/api/v1/files/41/public",
+      "driveFileId": "1B2zCMC3iVdF2T98ymJgetCm7jK7TwgcR",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 45836
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/lily.jpg": {
+      "fileObjectId": 42,
+      "publicUrl": "/api/v1/files/42/public",
+      "driveFileId": "1m4m2M3gaizlUmTO_1omjcHWCU-XkgUlx",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 43637
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/monstera.jpg": {
+      "fileObjectId": 43,
+      "publicUrl": "/api/v1/files/43/public",
+      "driveFileId": "1yQ3S-iKu4pP3kvTHcBHxIaVMJRy09IQd",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 13316
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/azalea.jpg": {
+      "fileObjectId": 44,
+      "publicUrl": "/api/v1/files/44/public",
+      "driveFileId": "1QckJIMmAtrxShlUv6NmWThDWV5rhl7W5",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 10727
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/lidah-mertua.jpg": {
+      "fileObjectId": 45,
+      "publicUrl": "/api/v1/files/45/public",
+      "driveFileId": "10SHOxOJNg_QzCjZGgszGKF63SJxVDQf1",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 17482
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/monstera-delicosa.jpg": {
+      "fileObjectId": 46,
+      "publicUrl": "/api/v1/files/46/public",
+      "driveFileId": "1gBHW37WxT7vfIEOoz3I_j6Y8-gdVq0FR",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 9025
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/jamie-fenn-i8fwqmjr67m-unsplash-2.jpg": {
+      "fileObjectId": 47,
+      "publicUrl": "/api/v1/files/47/public",
+      "driveFileId": "1TtypsrQeNrIujevhXS5P9RdeiCJxKo5x",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1236988
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/benjamin-combs-wuu_ssxdes0-unsplash.jpg": {
+      "fileObjectId": 48,
+      "publicUrl": "/api/v1/files/48/public",
+      "driveFileId": "1-GRxvzwJx2g1Q4gVa97rMh7pFZKsu3zH",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 2772522
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/avi-naim-uxsu-mrf2cc-unsplash-2.jpg": {
+      "fileObjectId": 49,
+      "publicUrl": "/api/v1/files/49/public",
+      "driveFileId": "1QZ6EgJ_5BIzSknM6oT-FiUPFTh4xizAz",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 2576581
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/brooke-cagle-4rggy-aa308-unsplash.jpg": {
+      "fileObjectId": 50,
+      "publicUrl": "/api/v1/files/50/public",
+      "driveFileId": "1vGJLwcmlTKiSgYGoiWzjzwaym67yYZS7",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1342487
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/neonbrand-rl4m0iczo4-unsplash.jpg": {
+      "fileObjectId": 51,
+      "publicUrl": "/api/v1/files/51/public",
+      "driveFileId": "1fQzdhOpJvEFC9-8XwbgqTDx6rxrJXf6P",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1043563
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/07/andreea-pop-yfsigndkcva-unsplash.jpg": {
+      "fileObjectId": 52,
+      "publicUrl": "/api/v1/files/52/public",
+      "driveFileId": "10C10iOtplzsPSZh71dWez0rSYi0kC5yy",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 3057213
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture1.png": {
+      "fileObjectId": 53,
+      "publicUrl": "/api/v1/files/53/public",
+      "driveFileId": "1wqOvR_-wohw_om5wWDX324QtQ2yL59Zs",
+      "mimeType": "image/png",
+      "sizeBytes": 104961
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture2.png": {
+      "fileObjectId": 54,
+      "publicUrl": "/api/v1/files/54/public",
+      "driveFileId": "1bQJGoHHB5A0bWoTaa_2E_dhvJkapjaaI",
+      "mimeType": "image/png",
+      "sizeBytes": 707353
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture3.png": {
+      "fileObjectId": 55,
+      "publicUrl": "/api/v1/files/55/public",
+      "driveFileId": "15eYqZ03aLTXkx6wPnSQZrAEYf8W9a7rP",
+      "mimeType": "image/png",
+      "sizeBytes": 165325
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture4.png": {
+      "fileObjectId": 56,
+      "publicUrl": "/api/v1/files/56/public",
+      "driveFileId": "1TcwwxYLTY6QaBRlheGDidJE9_mxqWoGh",
+      "mimeType": "image/png",
+      "sizeBytes": 568881
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture5.png": {
+      "fileObjectId": 57,
+      "publicUrl": "/api/v1/files/57/public",
+      "driveFileId": "1V726HwURYGypFshuNUHcdK8PCIdeE3Kc",
+      "mimeType": "image/png",
+      "sizeBytes": 307202
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/10/picture6.png": {
+      "fileObjectId": 58,
+      "publicUrl": "/api/v1/files/58/public",
+      "driveFileId": "1Usa0-NcfVfOxZuo1clENrivC5A5MopJc",
+      "mimeType": "image/png",
+      "sizeBytes": 578497
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/11/pajak.jpg": {
+      "fileObjectId": 59,
+      "publicUrl": "/api/v1/files/59/public",
+      "driveFileId": "1oX_KjUJhav3m9EAzb9kcin44FdOnZCKD",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 24286
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2021/11/bi.jpg": {
+      "fileObjectId": 60,
+      "publicUrl": "/api/v1/files/60/public",
+      "driveFileId": "1mF5LJoHQ2tq65TrLnKwJlMztHJNVyDOO",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 19016
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/06/genbi-news-fix-2.png": {
+      "fileObjectId": 61,
+      "publicUrl": "/api/v1/files/61/public",
+      "driveFileId": "11pTzx6HOye0717-1pjMD3dDknrxcihOi",
+      "mimeType": "image/png",
+      "sizeBytes": 930786
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/07/genbi-news-pg-20.png": {
+      "fileObjectId": 62,
+      "publicUrl": "/api/v1/files/62/public",
+      "driveFileId": "12xX6kBUymJqUQ1rDGRJQ6td4rOAhINWx",
+      "mimeType": "image/png",
+      "sizeBytes": 2072858
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/07/genbi-study.png": {
+      "fileObjectId": 63,
+      "publicUrl": "/api/v1/files/63/public",
+      "driveFileId": "1y4XskHU2LWgxAbxesIRWWwrZfdZiX7C8",
+      "mimeType": "image/png",
+      "sizeBytes": 1042997
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/08/genbi-news-menanam-mangrove-website.png": {
+      "fileObjectId": 64,
+      "publicUrl": "/api/v1/files/64/public",
+      "driveFileId": "1SHiqL2ARtO7MOj95uUlkq0ydD3d9D06n",
+      "mimeType": "image/png",
+      "sizeBytes": 2360026
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/10/genbi-news-genbi-mengajar-web.png": {
+      "fileObjectId": 65,
+      "publicUrl": "/api/v1/files/65/public",
+      "driveFileId": "1sQgAgT-c6A9JDjacQRJLqUQ8nCLGv2qD",
+      "mimeType": "image/png",
+      "sizeBytes": 2393443
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/11/doraa-web.png": {
+      "fileObjectId": 66,
+      "publicUrl": "/api/v1/files/66/public",
+      "driveFileId": "1BqpC-OsLJe7L3-XCTI_8bA67kNJ4aEyD",
+      "mimeType": "image/png",
+      "sizeBytes": 1801732
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/12/genbi-news-hutan-kota-web.png": {
+      "fileObjectId": 67,
+      "publicUrl": "/api/v1/files/67/public",
+      "driveFileId": "13DSh-oGsM6wvOdL_9_MYAOA87qUXM9zs",
+      "mimeType": "image/png",
+      "sizeBytes": 2419752
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/01/genbi-news-webinar-lh.png": {
+      "fileObjectId": 68,
+      "publicUrl": "/api/v1/files/68/public",
+      "driveFileId": "1vYqYlWX1YEgs9Hsn_W__E81z59d7w_p9",
+      "mimeType": "image/png",
+      "sizeBytes": 823550
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/02/genbi-news-sosialisasi-kesmas-web.png": {
+      "fileObjectId": 69,
+      "publicUrl": "/api/v1/files/69/public",
+      "driveFileId": "1TpkwiDgjjbRALpFMtVXZ3cdMBxRPFkDz",
+      "mimeType": "image/png",
+      "sizeBytes": 2085016
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/03/genbi-news-genexpo-wordpress.png": {
+      "fileObjectId": 70,
+      "publicUrl": "/api/v1/files/70/public",
+      "driveFileId": "1saiXZmn0l2vEMT9MRlab9JDr1h1W5OLv",
+      "mimeType": "image/png",
+      "sizeBytes": 1415554
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/asda.png": {
+      "fileObjectId": 71,
+      "publicUrl": "/api/v1/files/71/public",
+      "driveFileId": "1KrDvJ9S0PHb3oyBHIMB_vlzIfFxkPTm-",
+      "mimeType": "image/png",
+      "sizeBytes": 147279
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-5.png": {
+      "fileObjectId": 72,
+      "publicUrl": "/api/v1/files/72/public",
+      "driveFileId": "1agL7-HKyIeS5n2FN3QFRxfNsXz4prok5",
+      "mimeType": "image/png",
+      "sizeBytes": 565982
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-6.png": {
+      "fileObjectId": 73,
+      "publicUrl": "/api/v1/files/73/public",
+      "driveFileId": "1Bx8-BIwZ7sgteZnfG6muavwwlil5u6Pq",
+      "mimeType": "image/png",
+      "sizeBytes": 567609
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-7.png": {
+      "fileObjectId": 74,
+      "publicUrl": "/api/v1/files/74/public",
+      "driveFileId": "1btiSs7r5iD47QjruAUDYgdKBMzEtOWjJ",
+      "mimeType": "image/png",
+      "sizeBytes": 555705
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-11.png": {
+      "fileObjectId": 75,
+      "publicUrl": "/api/v1/files/75/public",
+      "driveFileId": "1dPDy47RSZbH6O-NRaGhFUIbxM1zbfGJf",
+      "mimeType": "image/png",
+      "sizeBytes": 493441
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-12.png": {
+      "fileObjectId": 76,
+      "publicUrl": "/api/v1/files/76/public",
+      "driveFileId": "1oCg-TDWs9rRWtOYprBY5VdqwRqrbK3Xe",
+      "mimeType": "image/png",
+      "sizeBytes": 653561
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/image-10.png": {
+      "fileObjectId": 77,
+      "publicUrl": "/api/v1/files/77/public",
+      "driveFileId": "1GZ-p_WmjTHRX2ok2ldh9tt7EGXsIfD27",
+      "mimeType": "image/png",
+      "sizeBytes": 513101
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/04/genbi-news-genbi-study-web.png": {
+      "fileObjectId": 78,
+      "publicUrl": "/api/v1/files/78/public",
+      "driveFileId": "1Pz3_TIWUHDpuZO19wOYAxOoy96Dm8dIC",
+      "mimeType": "image/png",
+      "sizeBytes": 964859
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/05/genbi-news-webinar-pspb-wordpress.png": {
+      "fileObjectId": 79,
+      "publicUrl": "/api/v1/files/79/public",
+      "driveFileId": "1376bh9B4vj89iOFDUMnsrnCmAneBTfb1",
+      "mimeType": "image/png",
+      "sizeBytes": 1589144
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/06/genbi-news-germas-wordpress.png": {
+      "fileObjectId": 80,
+      "publicUrl": "/api/v1/files/80/public",
+      "driveFileId": "1PNGSGK8hxtF9I5q9W18fMDS1og2q_Jsj",
+      "mimeType": "image/png",
+      "sizeBytes": 1952775
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2023/07/genbi-news-sgk-wordpress.png": {
+      "fileObjectId": 81,
+      "publicUrl": "/api/v1/files/81/public",
+      "driveFileId": "1tzc4rpKba8P1GZaLWll0lHXbm_Hd_DVH",
+      "mimeType": "image/png",
+      "sizeBytes": 1944698
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/01/daerah-ikn.webp": {
+      "fileObjectId": 82,
+      "publicUrl": "/api/v1/files/82/public",
+      "driveFileId": "1zjNia_pWB4uogHfVa4-WD4qX8ZoN8mqT",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 125096
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/01/image.png": {
+      "fileObjectId": 83,
+      "publicUrl": "/api/v1/files/83/public",
+      "driveFileId": "18yoK2ZAdzOz3Rh0jAd0xrz53Z_KTPCK9",
+      "mimeType": "image/png",
+      "sizeBytes": 433674
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/01/gepeu-genbi-news-wp-1.png": {
+      "fileObjectId": 84,
+      "publicUrl": "/api/v1/files/84/public",
+      "driveFileId": "1Q7swwppFv5Qgcys141CURoA26t7xTAtG",
+      "mimeType": "image/png",
+      "sizeBytes": 1235127
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/02/img_8822.png": {
+      "fileObjectId": 85,
+      "publicUrl": "/api/v1/files/85/public",
+      "driveFileId": "1DT6aDb_5A8cVHtNm49-FJdZ99f-7PPD9",
+      "mimeType": "image/png",
+      "sizeBytes": 1174694
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/02/img_8919.png": {
+      "fileObjectId": 86,
+      "publicUrl": "/api/v1/files/86/public",
+      "driveFileId": "1icVyv9yqA17uto3vuBN9VhNn8h2hI-QU",
+      "mimeType": "image/png",
+      "sizeBytes": 1203351
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/02/img_9200.png": {
+      "fileObjectId": 87,
+      "publicUrl": "/api/v1/files/87/public",
+      "driveFileId": "18uv583_8mlqeWQ1PBIZvoimdDMK6Q873",
+      "mimeType": "image/png",
+      "sizeBytes": 1145717
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/02/img_9479.png": {
+      "fileObjectId": 88,
+      "publicUrl": "/api/v1/files/88/public",
+      "driveFileId": "14HPUX2gBXhw-ZhRPFFgycUKtwtjw5IUB",
+      "mimeType": "image/png",
+      "sizeBytes": 1201547
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/03/image.png": {
+      "fileObjectId": 89,
+      "publicUrl": "/api/v1/files/89/public",
+      "driveFileId": "1CmZckp0FpKOz2O61LbVabB5ezX92XCUf",
+      "mimeType": "image/png",
+      "sizeBytes": 614412
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/03/image-1.png": {
+      "fileObjectId": 90,
+      "publicUrl": "/api/v1/files/90/public",
+      "driveFileId": "1yyFaQXjVGookqrybpEK-zvegF0VQk2-Q",
+      "mimeType": "image/png",
+      "sizeBytes": 357604
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/03/img_9871.png": {
+      "fileObjectId": 91,
+      "publicUrl": "/api/v1/files/91/public",
+      "driveFileId": "1fvxyT5t5Ddm7cvs4z8BuMLo6x4siLSo7",
+      "mimeType": "image/png",
+      "sizeBytes": 1152033
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/05/slide-2.png": {
+      "fileObjectId": 92,
+      "publicUrl": "/api/v1/files/92/public",
+      "driveFileId": "1ub7uuOwQejqkvOGVfh3qXXM8Ei_oC3Uk",
+      "mimeType": "image/png",
+      "sizeBytes": 654097
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/06/newsgenexpo_slide-2.png": {
+      "fileObjectId": 93,
+      "publicUrl": "/api/v1/files/93/public",
+      "driveFileId": "1aPVhk_hQfW4EnQVA0NuT3VeKQ-gK2d6B",
+      "mimeType": "image/png",
+      "sizeBytes": 1322875
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/06/salinan-dari-design-genbi-news_20240606_074020_0000.png": {
+      "fileObjectId": 94,
+      "publicUrl": "/api/v1/files/94/public",
+      "driveFileId": "1F0AfFGrXS-Ui22AhTpDvSMh8AAUC71HJ",
+      "mimeType": "image/png",
+      "sizeBytes": 1272874
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/11/sp_2433722.jpg": {
+      "fileObjectId": 95,
+      "publicUrl": "/api/v1/files/95/public",
+      "driveFileId": "1N0YhXvO0tt5IwDoKIaQ0etqOYrlT2KLM",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 4132098
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/12/bank-indonesia-ekonomi-hijau-1.jpg": {
+      "fileObjectId": 96,
+      "publicUrl": "/api/v1/files/96/public",
+      "driveFileId": "1i55FWKk9uBKZXDmLmhV-pAFCSptM4UVg",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 60953
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/give-a-tree.png": {
+      "fileObjectId": 97,
+      "publicUrl": "/api/v1/files/97/public",
+      "driveFileId": "1YlRf3IrMTFAbbGOt5Gpl-uWaOphjvjya",
+      "mimeType": "image/png",
+      "sizeBytes": 944203
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/12/genbi-news-slide-2.png": {
+      "fileObjectId": 98,
+      "publicUrl": "/api/v1/files/98/public",
+      "driveFileId": "1DX2mCiHgWnICjbiOOVTTg4lWWZRsjoGY",
+      "mimeType": "image/png",
+      "sizeBytes": 1370800
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/img_0631.jpg": {
+      "fileObjectId": 99,
+      "publicUrl": "/api/v1/files/99/public",
+      "driveFileId": "1L-0Ig4MgeC1mcP_0rk_zHFqY3jH-OTED",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 3093001
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/page-2-rev.png": {
+      "fileObjectId": 100,
+      "publicUrl": "/api/v1/files/100/public",
+      "driveFileId": "10erbabUteODtLMv7z7sVX5ZrN791q6SM",
+      "mimeType": "image/png",
+      "sizeBytes": 1358193
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/genbi-news-slide-2-mangrove.png": {
+      "fileObjectId": 101,
+      "publicUrl": "/api/v1/files/101/public",
+      "driveFileId": "1g7Kth5zjrLWbRsfwShnUt4QjIX9w1JoJ",
+      "mimeType": "image/png",
+      "sizeBytes": 1639601
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/02/page-2-rv.png": {
+      "fileObjectId": 102,
+      "publicUrl": "/api/v1/files/102/public",
+      "driveFileId": "1MHL8fvu-UJ54wS2d46rUSdplAKgtAdYy",
+      "mimeType": "image/png",
+      "sizeBytes": 1478336
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/02/sehati-page-2.png": {
+      "fileObjectId": 103,
+      "publicUrl": "/api/v1/files/103/public",
+      "driveFileId": "19KnzJYcVJY4ARYWcqxYYdEc8KWYdx_WV",
+      "mimeType": "image/png",
+      "sizeBytes": 1482007
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/03/genbi-kasih-page-2.png": {
+      "fileObjectId": 104,
+      "publicUrl": "/api/v1/files/104/public",
+      "driveFileId": "1e8UpxEYgTvxmc4Df2XNK1XeSjiYtnEGo",
+      "mimeType": "image/png",
+      "sizeBytes": 1367595
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/11/img_1610.jpg": {
+      "fileObjectId": 106,
+      "publicUrl": "/api/v1/files/106/public",
+      "driveFileId": "1pxo3bYcrhuPuN3hrCqhK_pj9wu5k3db8",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 7403168
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2024/11/img_1610.jpg);background-position:32%": {
+      "fileObjectId": 106,
+      "publicUrl": "/api/v1/files/106/public",
+      "driveFileId": "1pxo3bYcrhuPuN3hrCqhK_pj9wu5k3db8",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 7403168,
+      "repairedFrom": "https://genbiunsika.wordpress.com/wp-content/uploads/2024/11/img_1610.jpg);background-position:32%",
+      "canonical": "https://genbiunsika.wordpress.com/wp-content/uploads/2024/11/img_1610.jpg"
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/img_1610-edited.jpg": {
+      "fileObjectId": 107,
+      "publicUrl": "/api/v1/files/107/public",
+      "driveFileId": "1HDcVrz7PbnqvCR12OGCwbJrGo-jjM7qF",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 2340813
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/video-profile-genbi-unsika.00_00_23_15.still001.jpg": {
+      "fileObjectId": 108,
+      "publicUrl": "/api/v1/files/108/public",
+      "driveFileId": "1UvGQI3wpRVWPG2Or8t9kQ0YPsXZWCOfV",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 949827
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/mochamad-faishal-burhanudin.jpg": {
+      "fileObjectId": 109,
+      "publicUrl": "/api/v1/files/109/public",
+      "driveFileId": "1gXQzGc09IwMPyanmH7vifolFimwiQK76",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1264439
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/nana-casmana-ade-wikarta.jpg": {
+      "fileObjectId": 110,
+      "publicUrl": "/api/v1/files/110/public",
+      "driveFileId": "1BuHxAhTqyjKe-KTFXxScFUOAau8Qv6l-",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1281570
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/lydia-angelica-sitorus.jpg": {
+      "fileObjectId": 111,
+      "publicUrl": "/api/v1/files/111/public",
+      "driveFileId": "1_2ZodaaI3uJQAYMGd3fN6fTgIFOPsmZm",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1290040
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/aira-nazua-artamevia.jpg": {
+      "fileObjectId": 112,
+      "publicUrl": "/api/v1/files/112/public",
+      "driveFileId": "1hjMnd8cdK8dQNC34RfSlMorvnYjmyLr7",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1301386
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/rohmah-laelasari.jpg": {
+      "fileObjectId": 113,
+      "publicUrl": "/api/v1/files/113/public",
+      "driveFileId": "1nbZGkygCpJq4P8M2j7btcNIn0DGuwScw",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1240763
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/ulya-sofiatunnisa.jpg": {
+      "fileObjectId": 114,
+      "publicUrl": "/api/v1/files/114/public",
+      "driveFileId": "1BtL-FhcVf7L58tx9s79wDADq-QU4H2Mv",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1285651
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot.jpg": {
+      "fileObjectId": 115,
+      "publicUrl": "/api/v1/files/115/public",
+      "driveFileId": "1ToxKVWqUtToZ0LrNuq8NIDJQ8BcdKm6r",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1272533
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-2.jpg": {
+      "fileObjectId": 116,
+      "publicUrl": "/api/v1/files/116/public",
+      "driveFileId": "1JS3wMYigAx3kmqAZ7VYR0Sf6mUyQE0Rw",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1300032
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-3.jpg": {
+      "fileObjectId": 117,
+      "publicUrl": "/api/v1/files/117/public",
+      "driveFileId": "1B31kXUZed_SQWVVch6dEpsAiAMdEiu1d",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1284279
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-7.jpg": {
+      "fileObjectId": 118,
+      "publicUrl": "/api/v1/files/118/public",
+      "driveFileId": "1A0AIy-_3TUkFUA2mmyI4MAj85UtPSMim",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1259507
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-5.jpg": {
+      "fileObjectId": 119,
+      "publicUrl": "/api/v1/files/119/public",
+      "driveFileId": "1Px3RZrQyIo0GkwpEGMeZxBeD-EfyU-Z5",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1293845
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-10.jpg": {
+      "fileObjectId": 120,
+      "publicUrl": "/api/v1/files/120/public",
+      "driveFileId": "1BW7xoKJnS28m1r5DgdgCvpGe9EBqyiIc",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1272254
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-8.jpg": {
+      "fileObjectId": 121,
+      "publicUrl": "/api/v1/files/121/public",
+      "driveFileId": "11inKea-eo-Yh-Z1XdPT9ufoF6GemNnMQ",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1250899
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-6.jpg": {
+      "fileObjectId": 122,
+      "publicUrl": "/api/v1/files/122/public",
+      "driveFileId": "131va5HvA89NQS3LnME_ItFFmelb5FRtY",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1259021
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-9.jpg": {
+      "fileObjectId": 123,
+      "publicUrl": "/api/v1/files/123/public",
+      "driveFileId": "13nQ2o8ti_8U5k5bmMlVD2uaU4x5ulZVA",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1276675
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-4.jpg": {
+      "fileObjectId": 124,
+      "publicUrl": "/api/v1/files/124/public",
+      "driveFileId": "1FP6tiTpBQO9Zd3924iyakZqPznVQM0dd",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1241589
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/26.jpg": {
+      "fileObjectId": 125,
+      "publicUrl": "/api/v1/files/125/public",
+      "driveFileId": "1-x6fnW1xyG7iEqFNvlHwlCMaKOmyrhtF",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1278281
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/27.jpg": {
+      "fileObjectId": 126,
+      "publicUrl": "/api/v1/files/126/public",
+      "driveFileId": "1wXHnDyv30wCkvGMeI32Fxu0JKW3Bw6tA",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1295273
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/28.jpg": {
+      "fileObjectId": 127,
+      "publicUrl": "/api/v1/files/127/public",
+      "driveFileId": "13A7m2lEIamV4EoIgnc6hIIXp2g_I_twF",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1291339
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/31.jpg": {
+      "fileObjectId": 128,
+      "publicUrl": "/api/v1/files/128/public",
+      "driveFileId": "1KVuLb-UjteSLCFyNfjR5Mw0h5pXsba8H",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1290545
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/33.jpg": {
+      "fileObjectId": 129,
+      "publicUrl": "/api/v1/files/129/public",
+      "driveFileId": "1wsPPUBwMlyVdembiHhuyiSrYKHkRO7Ht",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1293595
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/30.jpg": {
+      "fileObjectId": 130,
+      "publicUrl": "/api/v1/files/130/public",
+      "driveFileId": "1h42cInWs4s7wjeDmP4Ixg37HY3Uob9jU",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1283645
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/32.jpg": {
+      "fileObjectId": 131,
+      "publicUrl": "/api/v1/files/131/public",
+      "driveFileId": "1lWKd8ZJDKYpL0WThSYhjNjNp7yMWHEx4",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1286673
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/29.jpg": {
+      "fileObjectId": 132,
+      "publicUrl": "/api/v1/files/132/public",
+      "driveFileId": "14mX5YLXBFfwHnRH5CvZNWC_0AQSRcgbN",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1285057
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-11.jpg": {
+      "fileObjectId": 133,
+      "publicUrl": "/api/v1/files/133/public",
+      "driveFileId": "1Qidp2YtDuPXddXCDiAzYdYVPvSiy_OV8",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1307722
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-4-1.jpg": {
+      "fileObjectId": 134,
+      "publicUrl": "/api/v1/files/134/public",
+      "driveFileId": "1wwFjsftADq751Bqyb0-OYSDpyCZ_PYMk",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1253750
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-5-1.jpg": {
+      "fileObjectId": 135,
+      "publicUrl": "/api/v1/files/135/public",
+      "driveFileId": "1fY7OPZQCZd_xmIhRyAMTStT91Un3LkRG",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1230606
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-7-1.jpg": {
+      "fileObjectId": 136,
+      "publicUrl": "/api/v1/files/136/public",
+      "driveFileId": "1b_g8Jnml3R-YaOVkLGEMIFSdVjWRMJMH",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1252477
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/25.jpg": {
+      "fileObjectId": 137,
+      "publicUrl": "/api/v1/files/137/public",
+      "driveFileId": "1UohKmJcy-IFzoHx80fkFsHOc-H5J4b7I",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1262725
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-3-1.jpg": {
+      "fileObjectId": 138,
+      "publicUrl": "/api/v1/files/138/public",
+      "driveFileId": "1Tv7Ss9tVNXC11-HpFA90-2fSc04QVeAV",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1277642
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-6-1.jpg": {
+      "fileObjectId": 139,
+      "publicUrl": "/api/v1/files/139/public",
+      "driveFileId": "1fk93mC177ag7A0-7ZoVJJ9NHFMBIgD7o",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1248792
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/desain-tanpa-judul-3.jpg": {
+      "fileObjectId": 140,
+      "publicUrl": "/api/v1/files/140/public",
+      "driveFileId": "1ZE9XDg_-SvvVlNe0NdIShJRMXp946Sva",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1270701
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/background-dot-2-1.jpg": {
+      "fileObjectId": 141,
+      "publicUrl": "/api/v1/files/141/public",
+      "driveFileId": "1jSWdjyImRqXqqJC3972L7FjTXS4HBo8H",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1283784
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/34.jpg": {
+      "fileObjectId": 142,
+      "publicUrl": "/api/v1/files/142/public",
+      "driveFileId": "1m2KesmiC6MjtYePLsvTYS1dvBmR56r5H",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1287161
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/40.jpg": {
+      "fileObjectId": 143,
+      "publicUrl": "/api/v1/files/143/public",
+      "driveFileId": "1_v5HaSxoErBVMK97b82wa_fv0mQQnR0K",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1313019
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/39.jpg": {
+      "fileObjectId": 144,
+      "publicUrl": "/api/v1/files/144/public",
+      "driveFileId": "1nTmtc3WPNVs_5oPsLZBCQ59Q8S_e9iYk",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1268288
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/41.jpg": {
+      "fileObjectId": 145,
+      "publicUrl": "/api/v1/files/145/public",
+      "driveFileId": "1y421FOgCjDkrb0qVVyrmDtKhGaeLa_Ur",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1234163
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/35.jpg": {
+      "fileObjectId": 146,
+      "publicUrl": "/api/v1/files/146/public",
+      "driveFileId": "1Aq_D67pC3mGBSM3XSynYjYrBPMjp_J0N",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1274386
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/36.jpg": {
+      "fileObjectId": 147,
+      "publicUrl": "/api/v1/files/147/public",
+      "driveFileId": "1AbtMrpX_I1z2FtzTjFqtpfzgjmBHu6BY",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1248046
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/38.jpg": {
+      "fileObjectId": 148,
+      "publicUrl": "/api/v1/files/148/public",
+      "driveFileId": "1lOzAL5Z06LtoIpe8CcVIwAGCd4sUUmVL",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1188949
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/37.jpg": {
+      "fileObjectId": 149,
+      "publicUrl": "/api/v1/files/149/public",
+      "driveFileId": "1kphUtGQot13ydxOXfsSSkFjCIaZsWsfa",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1293307
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/43.jpg": {
+      "fileObjectId": 150,
+      "publicUrl": "/api/v1/files/150/public",
+      "driveFileId": "1kr0Ziae3EAwmBKR_sOiRJgnLqg0RNPGu",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1269010
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/42.jpg": {
+      "fileObjectId": 151,
+      "publicUrl": "/api/v1/files/151/public",
+      "driveFileId": "1iiZhoB45mbeiGHc0KYD6_xtaxGnmjJbi",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1308805
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/50.jpg": {
+      "fileObjectId": 152,
+      "publicUrl": "/api/v1/files/152/public",
+      "driveFileId": "1DTfLLyuFhkq36_4KaIiRRKZjL-w1uzSR",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1252309
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/45.jpg": {
+      "fileObjectId": 153,
+      "publicUrl": "/api/v1/files/153/public",
+      "driveFileId": "13f_Kb84PstJ-48zvJqs4KFjTuaQ-LU34",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1279842
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/49.jpg": {
+      "fileObjectId": 154,
+      "publicUrl": "/api/v1/files/154/public",
+      "driveFileId": "1xBCgesze07KHlAcuD8PLVHZfneAiFxSo",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1239553
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/47.jpg": {
+      "fileObjectId": 155,
+      "publicUrl": "/api/v1/files/155/public",
+      "driveFileId": "1umjirUiGvHEvMQXB2e5EW20E-jSrhlgg",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1289907
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/48.jpg": {
+      "fileObjectId": 156,
+      "publicUrl": "/api/v1/files/156/public",
+      "driveFileId": "1f4dG38kXYGToDrGPEw6TkvwKsSnfm8hS",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1284242
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/46.jpg": {
+      "fileObjectId": 157,
+      "publicUrl": "/api/v1/files/157/public",
+      "driveFileId": "1hX9uNn6D5L_RDEv1FQT7oNU0z69VdG5n",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1301728
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/44.jpg": {
+      "fileObjectId": 158,
+      "publicUrl": "/api/v1/files/158/public",
+      "driveFileId": "1SCsSK2jmJ8NMPnFQcxnOnR4Eh-m_5D1z",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1295846
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/09/120258361_862160250984213_463488603459697954_n.jpg": {
+      "fileObjectId": 159,
+      "publicUrl": "/api/v1/files/159/public",
+      "driveFileId": "130KkZezwU5f88yh5vaNQSpIyRi2uagKE",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 43164
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/09/103177717_146457526973290_7827660554981059518_n.jpg": {
+      "fileObjectId": 160,
+      "publicUrl": "/api/v1/files/160/public",
+      "driveFileId": "1Ze5hBtvjtdAuWhM0Yx_q-N1o7UQ-JJDq",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 63142
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2020/09/107179156_567937067235881_7883243351111485857_n.jpg": {
+      "fileObjectId": 161,
+      "publicUrl": "/api/v1/files/161/public",
+      "driveFileId": "1ibRVTsXbBKjFxL3xkrOJ-nLbxUA1ZvLZ",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 108886
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2022/06/genbi-news-webinar.png": {
+      "fileObjectId": 162,
+      "publicUrl": "/api/v1/files/162/public",
+      "driveFileId": "1OZPQFlfQLtNKhVbfw55Sn4CBMlcmTVVW",
+      "mimeType": "image/png",
+      "sizeBytes": 922437
+    },
+    "https://genbiunsika.wordpress.com/wp-content/uploads/2025/01/qr-daftar-beasiswa-bi-unsika-2025.png": {
+      "fileObjectId": 163,
+      "publicUrl": "/api/v1/files/163/public",
+      "driveFileId": "14BztG4UrP_lj_dErA-yIHyJ0t-MODIs-",
+      "mimeType": "image/png",
+      "sizeBytes": 46594
+    }
+  }
+}

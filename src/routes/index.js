@@ -20,7 +20,7 @@ import membersRoutes from './members.routes.js';
 import analyticsRoutes from './analytics.routes.js';
 import infoCenterRoutes from './info-center.routes.js';
 import publicRoutes from './public.routes.js';
-
+import subscribersRoutes from './subscribers.routes.js';
 
 const router = Router();
 
@@ -48,6 +48,6 @@ router.use('/users', usersRoutes);
 router.use('/members', membersRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/info-center', infoCenterRoutes);
-
+router.use('/subscribers', subscribersRoutes);
 
 export default router;

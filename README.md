@@ -5,6 +5,7 @@ Backend API server untuk GenBI Unsika yang menangani logika bisnis, autentikasi,
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js v18+
 - MySQL/MariaDB
 - Google Cloud Console Account (untuk Drive API & OAuth)
@@ -12,6 +13,7 @@ Backend API server untuk GenBI Unsika yang menangani logika bisnis, autentikasi,
 ### Installation
 
 1.  **Clone & Install Dependencies**
+
     ```bash
     git clone <repository-url>
     cd genbi-server
@@ -20,8 +22,9 @@ Backend API server untuk GenBI Unsika yang menangani logika bisnis, autentikasi,
 
 2.  **Environment Variables**
     Buat file `.env` berdasarkan `.env.example`:
+
     ```env
-    PORT=4000
+    PORT=3500
     DATABASE_URL=mysql://root:password@localhost:3306/genbi_db
     JWT_ACCESS_SECRET=super_secret_key
     JWT_REFRESH_SECRET=super_secret_refresh_key
@@ -31,6 +34,7 @@ Backend API server untuk GenBI Unsika yang menangani logika bisnis, autentikasi,
     ```
 
 3.  **Database Setup**
+
     ```bash
     npx prisma generate
     npx prisma migrate deploy
@@ -41,17 +45,17 @@ Backend API server untuk GenBI Unsika yang menangani logika bisnis, autentikasi,
     ```bash
     npm run dev
     ```
-    Server berjalan di `http://localhost:4000`.
+    Server berjalan di `http://localhost:3500`.
 
 ## 🛠️ Tech Stack
 
--   **Runtime**: Node.js
--   **Framework**: Express.js
--   **ORM**: Prisma
--   **Database**: MySQL
--   **Validation**: Zod / Joi (cek `src/middleware/validator`)
--   **Auth**: JWT (Access + Refresh Token), Google OAuth
--   **Storage**: Google Drive API
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **ORM**: Prisma
+- **Database**: MySQL
+- **Validation**: Zod / Joi (cek `src/middleware/validator`)
+- **Auth**: JWT (Access + Refresh Token), Google OAuth
+- **Storage**: Google Drive API
 
 ## 📂 Folder Structure
 
@@ -75,17 +79,20 @@ genbi-server/
 ## 🔄 Integrations & Flow
 
 ### 1. Database (MySQL via Prisma)
--   Semua interaksi database menggunakan Prisma Client.
--   Schema didefinisikan di `prisma/schema.prisma`.
--   **Migration**: `npx prisma migrate dev` untuk update schema.
+
+- Semua interaksi database menggunakan Prisma Client.
+- Schema didefinisikan di `prisma/schema.prisma`.
+- **Migration**: `npx prisma migrate dev` untuk update schema.
 
 ### 2. Google Drive (File Storage)
--   File diupload ke folder temporary server dulu.
--   Service `src/lib/google-drive.js` mengupload ke Google Drive.
--   ID file Drive disimpan di database kolom `driveFileId`.
--   **Setup Guide**: Lihat `../Documentation/GOOGLE-DRIVE-SETUP.md`.
+
+- File diupload ke folder temporary server dulu.
+- Service `src/lib/google-drive.js` mengupload ke Google Drive.
+- ID file Drive disimpan di database kolom `driveFileId`.
+- **Setup Guide**: Lihat `../Documentation/GOOGLE-DRIVE-SETUP.md`.
 
 ### 3. Authentication Flow
+
 1.  **Login**: User kirim email/pass atau Google Token.
 2.  **Token**: Server return `accessToken` (15m) & `refreshToken` (7d).
 3.  **Middleware**: `authenticateToken` memvalidasi header `Authorization: Bearer <token>`.
@@ -93,25 +100,26 @@ genbi-server/
 
 ## 🗺️ File Tour
 
--   **`src/server.js`**:
-    -   Setup Express app.
-    -   Mendaftarkan middleware global (CORS, JSON parser).
-    -   Mounting routes.
-    -   Global error handler.
+- **`src/server.js`**:
+  - Setup Express app.
+  - Mendaftarkan middleware global (CORS, JSON parser).
+  - Mounting routes.
+  - Global error handler.
 
--   **`src/routes/*.routes.js`**:
-    -   Mendefinisikan URL endpoint.
-    -   Memetakan HTTP method ke Controller.
-    -   Menambahkan middleware auth/validasi per route.
+- **`src/routes/*.routes.js`**:
+  - Mendefinisikan URL endpoint.
+  - Memetakan HTTP method ke Controller.
+  - Menambahkan middleware auth/validasi per route.
 
--   **`prisma/schema.prisma`**:
-    -   Definisi tabel database (User, UserProfile, Activity, dll).
-    -   Definisi relasi antar tabel.
+- **`prisma/schema.prisma`**:
+  - Definisi tabel database (User, UserProfile, Activity, dll).
+  - Definisi relasi antar tabel.
 
 ## 📚 Documentation
 
 Dokumentasi lengkap project ini ada di folder `../Documentation/`:
--   [Setup Guide](../Documentation/SETUP-GUIDE.md)
--   [Architecture](../Documentation/ARCHITECTURE.md)
--   [Google Drive Setup](../Documentation/GOOGLE-DRIVE-SETUP.md)
--   [Database Migration](../Documentation/DATABASE-MIGRATION-GUIDE.md)
+
+- [Setup Guide](../Documentation/SETUP-GUIDE.md)
+- [Architecture](../Documentation/ARCHITECTURE.md)
+- [Google Drive Setup](../Documentation/GOOGLE-DRIVE-SETUP.md)
+- [Database Migration](../Documentation/DATABASE-MIGRATION-GUIDE.md)

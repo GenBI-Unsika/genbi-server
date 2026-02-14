@@ -1,0 +1,5 @@
+{
+  "watch": ["src", "packages"],
+  "ext": "js,mjs,json",
+  "ignore": ["temp-uploads/**", "prisma/**", "scripts/**", "**/*.log"]
+}
