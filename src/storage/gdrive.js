@@ -19,7 +19,6 @@ function getServiceAccountFromEnv() {
 }
 
 export function getDriveClient() {
-
   const oauthClientId = (env.GDRIVE_OAUTH_CLIENT_ID || env.GOOGLE_CLIENT_ID || '').split(',')[0].trim();
 
   if (oauthClientId && env.GDRIVE_OAUTH_CLIENT_SECRET && env.GDRIVE_OAUTH_REFRESH_TOKEN) {
@@ -37,6 +36,103 @@ export function getDriveClient() {
   });
 
   return google.drive({ version: 'v3', auth });
+}
+
+// ============================================================================
+// FOLDER MANAGEMENT - Organized GDrive folder structure
+// ============================================================================
+
+// In-memory cache of folder IDs to avoid redundant API calls.
+// Map<string, string> where key = "parentId/folderName" and value = folderId
+const folderCache = new Map();
+
+/**
+ * Find an existing folder by name inside a parent folder, or create it if not found.
+ * @param {string} folderName - The name of the folder to find/create
+ * @param {string} parentFolderId - The parent folder ID
+ * @returns {Promise<string>} The folder ID
+ */
+export async function getOrCreateDriveFolder(folderName, parentFolderId) {
+  const cacheKey = `${parentFolderId}/${folderName}`;
+  if (folderCache.has(cacheKey)) return folderCache.get(cacheKey);
+
+  const drive = getDriveClient();
+
+  // Search for existing folder
+  const query = [`name = '${folderName.replace(/'/g, "\\'")}'`, `'${parentFolderId}' in parents`, `mimeType = 'application/vnd.google-apps.folder'`, `trashed = false`].join(' and ');
+
+  const list = await drive.files.list({
+    q: query,
+    fields: 'files(id, name)',
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+    spaces: 'drive',
+    pageSize: 1,
+  });
+
+  if (list.data.files?.length > 0) {
+    const folderId = list.data.files[0].id;
+    folderCache.set(cacheKey, folderId);
+    return folderId;
+  }
+
+  // Create folder
+  const created = await drive.files.create({
+    requestBody: {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parentFolderId],
+    },
+    supportsAllDrives: true,
+    fields: 'id, name',
+  });
+
+  const folderId = created.data.id;
+  folderCache.set(cacheKey, folderId);
+  return folderId;
+}
+
+/**
+ * Resolve a nested folder path (e.g. "Beasiswa/Periode-2026/NPM-Nama")
+ * creating each segment if it doesn't exist.
+ * @param {string[]} pathSegments - Array of folder names from root to leaf
+ * @param {string} [rootFolderId] - Starting parent folder (defaults to GDRIVE_FOLDER_ID)
+ * @returns {Promise<string>} The deepest folder's ID
+ */
+export async function getOrCreateDriveFolderPath(pathSegments, rootFolderId = env.GDRIVE_FOLDER_ID) {
+  let currentParent = rootFolderId;
+  for (const segment of pathSegments) {
+    currentParent = await getOrCreateDriveFolder(segment, currentParent);
+  }
+  return currentParent;
+}
+
+/**
+ * Build the GDrive folder path segments for a scholarship applicant.
+ * Structure: Beasiswa / Periode-{year} / {NPM}-{Nama}
+ * @param {{ npm: string, name: string, year?: number }} applicant
+ * @returns {string[]}
+ */
+export function buildScholarshipFolderPath({ npm, name, year }) {
+  const y = year || new Date().getFullYear();
+  const safeName = (name || 'Unknown')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .substring(0, 50);
+  return ['Beasiswa', `Periode-${y}`, `${npm}-${safeName}`];
+}
+
+/**
+ * Build folder path for general upload categories.
+ * Structure: {category} / optional sub-folders
+ * Categories: Artikel, Profil, Dispensasi, Kegiatan, etc.
+ * @param {string} category - Top-level folder name
+ * @param {string[]} [subFolders] - Additional sub-folder segments
+ * @returns {string[]}
+ */
+export function buildUploadFolderPath(category, subFolders = []) {
+  return [category, ...subFolders];
 }
 
 function isServiceAccountQuotaError(error) {

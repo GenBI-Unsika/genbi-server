@@ -76,10 +76,19 @@ const server = app.listen(env.PORT, env.HOST, () => {
   console.info(`API listening on http://${displayHost}:${env.PORT}`);
 });
 
+// Increase timeout for bulk file uploads (default is 120s)
+// Match with Vite proxy timeout (5 minutes)
+server.timeout = 5 * 60 * 1000; // 5 minutes
+server.keepAliveTimeout = 5 * 60 * 1000 + 1000; // Slightly longer than timeout
+server.headersTimeout = 5 * 60 * 1000 + 2000; // Slightly longer than keepAliveTimeout
+
 server.on('error', (err) => {
   if (err?.code === 'EADDRINUSE') {
     // eslint-disable-next-line no-console
-    console.error(`Port ${env.PORT} is already in use. Stop the other process or set PORT to a different value in .env.`);
+    console.error(`\n⚠️  Port ${env.PORT} sudah dipakai oleh aplikasi lain!`);
+    console.error(`Solusi:`);
+    console.error(`  1. Stop proses yang pakai port ${env.PORT}: netstat -ano | findstr :${env.PORT}`);
+    console.error(`  2. Atau ganti PORT di file .env ke port lain (misal: 3500, 3600, 8000)\n`);
     process.exit(1);
   }
 
