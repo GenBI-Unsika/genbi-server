@@ -21,7 +21,9 @@
     "db:seed": "node prisma/seed.mjs",
     "admin:create": "node scripts/create-admin.mjs",
     "smoke:auth": "node scripts/smoke-auth.mjs http://localhost:4000",
-    "smoke:drive": "node scripts/smoke-drive.mjs http://127.0.0.1:4000"
+    "smoke:drive": "node scripts/smoke-drive.mjs http://127.0.0.1:4000",
+    "import:wordpress": "node scripts/import-wordpress.mjs",
+    "migrate:wp-media": "node scripts/migrate-wordpress-media.mjs"
   },
   "dependencies": {
     "@genbi/contracts": "workspace:*",
@@ -33,6 +35,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "fast-xml-parser": "^5.2.5",
     "google-auth-library": "^10.5.0",
     "googleapis": "^169.0.0",
     "helmet": "^7.2.0",

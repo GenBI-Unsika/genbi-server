@@ -9,7 +9,7 @@
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { getTempFile, readTempFile, deleteTempFile } from '../storage/temp-storage.js';
-import { uploadBufferToDrive, setDriveFilePublicReadable } from '../storage/gdrive.js';
+import { uploadBufferToDrive, setDriveFilePublicReadable, getOrCreateDriveFolderPath } from '../storage/gdrive.js';
 
 /**
  * Internal finalize upload - moves a staged file to permanent Google Drive storage
@@ -46,6 +46,20 @@ export async function finalizeUpload({ tempId, userId, folder }) {
     throw new Error('File temporary tidak ditemukan atau sudah expired');
   }
 
+  // Resolve target folder — use organized subfolder if specified, else root
+  let targetFolderId = env.GDRIVE_FOLDER_ID;
+  if (folder) {
+    try {
+      const segments = String(folder).split('/').filter(Boolean);
+      if (segments.length > 0) {
+        targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to resolve folder path, falling back to root:', e.message);
+    }
+  }
+
   // Upload to Google Drive
   let driveFile;
   try {
@@ -53,7 +67,7 @@ export async function finalizeUpload({ tempId, userId, folder }) {
       name: tempMeta.originalName,
       mimeType: tempMeta.mimeType,
       buffer,
-      parentFolderId: env.GDRIVE_FOLDER_ID,
+      parentFolderId: targetFolderId,
     });
   } catch (e) {
     // eslint-disable-next-line no-console

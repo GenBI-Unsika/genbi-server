@@ -5,6 +5,7 @@ import { env } from '../config/env.js';
 export const ACCESS_TOKEN_AUDIENCE = 'genbi-access';
 export const REFRESH_TOKEN_AUDIENCE = 'genbi-refresh';
 export const FILE_TOKEN_AUDIENCE = 'genbi-file';
+export const SCHOLARSHIP_ANNOUNCEMENT_TOKEN_AUDIENCE = 'genbi-scholarship-announcement';
 
 export function signAccessToken({ userId, role }) {
   const subject = String(userId);
@@ -68,6 +69,35 @@ export function signFileToken({ userId, fileObjectId, disposition }) {
 export function verifyFileToken(token) {
   return jwt.verify(token, env.JWT_ACCESS_SECRET, {
     audience: FILE_TOKEN_AUDIENCE,
+    issuer: 'genbi-backend',
+  });
+}
+
+function publicAnnouncementSecret() {
+  const s = String(env.JWT_PUBLIC_ANNOUNCEMENT_SECRET || '').trim();
+  return s || env.JWT_ACCESS_SECRET;
+}
+
+/**
+ * Token publik untuk membuka halaman pengumuman beasiswa tanpa login.
+ * Payload dibuat minimal: appId + subject userId.
+ */
+export function signScholarshipAnnouncementToken({ userId, appId }) {
+  const subject = String(userId);
+  const aid = Number(appId);
+  if (!Number.isInteger(aid) || aid <= 0) throw new Error('Invalid appId');
+
+  return jwt.sign({ aid }, publicAnnouncementSecret(), {
+    subject,
+    expiresIn: env.JWT_PUBLIC_ANNOUNCEMENT_TTL_SECONDS,
+    audience: SCHOLARSHIP_ANNOUNCEMENT_TOKEN_AUDIENCE,
+    issuer: 'genbi-backend',
+  });
+}
+
+export function verifyScholarshipAnnouncementToken(token) {
+  return jwt.verify(token, publicAnnouncementSecret(), {
+    audience: SCHOLARSHIP_ANNOUNCEMENT_TOKEN_AUDIENCE,
     issuer: 'genbi-backend',
   });
 }

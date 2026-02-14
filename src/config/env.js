@@ -8,8 +8,13 @@ import { z } from 'zod';
 // tersedia terlepas dari direktori kerja saat ini.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// 1) Muat .env lokal backend (genbi-server/.env)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-// Juga muat default .env (no-op jika sudah dimuat atau variabel sudah diset).
+// 2) Muat .env root monorepo (genbiunsika/.env) agar backend tetap dapat
+//    berjalan walau dijalankan dari folder yang berbeda.
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// 3) Juga muat default .env berdasarkan CWD (no-op jika sudah dimuat).
 dotenv.config();
 
 const envSchema = z.object({
@@ -47,6 +52,16 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(60 * 5),
+
+  // Token publik untuk halaman pengumuman beasiswa (dipakai untuk QR/share URL tanpa login)
+  // Disarankan gunakan secret terpisah; jika kosong akan fallback ke JWT_ACCESS_SECRET.
+  JWT_PUBLIC_ANNOUNCEMENT_SECRET: z.string().optional().default(''),
+  // Default 30 hari agar QR yang dicetak tidak cepat mati.
+  JWT_PUBLIC_ANNOUNCEMENT_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60 * 60 * 24 * 30),
 
   DATABASE_URL: z.string().min(10),
 

@@ -16,6 +16,22 @@ export function notFound(req, _res, next) {
 export function errorHandler(err, _req, res, _next) {
   let statusCode = err?.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500;
 
+  // body-parser / express.json errors often use `status` instead of `statusCode`
+  if (statusCode === 500 && err?.status && Number.isInteger(err.status)) {
+    statusCode = err.status;
+  }
+
+  // Payload too large
+  if (statusCode === 500 && (err?.type === 'entity.too.large' || err?.name === 'PayloadTooLargeError')) {
+    statusCode = 413;
+  }
+
+  // Invalid JSON payload
+  // body-parser sets `status`=400 for JSON syntax errors
+  if (statusCode === 500 && err instanceof SyntaxError && (err?.status === 400 || err?.statusCode === 400) && 'body' in err) {
+    statusCode = 400;
+  }
+
   const nodeEnv = process.env.NODE_ENV || 'development';
   const isProd = nodeEnv === 'production';
 
@@ -31,13 +47,17 @@ export function errorHandler(err, _req, res, _next) {
   const payload = {
     error: {
       message:
-        statusCode === 503
-          ? 'Database sedang tidak tersedia. Pastikan database (MySQL) berjalan lalu coba lagi.'
-          : statusCode >= 500
-            ? isProd
-              ? 'Terjadi kesalahan pada server. Silakan coba lagi.'
-              : err?.message || 'Terjadi kesalahan pada server.'
-            : err?.message || 'Terjadi kesalahan.',
+        statusCode === 413
+          ? 'Payload terlalu besar. Mohon kecilkan ukuran data/file lalu coba lagi.'
+          : statusCode === 400 && err instanceof SyntaxError
+            ? 'Format JSON tidak valid. Coba refresh halaman lalu kirim ulang.'
+            : statusCode === 503
+              ? 'Database sedang tidak tersedia. Pastikan database (MySQL) berjalan lalu coba lagi.'
+              : statusCode >= 500
+                ? isProd
+                  ? 'Terjadi kesalahan pada server. Silakan coba lagi.'
+                  : err?.message || 'Terjadi kesalahan pada server.'
+                : err?.message || 'Terjadi kesalahan.',
       code: prismaCode || err?.code,
       details: err?.details,
       ...(statusCode >= 500 && !isProd && err?.stack ? { stack: String(err.stack) } : {}),

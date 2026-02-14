@@ -20,6 +20,11 @@ export function isPrismaUniqueConstraintError(err) {
   return isPrismaError(err, 'P2002');
 }
 
+// Common: value too long for column type
+export function isPrismaValueTooLongError(err) {
+  return isPrismaError(err, 'P2000');
+}
+
 // Common: DB not reachable / connection issues
 export function isPrismaConnectionError(err) {
   // Prisma commonly uses these codes for connection issues:
