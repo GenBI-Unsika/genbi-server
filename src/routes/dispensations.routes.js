@@ -243,8 +243,6 @@ router.post(
         parentFolderId: targetFolderId,
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Google Drive upload failed', e);
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 

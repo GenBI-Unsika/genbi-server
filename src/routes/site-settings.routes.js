@@ -133,8 +133,6 @@ router.post(
         parentFolderId: targetFolderId,
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Google Drive upload failed', e);
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
@@ -174,7 +172,7 @@ router.delete(
       throw new HttpError(400, 'Key tidak valid');
     }
 
-    await prisma.appSetting.delete({ where: { key } }).catch(() => {});
+    await prisma.appSetting.delete({ where: { key } }).catch(() => { });
 
     res.json({ data: { key, deleted: true } });
   }),

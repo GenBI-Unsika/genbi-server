@@ -4,6 +4,7 @@ import { asyncHandler } from '../lib/async-handler.js';
 import { APP_SETTING_KEYS } from '../constants/settings.js';
 import { HttpError } from '../lib/errors.js';
 import { verifyScholarshipAnnouncementToken } from '../auth/tokens.js';
+import { sanitizePublicMember } from '../lib/sanitizer.js';
 
 const router = Router();
 
@@ -517,20 +518,7 @@ router.get(
       orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
 
-    const data = users.map((u) => ({
-      id: u.id,
-      name: u.profile?.name || u.email?.split('@')[0],
-      position: u.profile?.jabatan || null,
-      jabatan: u.profile?.jabatan || null,
-      division: u.profile?.division?.name || null,
-      image: u.profile?.avatar || null,
-      photo: u.profile?.avatar || null,
-      major: u.profile?.studyProgram?.name || null,
-      studyProgram: u.profile?.studyProgram?.name || null,
-      faculty: u.profile?.faculty?.name || null,
-      socials: u.profile?.socials || null,
-      socialMedia: u.profile?.socials || null,
-    }));
+    const data = users.map(sanitizePublicMember);
 
     res.json({ data });
   }),

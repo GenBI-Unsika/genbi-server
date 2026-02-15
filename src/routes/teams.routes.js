@@ -6,35 +6,11 @@ import { HttpError } from '../lib/errors.js';
 import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 import { finalizeUpload } from '../lib/file-utils.js';
 import { FOLDER_PROFILE_AVATARS } from '../constants/drive-folders.js';
+import { sanitizePublicMember } from '../lib/sanitizer.js';
 
 const router = Router();
 
-// Helper untuk transform user/profile menjadi format yang diharapkan frontend (kompatibel dengan TeamMember lama)
-function transformUserToMember(user) {
-  return {
-    id: user.id,
-    name: user.profile?.name || user.email,
-    jabatan: user.profile?.jabatan || null,
-    divisionId: user.profile?.divisionId || null,
-    division: user.profile?.division?.name || null,
-    divisionKey: user.profile?.division?.key || null,
-    photo: user.profile?.avatar || null,
-    faculty: user.profile?.faculty?.name || null,
-    major: user.profile?.studyProgram?.name || null,
-    studyProgram: user.profile?.studyProgram?.name || null,
-    cohort: user.profile?.semester, // Mapping approximate
-    birthDate: user.profile?.birthDate || null,
-    phone: user.profile?.phone || null,
-    email: user.email,
-    socials: user.profile?.socials || null,
-    isActive: user.isActive,
-    sortOrder: user.profile?.sortOrder || 0,
-    userId: user.id, // Self reference for compatibility
-    role: user.role?.name || 'awardee',
-    npm: user.profile?.npm || null,
-    gender: user.profile?.gender || null,
-  };
-}
+// Member transformation is handled by central sanitizer for consistency.
 
 // Public: get users with specific roles
 router.get(
@@ -58,7 +34,7 @@ router.get(
       orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
 
-    res.json({ data: users.map(transformUserToMember) });
+    res.json({ data: users.map(sanitizePublicMember) });
   }),
 );
 
@@ -84,7 +60,7 @@ router.get(
       },
       orderBy: [{ profile: { sortOrder: 'asc' } }, { profile: { division: { name: 'asc' } } }, { profile: { name: 'asc' } }],
     });
-    res.json({ data: users.map(transformUserToMember) });
+    res.json({ data: users.map(sanitizePublicMember) });
   }),
 );
 
@@ -215,7 +191,7 @@ router.post(
       },
     });
 
-    res.status(201).json({ data: transformUserToMember(fullUser) });
+    res.status(201).json({ data: sanitizePublicMember(fullUser) });
   }),
 );
 
@@ -320,7 +296,7 @@ router.patch(
       },
     });
 
-    res.json({ data: transformUserToMember(fullUser) });
+    res.json({ data: sanitizePublicMember(fullUser) });
   }),
 );
 

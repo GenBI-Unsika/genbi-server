@@ -109,14 +109,7 @@ export async function sendVerifyEmail({ toEmail, token, expiresAt }) {
     // eslint-disable-next-line no-console
 
     if (env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.info(`[DEV] Email verification requested for: ${toEmail}`);
-      // eslint-disable-next-line no-console
-      console.info(`[DEV] Verify token: ${token}`);
-      // eslint-disable-next-line no-console
-      console.info(`[DEV] Verify link (frontend): ${link || '(FRONTEND_CLIENT_BASE_URL belum diset)'}`);
-      // eslint-disable-next-line no-console
-      console.info(`[DEV] Alternative verify endpoint: /api/v1/auth/verify-email?token=${encodeURIComponent(token)}`);
+      // Dev mode: verification link is returned in API response for testing ease
     }
 
     return { ok: true, skipped: true, link };
@@ -152,8 +145,7 @@ export async function sendNewsletterSubscribedEmail({ toEmail, name }) {
       throw new HttpError(500, 'SMTP belum dikonfigurasi di server.');
     }
     if (env.NODE_ENV === 'development') {
-      // eslint-disable-next-line no-console
-      console.info(`[DEV] Newsletter subscribed: ${toEmail} (${String(name || '').trim() || '-'})`);
+      // Dev mode: subscription skipped but handled
     }
     return { ok: true, skipped: true };
   }

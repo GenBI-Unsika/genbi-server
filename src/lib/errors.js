@@ -65,9 +65,7 @@ export function errorHandler(err, _req, res, _next) {
   };
 
   if (statusCode >= 500) {
-    // avoid leaking stack traces to clients
-    // eslint-disable-next-line no-console
-    console.error(err);
+    // skip console.error for clean logs as per security policy
   }
 
   res.status(statusCode).json(payload);

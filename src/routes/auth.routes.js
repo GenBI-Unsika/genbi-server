@@ -13,6 +13,7 @@ import { assertAllowedEmailDomain, normalizeEmail } from '../auth/domain.js';
 import { hashToken, makeVerifyToken, sendVerifyEmail, verifyExpiresAt } from '../auth/email.js';
 import { verifyGoogleIdToken } from '../auth/google.js';
 import { requireAuth, ADMIN_ROLES } from '../middleware/auth.js';
+import { sanitizeProfile } from '../lib/sanitizer.js';
 
 const router = Router();
 
@@ -83,7 +84,7 @@ async function issueSession(user, req, res) {
       id: user.id,
       email: user.email,
       role: user.role?.name || 'awardee',
-      profile: user.profile,
+      profile: sanitizeProfile(user.profile),
     },
   };
 }
@@ -368,8 +369,6 @@ router.post(
 
     const { sub, email, name, givenName, familyName, picture, locale } = await verifyGoogleIdToken(body.data.idToken);
 
-    // console.log('[Auth] Admin Google Login Attempt:', { email, sub });
-
     const user0 = await prisma.user.findUnique({
       where: { email },
       include: {
@@ -392,7 +391,6 @@ router.post(
     }
 
     if (user0.googleSub && user0.googleSub !== sub) {
-      // console.log('[Auth] Admin login failed: Google Sub mismatch', { email, expected: user0.googleSub, got: sub });
       throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
     }
 
@@ -511,7 +509,7 @@ router.post(
           id: user.id,
           email: user.email,
           role: user.role?.name || 'awardee',
-          profile: user.profile,
+          profile: sanitizeProfile(user.profile),
         },
       },
     });

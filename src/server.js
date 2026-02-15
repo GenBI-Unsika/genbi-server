@@ -70,10 +70,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 const server = app.listen(env.PORT, env.HOST, () => {
-  // eslint-disable-next-line no-console
-  const displayHost = env.HOST === '0.0.0.0' ? 'localhost' : env.HOST;
-  // eslint-disable-next-line no-console
-  console.info(`API listening on http://${displayHost}:${env.PORT}`);
+  // Server is up
 });
 
 // Increase timeout for bulk file uploads (default is 120s)
@@ -84,31 +81,17 @@ server.headersTimeout = 5 * 60 * 1000 + 2000; // Slightly longer than keepAliveT
 
 server.on('error', (err) => {
   if (err?.code === 'EADDRINUSE') {
-    // eslint-disable-next-line no-console
-    console.error(`\n⚠️  Port ${env.PORT} sudah dipakai oleh aplikasi lain!`);
-    console.error(`Solusi:`);
-    console.error(`  1. Stop proses yang pakai port ${env.PORT}: netstat -ano | findstr :${env.PORT}`);
-    console.error(`  2. Atau ganti PORT di file .env ke port lain (misal: 3500, 3600, 8000)\n`);
     process.exit(1);
   }
-
-  // eslint-disable-next-line no-console
-  console.error('Failed to start server:', err);
   process.exit(1);
 });
 
 const gracefulShutdown = () => {
-  // eslint-disable-next-line no-console
-  console.info('Received kill signal, shutting down gracefully');
   server.close(() => {
-    // eslint-disable-next-line no-console
-    console.info('Closed out remaining connections');
     process.exit(0);
   });
 
   setTimeout(() => {
-    // eslint-disable-next-line no-console
-    console.error('Could not close connections in time, forcefully shutting down');
     process.exit(1);
   }, 10000);
 };
@@ -118,9 +101,7 @@ process.on('SIGINT', gracefulShutdown);
 
 // Handle nodemon restart signal
 process.on('SIGUSR2', () => {
-  console.info('Received SIGUSR2 (nodemon restart), closing server');
   server.close(() => {
-    console.info('Server closed');
     process.kill(process.pid, 'SIGUSR2');
   });
 });

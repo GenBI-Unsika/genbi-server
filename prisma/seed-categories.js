@@ -12,7 +12,7 @@ const categories = [
 ];
 
 async function seedCategories() {
-    console.log('Seeding article categories...');
+    // Seeding article categories
 
     for (const cat of categories) {
         await prisma.articleCategory.upsert({
@@ -20,15 +20,15 @@ async function seedCategories() {
             update: {},
             create: cat,
         });
-        console.log(`✓ Category: ${cat.name}`);
+        // Seeded category
     }
 
-    console.log('✅ Article categories seeded successfully!');
+    // Seeded successfully
 }
 
 seedCategories()
     .catch((e) => {
-        console.error(e);
+        // Seeding failed
         process.exit(1);
     })
     .finally(async () => {

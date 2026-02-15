@@ -56,7 +56,7 @@ export async function finalizeUpload({ tempId, userId, folder }) {
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('Failed to resolve folder path, falling back to root:', e.message);
+      // Failed to resolve folder path
     }
   }
 
@@ -96,7 +96,7 @@ export async function finalizeUpload({ tempId, userId, folder }) {
       await setDriveFilePublicReadable(driveFile.id);
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('Failed to set Drive file public permission', e);
+      // Failed to set Drive file public permission
     }
   }
 

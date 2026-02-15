@@ -178,7 +178,6 @@ router.patch(
   adminMiddleware,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    console.log('[DEBUG] PATCH /study-programs/:id', id, req.body);
     const { code, name, degree, facultyId, sortOrder, isActive } = req.body;
 
     const program = await prisma.studyProgram.update({

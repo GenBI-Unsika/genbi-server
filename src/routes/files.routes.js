@@ -42,8 +42,6 @@ router.post(
           targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to create folder path, uploading to root:', e.message);
         // Fall back to root folder
       }
     }
@@ -57,8 +55,6 @@ router.post(
         parentFolderId: targetFolderId,
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Google Drive upload failed', e);
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
@@ -76,8 +72,7 @@ router.post(
       try {
         await setDriveFilePublicReadable(driveFile.id);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to set Drive file public permission', e);
+        // Silent fail for permission
       }
     }
 
@@ -396,7 +391,7 @@ router.post(
           targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
         }
       } catch (e) {
-        console.warn('Failed to create folder path during finalize, using root:', e.message);
+        // Silent fail for folder path creation
       }
     }
 
@@ -409,7 +404,6 @@ router.post(
         parentFolderId: targetFolderId,
       });
     } catch (e) {
-      console.error('Google Drive upload failed', e);
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
@@ -431,7 +425,7 @@ router.post(
       try {
         await setDriveFilePublicReadable(driveFile.id);
       } catch (e) {
-        console.warn('Failed to set Drive file public permission', e);
+        // Silent fail
       }
     }
 
@@ -501,7 +495,7 @@ router.post(
               targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
             }
           } catch (e) {
-            console.warn('Failed to create folder path during bulk finalize:', e.message);
+            // silent fail
           }
         }
 
@@ -514,7 +508,6 @@ router.post(
             parentFolderId: targetFolderId,
           });
         } catch (e) {
-          console.error('Google Drive upload failed (bulk)', e);
           throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
         }
 

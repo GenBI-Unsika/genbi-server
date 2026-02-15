@@ -308,8 +308,7 @@ router.post(
               fileId: finalizedFile.id,
             });
           } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('Failed to finalize photo:', e.message);
+            // Silent fail for photo upload in loop
           }
         } else {
           processedPhotos.push(photo);
@@ -335,8 +334,7 @@ router.post(
               fileId: finalizedFile.id,
             });
           } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('Failed to finalize document:', e.message);
+            // Silent fail for doc upload in loop
           }
         } else {
           processedDocs.push(doc);
@@ -422,8 +420,7 @@ router.patch(
                 fileId: finalizedFile.id,
               });
             } catch (e) {
-              // eslint-disable-next-line no-console
-              console.warn('Failed to finalize photo:', e.message);
+              // Silent fail for photo upload in loop
             }
           } else {
             processedPhotos.push(photo);
@@ -448,8 +445,7 @@ router.patch(
                 fileId: finalizedFile.id,
               });
             } catch (e) {
-              // eslint-disable-next-line no-console
-              console.warn('Failed to finalize document:', e.message);
+              // Silent fail for doc upload in loop
             }
           } else {
             processedDocs.push(doc);

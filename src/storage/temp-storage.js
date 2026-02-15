@@ -99,7 +99,7 @@ export async function saveTempFile({ buffer, originalName, mimeType, userId, ttl
     await fs.writeFile(getMetaPath(tempId), JSON.stringify(metadata), 'utf8');
   } catch (e) {
     // Non-fatal, but will cause temp file to be lost on restart.
-    console.warn('[temp-storage] Failed to persist metadata:', e?.message || e);
+    // Failed to persist metadata
   }
 
   return {
@@ -129,13 +129,13 @@ export function getTempFile(tempId) {
   if (!metadata) return null;
 
   if (Date.now() > metadata.expiresAt) {
-    deleteTempFile(tempId).catch(() => {});
+    deleteTempFile(tempId).catch(() => { });
     return null;
   }
 
   // File missing on disk -> treat as expired/not found
   if (metadata.filePath && !fsSync.existsSync(metadata.filePath)) {
-    deleteTempFile(tempId).catch(() => {});
+    deleteTempFile(tempId).catch(() => { });
     return null;
   }
 
@@ -177,7 +177,7 @@ export async function deleteTempFile(tempId) {
     try {
       const entries = await fs.readdir(TEMP_DIR);
       const candidates = entries.filter((name) => name.startsWith(tempId) && !name.endsWith('.meta.json'));
-      await Promise.all(candidates.map((name) => fs.unlink(path.join(TEMP_DIR, name)).catch(() => {})));
+      await Promise.all(candidates.map((name) => fs.unlink(path.join(TEMP_DIR, name)).catch(() => { })));
     } catch {
       // ignore
     }
