@@ -490,6 +490,7 @@ router.get(
     const where = {
       isActive: true,
       role: { name: { in: ['awardee', 'admin', 'super_admin'] } },
+      profile: { isNot: null },
     };
 
     if (divisionId) {

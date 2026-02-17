@@ -188,6 +188,7 @@ router.post(
       where: { id: user.id },
       include: {
         profile: { include: { division: true, faculty: true, studyProgram: true } },
+        role: true,
       },
     });
 
@@ -293,6 +294,7 @@ router.patch(
       where: { id },
       include: {
         profile: { include: { division: true, faculty: true, studyProgram: true } },
+        role: true,
       },
     });
 
