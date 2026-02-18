@@ -1,4 +1,4 @@
-import { isPrismaConnectionError, prismaErrorCode } from './prisma-errors.js';
+import { isPrismaConnectionError, isPrismaMissingTableError, isPrismaUniqueConstraintError, isPrismaValueTooLongError, isPrismaError, prismaErrorCode } from './prisma-errors.js';
 
 export class HttpError extends Error {
   constructor(statusCode, message, details) {
@@ -40,6 +40,25 @@ export function errorHandler(err, _req, res, _next) {
   const prismaCode = prismaErrorCode(err);
   const looksLikePrismaCantReachDb = isPrismaConnectionError(err) || err?.name === 'PrismaClientInitializationError' || (typeof err?.message === 'string' && err.message.includes("Can't reach database server"));
 
+  // Map common Prisma errors to clearer HTTP statuses.
+  // This prevents noisy 500s for expected data/validation issues.
+  if (statusCode >= 500) {
+    if (isPrismaUniqueConstraintError(err)) {
+      statusCode = 409;
+    } else if (isPrismaValueTooLongError(err)) {
+      statusCode = 400;
+    } else if (isPrismaMissingTableError(err)) {
+      // DB schema isn't ready (migrations not applied)
+      statusCode = 503;
+    } else if (isPrismaError(err, 'P2003')) {
+      // Foreign key constraint
+      statusCode = 409;
+    } else if (isPrismaError(err, 'P2025')) {
+      // Record not found
+      statusCode = 404;
+    }
+  }
+
   if (statusCode >= 500 && looksLikePrismaCantReachDb) {
     statusCode = 503;
   }
@@ -51,18 +70,26 @@ export function errorHandler(err, _req, res, _next) {
           ? 'Payload terlalu besar. Mohon kecilkan ukuran data/file lalu coba lagi.'
           : statusCode === 400 && err instanceof SyntaxError
             ? 'Format JSON tidak valid. Coba refresh halaman lalu kirim ulang.'
-            : statusCode === 503
-              ? 'Database sedang tidak tersedia. Pastikan database (MySQL) berjalan lalu coba lagi.'
-              : statusCode >= 500
-                ? isProd
-                  ? 'Terjadi kesalahan pada server. Silakan coba lagi.'
-                  : err?.message || 'Terjadi kesalahan pada server.'
-                : err?.message || 'Terjadi kesalahan.',
+            : statusCode === 409
+              ? 'Data bentrok dengan data yang sudah ada. Silakan refresh lalu coba lagi.'
+              : statusCode === 503
+                ? isPrismaMissingTableError(err)
+                  ? 'Database belum siap (migrasi belum dijalankan). Hubungi admin/server untuk menjalankan migrasi.'
+                  : 'Database sedang tidak tersedia. Pastikan database (MySQL) berjalan lalu coba lagi.'
+                : statusCode >= 500
+                  ? isProd
+                    ? 'Terjadi kesalahan pada server. Silakan coba lagi.'
+                    : err?.message || 'Terjadi kesalahan pada server.'
+                  : err?.message || 'Terjadi kesalahan.',
       code: prismaCode || err?.code,
       details: err?.details,
       ...(statusCode >= 500 && !isProd && err?.stack ? { stack: String(err.stack) } : {}),
     },
   };
+
+  // Helpful for support/debugging without exposing internals.
+  // pino-http attaches request id to `req.id`.
+  if (_req?.id) payload.error.requestId = String(_req.id);
 
   if (statusCode >= 500) {
     // skip console.error for clean logs as per security policy
