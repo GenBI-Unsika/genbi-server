@@ -61,32 +61,38 @@ function defaultPasswordFromEmail(email) {
 }
 
 async function issueSession(user, req, res) {
-  const accessToken = signAccessToken({ userId: user.id, role: user.role?.name || 'awardee' });
-  const { token: refreshToken, jti } = signRefreshToken({ userId: user.id });
+  try {
+    const roleName = user.role?.name || 'awardee';
+    const accessToken = signAccessToken({ userId: user.id, role: roleName });
+    const { token: refreshToken, jti } = signRefreshToken({ userId: user.id });
 
-  await prisma.refreshToken.create({
-    data: {
-      userId: user.id,
-      jti,
-      tokenHash: sha256Base64(refreshToken),
-      expiresAt: new Date(Date.now() + env.JWT_REFRESH_TTL_SECONDS * 1000),
-      status: 'active',
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent') || undefined,
-    },
-  });
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        jti,
+        tokenHash: sha256Base64(refreshToken),
+        expiresAt: new Date(Date.now() + env.JWT_REFRESH_TTL_SECONDS * 1000),
+        status: 'active',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent') || undefined,
+      },
+    });
 
-  res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
 
-  return {
-    accessToken,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role?.name || 'awardee',
-      profile: sanitizeProfile(user.profile),
-    },
-  };
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: roleName,
+        profile: sanitizeProfile(user.profile),
+      },
+    };
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
+    throw new HttpError(500, 'Terjadi kesalahan sistem saat membuat sesi login. Silakan coba beberapa saat lagi.');
+  }
 }
 
 router.post(
@@ -298,7 +304,9 @@ router.post(
       const passwordHash = await bcrypt.hash(initialPassword, 12);
 
       const defaultRole = await prisma.role.findUnique({ where: { name: 'awardee' } });
-      if (!defaultRole) throw new HttpError(500, 'Konfigurasi role belum di-seed.');
+      if (!defaultRole) {
+        throw new HttpError(500, 'Sistem belum siap untuk menerima pendaftaran baru (Role error). Hubungi administrator.');
+      }
 
       user = await prisma.user.create({
         data: {

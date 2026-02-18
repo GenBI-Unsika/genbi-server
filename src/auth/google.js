@@ -7,7 +7,9 @@ import { allowedEmailDomains, normalizeEmail } from './domain.js';
 let cachedClient = null;
 
 function getClient() {
-  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(500, 'Konfigurasi login Google belum tersedia di server.');
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new HttpError(500, 'Layanan login Google sedang tidak tersedia atau belum dikonfigurasi. Silakan hubungi admin.');
+  }
   const clientIds = env.GOOGLE_CLIENT_ID.split(',')
     .map((s) => s.trim())
     .filter(Boolean);
@@ -20,6 +22,7 @@ function getClient() {
 }
 
 function getAllowedAudiences() {
+  if (!env.GOOGLE_CLIENT_ID) return [];
   return env.GOOGLE_CLIENT_ID.split(',')
     .map((s) => s.trim())
     .filter(Boolean);
