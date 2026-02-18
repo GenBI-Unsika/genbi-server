@@ -289,63 +289,139 @@ router.post(
     const body = googleSchema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
 
-    const { sub, email, name, givenName, familyName, picture, locale } = await verifyGoogleIdToken(body.data.idToken);
+    try {
+      const { sub, email, name, givenName, familyName, picture, locale } = await verifyGoogleIdToken(body.data.idToken);
 
-    let user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        profile: { include: { division: true } },
-        role: true,
-      },
-    });
-
-    if (!user) {
-      const initialPassword = defaultPasswordFromEmail(email) || makeVerifyToken();
-      const passwordHash = await bcrypt.hash(initialPassword, 12);
-
-      const defaultRole = await prisma.role.findUnique({ where: { name: 'awardee' } });
-      if (!defaultRole) {
-        throw new HttpError(500, 'Sistem belum siap untuk menerima pendaftaran baru (Role error). Hubungi administrator.');
-      }
-
-      user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          googleSub: sub,
-          emailVerifiedAt: new Date(),
-          roleId: defaultRole.id, // Connect role via ID
-          isActive: true,
-          profile:
-            name || picture
-              ? {
-                create: {
-                  name: name || null,
-                  avatar: picture || null,
-                },
-              }
-              : undefined,
-        },
+      let user = await prisma.user.findUnique({
+        where: { email },
         include: {
           profile: { include: { division: true } },
           role: true,
         },
       });
-    } else {
-      if (!user.isActive) throw new HttpError(401, 'Akun dinonaktifkan. Hubungi admin.');
-      if (user.googleSub && user.googleSub !== sub) throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
 
-      // Update user dan profile dengan semua info Google
-      user = await prisma.user.update({
-        where: { id: user.id },
+      if (!user) {
+        const initialPassword = defaultPasswordFromEmail(email) || makeVerifyToken();
+        const passwordHash = await bcrypt.hash(initialPassword, 12);
+
+        const defaultRole = await prisma.role.findUnique({ where: { name: 'awardee' } });
+        if (!defaultRole) {
+          throw new HttpError(500, 'Sistem belum siap untuk menerima pendaftaran baru (Role error). Hubungi administrator.');
+        }
+
+        user = await prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            googleSub: sub,
+            emailVerifiedAt: new Date(),
+            roleId: defaultRole.id, // Connect role via ID
+            isActive: true,
+            profile:
+              name || picture
+                ? {
+                  create: {
+                    name: name || null,
+                    avatar: picture || null,
+                  },
+                }
+                : undefined,
+          },
+          include: {
+            profile: { include: { division: true } },
+            role: true,
+          },
+        });
+      } else {
+        if (!user.isActive) throw new HttpError(401, 'Akun dinonaktifkan. Hubungi admin.');
+        if (user.googleSub && user.googleSub !== sub) throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
+
+        // Update user dan profile dengan semua info Google
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            googleSub: user.googleSub ? undefined : sub,
+            emailVerifiedAt: user.emailVerifiedAt || new Date(),
+            profile: user.profile
+              ? {
+                update: {
+                  avatar: picture || user.profile.avatar,
+                  name: name || user.profile.name,
+                },
+              }
+              : name || picture
+                ? {
+                  create: {
+                    name: name || null,
+                    avatar: picture || null,
+                  },
+                }
+                : undefined,
+          },
+          include: {
+            profile: { include: { division: true } },
+            role: true,
+          },
+        });
+      }
+
+      const data = await issueSession(user, req, res);
+      res.json({ data });
+    } catch (error) {
+      if (req.log) {
+        req.log.error({ err: error, body: req.body }, 'Google Login Error');
+      } else {
+        console.error('Google Login Error:', error);
+      }
+      throw error;
+    }
+  }),
+);
+
+router.post(
+  '/admin/google',
+  asyncHandler(async (req, res) => {
+    const body = googleSchema.safeParse(req.body);
+    if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
+
+    try {
+      const { sub, email, name, givenName, familyName, picture, locale } = await verifyGoogleIdToken(body.data.idToken);
+
+      const user0 = await prisma.user.findUnique({
+        where: { email },
+        include: {
+          profile: { include: { division: true } },
+          role: true,
+        },
+      });
+
+      if (!user0) {
+        throw new HttpError(401, 'Akun admin tidak ditemukan atau tidak aktif.');
+      }
+      if (!user0.isActive) {
+        throw new HttpError(401, 'Akun admin tidak ditemukan atau tidak aktif.');
+      }
+
+      // Manual check for debugging
+      const roleName = user0.role?.name;
+      if (!ADMIN_ROLES.includes(roleName)) {
+        throw new HttpError(403, `Akses ditolak. Role anda (${roleName}) tidak memiliki hak akses admin.`);
+      }
+
+      if (user0.googleSub && user0.googleSub !== sub) {
+        throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
+      }
+
+      const user = await prisma.user.update({
+        where: { id: user0.id },
         data: {
-          googleSub: user.googleSub ? undefined : sub,
-          emailVerifiedAt: user.emailVerifiedAt || new Date(),
-          profile: user.profile
+          googleSub: user0.googleSub ? undefined : sub,
+          emailVerifiedAt: user0.emailVerifiedAt || new Date(),
+          profile: user0.profile
             ? {
               update: {
-                avatar: picture || user.profile.avatar,
-                name: name || user.profile.name,
+                avatar: picture || user0.profile.avatar,
+                name: name || user0.profile.name,
               },
             }
             : name || picture
@@ -362,75 +438,17 @@ router.post(
           role: true,
         },
       });
+
+      const data = await issueSession(user, req, res);
+      res.json({ data });
+    } catch (error) {
+      if (req.log) {
+        req.log.error({ err: error, body: req.body }, 'Admin Google Login Error');
+      } else {
+        console.error('Admin Google Login Error:', error);
+      }
+      throw error;
     }
-
-    const data = await issueSession(user, req, res);
-    res.json({ data });
-  }),
-);
-
-router.post(
-  '/admin/google',
-  asyncHandler(async (req, res) => {
-    const body = googleSchema.safeParse(req.body);
-    if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
-
-    const { sub, email, name, givenName, familyName, picture, locale } = await verifyGoogleIdToken(body.data.idToken);
-
-    const user0 = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        profile: { include: { division: true } },
-        role: true,
-      },
-    });
-
-    if (!user0) {
-      throw new HttpError(401, 'Akun admin tidak ditemukan atau tidak aktif.');
-    }
-    if (!user0.isActive) {
-      throw new HttpError(401, 'Akun admin tidak ditemukan atau tidak aktif.');
-    }
-
-    // Manual check for debugging
-    const roleName = user0.role?.name;
-    if (!ADMIN_ROLES.includes(roleName)) {
-      throw new HttpError(403, `Akses ditolak. Role anda (${roleName}) tidak memiliki hak akses admin.`);
-    }
-
-    if (user0.googleSub && user0.googleSub !== sub) {
-      throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
-    }
-
-    const user = await prisma.user.update({
-      where: { id: user0.id },
-      data: {
-        googleSub: user0.googleSub ? undefined : sub,
-        emailVerifiedAt: user0.emailVerifiedAt || new Date(),
-        profile: user0.profile
-          ? {
-            update: {
-              avatar: picture || user0.profile.avatar,
-              name: name || user0.profile.name,
-            },
-          }
-          : name || picture
-            ? {
-              create: {
-                name: name || null,
-                avatar: picture || null,
-              },
-            }
-            : undefined,
-      },
-      include: {
-        profile: { include: { division: true } },
-        role: true,
-      },
-    });
-
-    const data = await issueSession(user, req, res);
-    res.json({ data });
   }),
 );
 
