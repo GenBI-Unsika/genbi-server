@@ -95,5 +95,25 @@ export function errorHandler(err, _req, res, _next) {
     // skip console.error for clean logs as per security policy
   }
 
+  // Log the full error server-side (including stack and request id) so
+  // container logs contain diagnostic info even when response messages
+  // are sanitized for production clients.
+  try {
+    const rid = _req?.id || null;
+    if (_req && typeof _req.log === 'function') {
+      _req.log({ err }, 'http_error');
+    } else if (_req && _req.log && typeof _req.log.error === 'function') {
+      _req.log.error({ err, requestId: rid }, 'http_error');
+    } else if (typeof console !== 'undefined' && console.error) {
+      console.error('HTTP error', { requestId: rid, err: err && err.stack ? String(err.stack) : String(err) });
+    }
+  } catch (logErr) {
+    try {
+      console.error('Failed to log error', String(logErr));
+    } catch {
+      /* swallow */
+    }
+  }
+
   res.status(statusCode).json(payload);
 }
