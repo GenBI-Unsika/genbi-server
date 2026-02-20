@@ -23,7 +23,8 @@
     "smoke:auth": "node scripts/smoke-auth.mjs http://localhost:4000",
     "smoke:drive": "node scripts/smoke-drive.mjs http://127.0.0.1:4000",
     "import:wordpress": "node scripts/import-wordpress.mjs",
-    "migrate:wp-media": "node scripts/migrate-wordpress-media.mjs"
+    "migrate:wp-media": "node scripts/migrate-wordpress-media.mjs",
+    "fix:article-sql": "node scripts/fix-article-sql.mjs"
   },
   "dependencies": {
     "@genbi/contracts": "workspace:*",
