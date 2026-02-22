@@ -281,8 +281,7 @@ model Division {
   id          Int      @id @default(autoincrement())
   key         String   @unique
   name        String
-  description String?
-  icon        String?
+  description String?  @db.Text
   gradient    String?
   bgLight     String?  @map("bg_light")
   textColor   String?  @map("text_color")
@@ -504,6 +503,7 @@ model DispensationTemplate {
 model Activity {
   id              Int            @id @default(autoincrement())
   title           String
+  category        String         @default("event") // "event" or "proker"
   description     String?        @db.Text
   coverImage      String?        @map("cover_image")
   theme           String?        // Tema untuk Proker
