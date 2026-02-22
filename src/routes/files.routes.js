@@ -356,7 +356,7 @@ router.delete(
 router.post(
   '/finalize',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   asyncHandler(async (req, res) => {
     const tempId = req.body?.tempId;
     const folder = req.body?.folder;
@@ -454,7 +454,7 @@ router.post(
 router.post(
   '/finalize-bulk',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   asyncHandler(async (req, res) => {
     const files = req.body?.files; // Array dari { tempId, folder? }
 

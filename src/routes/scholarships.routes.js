@@ -291,7 +291,7 @@ router.put(
 router.post(
   '/applications',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   asyncHandler(async (req, res) => {
     const open = await getRegistrationOpen();
     if (!open) throw new HttpError(403, 'Pendaftaran beasiswa sedang ditutup.');
