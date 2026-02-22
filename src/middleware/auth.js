@@ -5,12 +5,11 @@ const ROLE_HIERARCHY = {
   super_admin: 5,
   admin: 4,
   awardee: 3,
-  member: 3, // alias untuk awardee - anggota aktif GenBI
+  member: 3, // nama beken buat mahasiswa yg dapet beasiswa (GenBI aktif)
   alumni: 1,
   user: 0,
 };
 
-// Role yang dapat mengakses panel admin
 const ADMIN_ROLES = ['super_admin', 'admin'];
 
 export function requireAuth(req, _res, next) {
@@ -23,8 +22,6 @@ export function requireAuth(req, _res, next) {
   try {
     const decoded = verifyAccessToken(token);
 
-    // JWT 'sub' didefinisikan sebagai string. Skema Prisma kami menggunakan ID Int.
-    // Konversi ke number di awal agar query Prisma di bawah tidak error.
     const userId = Number.parseInt(String(decoded.sub), 10);
     if (!Number.isInteger(userId) || userId <= 0) {
       return next(new HttpError(401, 'Invalid access token subject'));
@@ -32,7 +29,7 @@ export function requireAuth(req, _res, next) {
 
     req.auth = {
       userId,
-      role: decoded.role, // Assuming token payload now contains role name string
+      role: decoded.role, // Anggap aja token skrg udh bawa info string nama role-nya
     };
     return next();
   } catch {
@@ -48,7 +45,7 @@ export function requireRole(...roles) {
   };
 }
 
-// Cek jika user memiliki akses level admin (super_admin, admin)
+// Pastiin ini user punya kuasa admin (super_admin ato admin biasa)
 export function requireAdminAccess(req, _res, next) {
   if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
   if (!ADMIN_ROLES.includes(req.auth.role)) {
@@ -57,7 +54,7 @@ export function requireAdminAccess(req, _res, next) {
   return next();
 }
 
-// Cek jika user adalah super_admin
+// Pastiin ini beneran the real super_admin
 export function requireSuperAdmin(req, _res, next) {
   if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
   if (req.auth.role !== 'super_admin') {
@@ -66,7 +63,7 @@ export function requireSuperAdmin(req, _res, next) {
   return next();
 }
 
-// Cek jika level role user setidaknya minimum yang ditentukan
+// Pastiin pangkat user ini cukup buat msk ke mari
 export function requireMinRole(minRole) {
   return (req, _res, next) => {
     if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));

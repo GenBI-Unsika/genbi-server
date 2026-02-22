@@ -9,15 +9,15 @@ import { FOLDER_ACTIVITY_COVERS, FOLDER_ACTIVITY_PHOTOS, FOLDER_ACTIVITY_DOCUMEN
 
 const router = Router();
 
-// Ambil semua kegiatan (publik)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { status, divisionId, page = 1, limit = 20, search, startDate, endDate, sortBy, sortOrder } = req.query;
+    const { status, category, divisionId, page = 1, limit = 20, search, startDate, endDate, sortBy, sortOrder } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = { isActive: true };
     if (status) where.status = status;
+    if (category) where.category = category;
     if (divisionId) {
       const divId = parseInt(divisionId, 10);
       if (!isNaN(divId)) where.divisionId = divId;
@@ -26,14 +26,12 @@ router.get(
       where.OR = [{ title: { contains: search } }, { description: { contains: search } }];
     }
 
-    // Filter tanggal
     if (startDate || endDate) {
       where.startDate = {};
       if (startDate) where.startDate.gte = new Date(startDate);
       if (endDate) where.startDate.lte = new Date(endDate);
     }
 
-    // Sorting
     const orderBy = [];
     if (sortBy) {
       orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
@@ -52,7 +50,7 @@ router.get(
       prisma.activity.count({ where }),
     ]);
 
-    // Transformasi untuk kompatibilitas ke belakang
+    // Transformasi data dlu biar tetep nyambung sm script lama
     const data = activities.map((a) => ({
       ...a,
       division: a.division?.name || null,
@@ -65,7 +63,24 @@ router.get(
   }),
 );
 
-// Ambil satu kegiatan
+router.get(
+  '/registrations',
+  requireAuth,
+  requireAdminAccess,
+  asyncHandler(async (req, res) => {
+    const registrations = await prisma.activityRegistration.findMany({
+      orderBy: { registeredAt: 'desc' },
+      include: {
+        activity: {
+          select: { title: true }
+        }
+      }
+    });
+
+    res.json({ data: registrations });
+  }),
+);
+
 router.get(
   '/:id',
   asyncHandler(async (req, res) => {
@@ -90,7 +105,6 @@ router.get(
   }),
 );
 
-// Buat kegiatan (hanya admin)
 router.post(
   '/',
   requireAuth,
@@ -101,15 +115,16 @@ router.post(
       url: z.string().trim().min(1).max(1000),
       type: z.string().optional(),
       size: z.number().optional(),
-    });
+    }).passthrough();
 
     const schema = z.object({
       title: z.string().min(1, 'Judul wajib diisi'),
+      category: z.enum(['event', 'proker']).optional(),
       description: z.string().optional(),
       coverImage: z.string().trim().max(500).nullable().optional(),
-      theme: z.string().max(255).nullable().optional(), // Tema untuk Proker
-      publicationDate: z.string().nullable().optional(), // Tanggal publikasi untuk Proker
-      benefits: z.array(z.string()).nullable().optional(), // Manfaat kegiatan
+      theme: z.string().max(255).nullable().optional(), // Tema khusus Proker aja
+      publicationDate: z.string().nullable().optional(), // Tgl rilis khusus Proker
+      benefits: z.array(z.string()).nullable().optional(), // Asiknya ikutan (benefits)
       attachments: z
         .object({
           photos: z.array(attachmentFileSchema).optional(),
@@ -132,7 +147,7 @@ router.post(
       location: z.string().nullable().optional(),
       status: z.enum(['DRAFT', 'PLANNED', 'ONGOING', 'COMPLETED', 'CANCELLED']).optional(),
       budget: z.number().nullable().optional(),
-      coverImageTempId: z.string().optional(), // New field for staged upload
+      coverImageTempId: z.string().optional(), // Kolom baru buat file staging td
     });
 
     const body = schema.safeParse(req.body);
@@ -140,7 +155,6 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Process attachments and cover image finalization
     let coverImage = body.data.coverImage;
     if (body.data.coverImageTempId) {
       const finalized = await finalizeUpload({
@@ -151,7 +165,6 @@ router.post(
       coverImage = finalized.publicUrl;
     }
 
-    // Handle attachments - they might already be finalized objects or tempIds from earlier
     let attachments = body.data.attachments || null;
     if (attachments) {
       const photos = await Promise.all(
@@ -178,6 +191,7 @@ router.post(
     const activity = await prisma.activity.create({
       data: {
         title: body.data.title,
+        category: body.data.category || 'event',
         description: body.data.description,
         coverImage: coverImage ?? null,
         theme: body.data.theme ?? null,
@@ -204,7 +218,6 @@ router.post(
   }),
 );
 
-// Update kegiatan (hanya admin)
 router.patch(
   '/:id',
   requireAuth,
@@ -213,7 +226,7 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    const { title, description, coverImage, coverImageTempId, theme, publicationDate, benefits, attachments, divisionId, startDate, endDate, location, status, budget, isActive } = req.body;
+    const { title, category, description, coverImage, coverImageTempId, theme, publicationDate, benefits, attachments, divisionId, startDate, endDate, location, status, budget, isActive } = req.body;
 
     let finalCoverImage = coverImage;
     if (coverImageTempId) {
@@ -252,6 +265,7 @@ router.patch(
       where: { id },
       data: {
         ...(title !== undefined && { title }),
+        ...(category !== undefined && { category }),
         ...(description !== undefined && { description }),
         ...(finalCoverImage !== undefined && { coverImage: finalCoverImage || null }),
         ...(theme !== undefined && { theme: theme || null }),
@@ -278,7 +292,6 @@ router.patch(
   }),
 );
 
-// Hapus kegiatan (soft delete)
 router.delete(
   '/:id',
   requireAuth,
@@ -296,16 +309,12 @@ router.delete(
   }),
 );
 
-// ENDPOINT PENDAFTARAN PUBLIK
-
-// Daftar kegiatan (publik - tidak perlu login)
 router.post(
   '/:id/registrations',
   asyncHandler(async (req, res) => {
     const activityId = parseInt(req.params.id, 10);
     if (isNaN(activityId)) throw new HttpError(400, 'ID tidak valid');
 
-    // Validasi kegiatan ada dan aktif
     const activity = await prisma.activity.findUnique({
       where: { id: activityId },
     });
@@ -314,7 +323,6 @@ router.post(
       throw new HttpError(404, 'Kegiatan tidak ditemukan');
     }
 
-    // Validasi body request
     const schema = z.object({
       name: z.string().min(1, 'Nama wajib diisi'),
       email: z.string().email('Format email tidak valid'),
@@ -328,7 +336,6 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Cek duplikasi pendaftaran
     const existing = await prisma.activityRegistration.findUnique({
       where: {
         activityId_email: {
@@ -339,10 +346,9 @@ router.post(
     });
 
     if (existing) {
-      throw new HttpError(409, 'Email sudah terdaftar untuk kegiatan ini');
+      throw new HttpError(409, 'Anda sudah terdaftar untuk kegiatan ini');
     }
 
-    // Buat pendaftaran
     const registration = await prisma.activityRegistration.create({
       data: {
         activityId,
@@ -379,7 +385,6 @@ router.get(
   }),
 );
 
-// Hapus pendaftaran (hanya admin)
 router.delete(
   '/:id/registrations/:registrationId',
   requireAuth,

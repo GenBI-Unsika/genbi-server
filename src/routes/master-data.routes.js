@@ -6,7 +6,6 @@ import { requireAuth as authMiddleware, requireAdminAccess as adminMiddleware } 
 
 const router = Router();
 
-// === ROLES ===
 router.get(
   '/roles',
   authMiddleware,
@@ -60,14 +59,10 @@ router.delete(
   }),
 );
 
-// === FAKULTAS ===
 router.get(
   '/faculties',
   asyncHandler(async (req, res) => {
     const faculties = await prisma.faculty.findMany({
-      // Admin might want to see inactive ones too? For now, let's keep it consistent or allow filter
-      // If public uses this, we should filter. If admin, maybe not.
-      // Let's allow query param ?all=true for admin
       where: req.query.all === 'true' ? {} : { isActive: true },
       orderBy: { sortOrder: 'asc' },
       include: {
@@ -116,8 +111,6 @@ router.delete(
   adminMiddleware,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    // Check if has relations? Prisma might complain or cascade.
-    // Schema says delete cascade for StudyPrograms, but SetNull for UserProfiles.
     await prisma.faculty.delete({
       where: { id: parseInt(id) },
     });
@@ -125,7 +118,6 @@ router.delete(
   }),
 );
 
-// === PROGRAM STUDI ===
 router.get(
   '/study-programs',
   asyncHandler(async (req, res) => {
@@ -186,9 +178,6 @@ router.patch(
         code,
         name,
         degree,
-        // Only update facultyId if provided and valid.
-        // If faultyId is provided but invalid integer, it might still crash or be 0.
-        // Better to check if it's a valid number string/int.
         ...(facultyId ? { facultyId: parseInt(facultyId) } : {}),
         sortOrder: sortOrder !== undefined ? (parseInt(sortOrder) || 0) : undefined,
         isActive,

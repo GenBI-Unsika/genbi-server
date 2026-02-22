@@ -7,7 +7,6 @@ import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
-// Tentukan mode acara (online/offline) berdasarkan tipe dan lokasi
 const getEventMode = (type, location) => {
   const t = (type || '').toLowerCase();
   // Jika tipe secara eksplisit mengatakan online atau offline
@@ -22,9 +21,7 @@ const getEventMode = (type, location) => {
   return 'offline';
 };
 
-// Petakan acara ke format frontend
 const mapEvent = (e) => {
-  // Ambil waktu dari startDate
   const startDate = new Date(e.startDate);
   const timeStr = startDate.toTimeString().slice(0, 5); // HH:MM
   const dateStr = startDate.toISOString().slice(0, 10); // YYYY-MM-DD
@@ -65,7 +62,6 @@ router.get(
   }),
 );
 
-// Ambil acara mendatang
 router.get(
   '/upcoming',
   asyncHandler(async (req, res) => {
@@ -87,7 +83,6 @@ router.get(
   }),
 );
 
-// Buat acara (perlu admin)
 router.post(
   '/',
   requireAuth,
@@ -111,7 +106,6 @@ router.post(
   }),
 );
 
-// Update acara
 router.patch(
   '/:id',
   requireAuth,
@@ -139,7 +133,6 @@ router.patch(
   }),
 );
 
-// Hapus acara (soft delete)
 router.delete(
   '/:id',
   requireAuth,

@@ -14,7 +14,6 @@ let pageViewsTableReady = false;
 async function ensurePageViewsTable() {
   if (pageViewsTableReady) return;
 
-  // Biarkan ini sebagai string DDL konstan (tanpa input user). Menggunakan Unsafe aman di sini.
   const ddl = `
     CREATE TABLE IF NOT EXISTS page_views (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +43,6 @@ function sha256Hex(value) {
 function normalizePath(input) {
   const p = String(input || '/').trim();
   if (!p.startsWith('/')) return '/';
-  // hindari path yang terlalu panjang yang membebani DB
   return p.length > 255 ? p.slice(0, 255) : p;
 }
 
@@ -58,7 +56,6 @@ function normalizeOptionalText(input, maxLen) {
 function getClientIp(req) {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
-    // bisa berupa list seperti "ip1, ip2"
     return forwarded.split(',')[0].trim();
   }
   return req.ip || '';
@@ -89,14 +86,13 @@ function clampInt(value, { min, max, fallback }) {
   return Math.max(min, Math.min(max, n));
 }
 
-// Publik: lacak tampilan halaman (digunakan oleh genbi-client)
 router.post(
   '/track',
   asyncHandler(async (req, res) => {
     try {
       await ensurePageViewsTable();
     } catch {
-      // Tracking best-effort: jika DB tidak dapat dijangkau, jangan merusak website.
+      // Tracking sebisanya aja: kl DB mati, web jgn ikutan modyar.
       const fallbackVisitorId = req?.body?.visitorId ? String(req.body.visitorId) : crypto.randomUUID();
       return res.status(202).json({ data: { visitorId: fallbackVisitorId, tracked: false } });
     }
@@ -126,9 +122,17 @@ router.post(
         INSERT INTO page_views (visitor_id, path, referrer, user_agent, ip_hash)
         VALUES (${visitorId}, ${path}, ${referrer}, ${userAgent}, ${ipHash})
       `;
+
+      const articleMatch = path.match(/^\/articles\/([^\/\?\#]+)/);
+      if (articleMatch && articleMatch[1]) {
+        const slug = articleMatch[1];
+        await prisma.article.updateMany({
+          where: { slug },
+          data: { viewCount: { increment: 1 } },
+        });
+      }
     } catch {
-      // Jika DB mati, jangan merusak UX website; cukup tidak ada tracking.
-      // Tetap kembalikan visitorId agar klien dapat menyimpannya.
+      // Kalo DB nyerah, webnya jalanin trus aja, bodo amat gausah tracking.
       return res.status(202).json({ data: { visitorId, tracked: false } });
     }
 
@@ -136,7 +140,6 @@ router.post(
   }),
 );
 
-// Admin: seri trafik (tampilan + pengunjung unik)
 router.get(
   '/traffic',
   requireAuth,
@@ -144,13 +147,12 @@ router.get(
   asyncHandler(async (req, res) => {
     await ensurePageViewsTable();
 
-    const days = clampInt(req.query.days, { min: 1, max: 60, fallback: 10 });
+    const days = clampInt(req.query.days, { min: 1, max: 90, fallback: 10 });
 
     const today = startOfDay(new Date());
     const from = new Date(today);
-    from.setDate(from.getDate() - (days - 1));
+    from.setDate(today.getDate() - (days - 1));
 
-    // Agregasi berdasarkan tanggal
     const rows = await prisma.$queryRaw`
       SELECT
         DATE(created_at) AS day,
@@ -164,7 +166,6 @@ router.get(
 
     const byDay = new Map();
     for (const r of rows || []) {
-      // Prisma bisa mengembalikan Date atau string tergantung driver
       const dayDate = r.day instanceof Date ? r.day : new Date(String(r.day));
       const key = toDateKey(dayDate);
       byDay.set(key, {
@@ -213,10 +214,10 @@ router.get(
   asyncHandler(async (req, res) => {
     await ensurePageViewsTable();
 
-    const days = clampInt(req.query.days, { min: 1, max: 60, fallback: 10 });
+    const days = clampInt(req.query.days, { min: 1, max: 90, fallback: 10 });
     const today = startOfDay(new Date());
     const from = new Date(today);
-    from.setDate(from.getDate() - (days - 1));
+    from.setDate(today.getDate() - (days - 1));
 
     const [trafficRows, trafficTotalsRow, allTimeRow, prokerRow, eventsRow, articlesRow] = await Promise.all([
       prisma.$queryRaw`
@@ -293,11 +294,16 @@ router.get(
     const events = Array.isArray(eventsRow) && eventsRow[0] ? eventsRow[0] : { views: 0, visitors: 0 };
     const articles = Array.isArray(articlesRow) && articlesRow[0] ? articlesRow[0] : { views: 0, visitors: 0 };
 
-    const [scholarshipApplications, articlesCount, eventsCount, activitiesCount, latestArticles, topArticles] = await Promise.all([
+    const [scholarshipApps, activityRegs, articlesCount, eventsCount, activitiesCount, articlesTotalViewsRow, latestArticlesData, topArticlesData] = await Promise.all([
       prisma.scholarshipApplication.count(),
+      prisma.activityRegistration.count(),
       prisma.article.count({ where: { isActive: true } }),
       prisma.event.count({ where: { isActive: true } }),
       prisma.activity.count({ where: { isActive: true } }),
+      prisma.article.aggregate({
+        _sum: { viewCount: true },
+        where: { isActive: true },
+      }),
       prisma.article.findMany({
         where: { isActive: true },
         orderBy: { createdAt: 'desc' },
@@ -312,6 +318,11 @@ router.get(
       }),
     ]);
 
+    const articlesTotalViews = articlesTotalViewsRow._sum.viewCount || 0;
+
+    const latestArticles = latestArticlesData.map(a => ({ ...a, views: a.viewCount }));
+    const topArticles = topArticlesData.map(a => ({ ...a, views: a.viewCount }));
+
     res.json({
       data: {
         range: { days, from },
@@ -325,6 +336,7 @@ router.get(
         allTime: {
           views: Number(allTime.views || 0),
           visitors: Number(allTime.visitors || 0),
+          articlesTotalViews: Number(articlesTotalViews || 0),
         },
         byPrefix: {
           proker: { views: Number(proker.views || 0), visitors: Number(proker.visitors || 0) },
@@ -332,7 +344,7 @@ router.get(
           articles: { views: Number(articles.views || 0), visitors: Number(articles.visitors || 0) },
         },
         counts: {
-          scholarshipApplications,
+          scholarshipApplications: scholarshipApps,
           articles: articlesCount,
           events: eventsCount,
           activities: activitiesCount,

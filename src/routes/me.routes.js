@@ -67,7 +67,6 @@ router.patch(
     const body = schema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
 
-    // Handle staged avatar upload - finalize if tempId provided
     let finalAvatar = body.data.avatar;
     if (body.data.avatarTempId) {
       try {
@@ -89,7 +88,6 @@ router.patch(
 
     if (!user) throw new HttpError(404, 'User not found');
 
-    // Determine the avatar value to use
     const avatarValue = body.data.avatarTempId ? finalAvatar : body.data.avatar !== undefined ? body.data.avatar : undefined;
 
     const profile = await prisma.userProfile.upsert({
@@ -140,14 +138,12 @@ router.patch(
   }),
 );
 
-// Ambil event yang pernah diikutiku (via MemberPoint)
 router.get(
   '/events',
   requireAuth,
   asyncHandler(async (req, res) => {
     const userId = req.auth.userId;
 
-    // We determine attended events by looking at MemberPoint records tagged with an eventId
     const attendanceRecords = await prisma.memberPoint.findMany({
       where: {
         userId,
@@ -169,7 +165,6 @@ router.get(
       },
     });
 
-    // Create a map for quick lookup
     const eventMap = new Map(attendedEvents.map(e => [e.id, e]));
 
     const items = attendanceRecords
@@ -192,7 +187,6 @@ router.get(
   }),
 );
 
-// Ambil poin saya (perpointan)
 router.get(
   '/points',
   requireAuth,
@@ -234,7 +228,6 @@ router.get(
   }),
 );
 
-// Ambil uang kas saya
 router.get(
   '/treasury',
   requireAuth,

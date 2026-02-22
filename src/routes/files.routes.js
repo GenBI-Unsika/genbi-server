@@ -9,6 +9,7 @@ import { env } from '../config/env.js';
 import { signFileToken, verifyFileToken } from '../auth/tokens.js';
 import { downloadDriveFileStream, setDriveFilePublicReadable, toDriveUploadHttpErrorMessage, uploadBufferToDrive, getOrCreateDriveFolderPath } from '../storage/gdrive.js';
 import { saveTempFile, getTempFileStream, readTempFile, deleteTempFile, getTempFile } from '../storage/temp-storage.js';
+import { optimizeImage, normalizeFilename } from '../lib/image-optimizer.js';
 
 const router = Router();
 
@@ -30,8 +31,6 @@ router.post(
     const file = req.file;
     if (!file) throw new HttpError(400, 'Missing file (multipart field name: file)');
 
-    // Support organized folder structure via query/body params
-    // e.g. POST /files?folder=Beasiswa/Periode-2026/1234567-NamaLengkap
     const folderPath = req.query?.folder || req.body?.folder || '';
 
     let targetFolderId = env.GDRIVE_FOLDER_ID;
@@ -42,16 +41,18 @@ router.post(
           targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
         }
       } catch (e) {
-        // Fall back to root folder
       }
     }
+
+    const { buffer: optBuffer, mimeType: optMimeType, extension: optExtension } = await optimizeImage(file.buffer, file.mimetype);
+    const finalFilename = normalizeFilename(file.originalname, optExtension);
 
     let driveFile;
     try {
       driveFile = await uploadBufferToDrive({
-        name: file.originalname,
-        mimeType: file.mimetype,
-        buffer: file.buffer,
+        name: finalFilename,
+        mimeType: optMimeType,
+        buffer: optBuffer,
         parentFolderId: targetFolderId,
       });
     } catch (e) {
@@ -62,9 +63,9 @@ router.post(
       data: {
         createdById: req.auth.userId,
         driveFileId: driveFile.id,
-        name: driveFile.name || file.originalname,
-        mimeType: driveFile.mimeType || file.mimetype,
-        sizeBytes: driveFile.size ? Number(driveFile.size) : file.size,
+        name: driveFile.name || finalFilename,
+        mimeType: driveFile.mimeType || optMimeType,
+        sizeBytes: driveFile.size ? Number(driveFile.size) : optBuffer.length,
       },
     });
 
@@ -72,11 +73,9 @@ router.post(
       try {
         await setDriveFilePublicReadable(driveFile.id);
       } catch (e) {
-        // Silent fail for permission
       }
     }
 
-    // URL Publik (File Drive harus dibagikan secara publik agar ini berfungsi)
     const publicUrl = `https://drive.google.com/uc?export=view&id=${driveFile.id}`;
 
     const base = `${req.protocol}://${req.get('host')}`;
@@ -200,16 +199,9 @@ router.get(
   }),
 );
 
-// ============================================================================
-// PUBLIC PROXY ROUTE - Permanent image serving without token
-// ============================================================================
-// This route serves files publicly without requiring authentication or tokens.
-// Used for displaying images in public pages (articles, profiles, etc.)
-// Files are streamed from Google Drive with caching headers for performance.
 router.get(
   '/:id/public',
   (req, res, next) => {
-    // Allow cross-origin embedding even for errors, so frontend doesn't get confusing CORP blocks
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
   },
@@ -230,9 +222,7 @@ router.get(
       throw new HttpError(502, `Google Drive download failed: ${e?.message || 'unknown error'}`);
     }
 
-    // Set caching headers for better performance
-    // Cache for 1 hour in browsers, allow CDN caching
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     res.setHeader('Content-Type', row.mimeType || 'application/octet-stream');
     res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(row.name)}`);
 
@@ -254,10 +244,13 @@ router.post(
     const file = req.file;
     if (!file) throw new HttpError(400, 'Missing file (multipart field name: file)');
 
+    const { buffer: optBuffer, mimeType: optMimeType, extension: optExtension } = await optimizeImage(file.buffer, file.mimetype);
+    const finalFilename = normalizeFilename(file.originalname, optExtension);
+
     const result = await saveTempFile({
-      buffer: file.buffer,
-      originalName: file.originalname,
-      mimeType: file.mimetype,
+      buffer: optBuffer,
+      originalName: finalFilename,
+      mimeType: optMimeType,
       userId: req.auth.userId,
     });
 
@@ -273,7 +266,6 @@ router.post(
   }),
 );
 
-// Ambil/preview file sementara
 router.get(
   '/temp/:tempId',
   (req, res, next) => {
@@ -301,7 +293,6 @@ router.get(
   }),
 );
 
-// Ambil metadata file sementara
 router.get(
   '/temp/:tempId/info',
   requireAuth,
@@ -313,7 +304,6 @@ router.get(
       throw new HttpError(404, 'File temporary tidak ditemukan atau sudah expired');
     }
 
-    // Hanya izinkan pemilik melihat metadata
     if (metadata.userId !== req.auth.userId) {
       throw new HttpError(403, 'Tidak memiliki akses ke file ini');
     }
@@ -330,7 +320,6 @@ router.get(
   }),
 );
 
-// Hapus file sementara
 router.delete(
   '/temp/:tempId',
   requireAuth,
@@ -352,7 +341,6 @@ router.delete(
   }),
 );
 
-// Finalisasi file sementara -> Upload ke Google Drive
 router.post(
   '/finalize',
   requireAuth,
@@ -386,7 +374,6 @@ router.post(
 
     const metadata = tempMeta;
 
-    // Resolve target folder if folder path is specified
     let targetFolderId = env.GDRIVE_FOLDER_ID;
     if (folder) {
       try {
@@ -395,7 +382,6 @@ router.post(
           targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
         }
       } catch (e) {
-        // Silent fail for folder path creation
       }
     }
 
@@ -418,7 +404,6 @@ router.post(
         name: driveFile.name || metadata.originalName,
         mimeType: driveFile.mimeType || metadata.mimeType,
         sizeBytes: driveFile.size ? Number(driveFile.size) : metadata.size,
-        // Note: folder is for Drive organization only, not stored in DB
       },
     });
 
@@ -429,7 +414,6 @@ router.post(
       try {
         await setDriveFilePublicReadable(driveFile.id);
       } catch (e) {
-        // Silent fail
       }
     }
 
@@ -450,7 +434,6 @@ router.post(
   }),
 );
 
-// Finalisasi massal beberapa file sementara
 router.post(
   '/finalize-bulk',
   requireAuth,
@@ -490,7 +473,6 @@ router.post(
 
         const metadata = tempMeta;
 
-        // Resolve target folder if specified
         let targetFolderId = env.GDRIVE_FOLDER_ID;
         if (item.folder) {
           try {
@@ -499,7 +481,6 @@ router.post(
               targetFolderId = await getOrCreateDriveFolderPath(segments, env.GDRIVE_FOLDER_ID);
             }
           } catch (e) {
-            // silent fail
           }
         }
 
@@ -522,7 +503,6 @@ router.post(
             name: driveFile.name || metadata.originalName,
             mimeType: driveFile.mimeType || metadata.mimeType,
             sizeBytes: driveFile.size ? Number(driveFile.size) : metadata.size,
-            // Note: folder is for Drive organization only, not stored in DB
           },
         });
 

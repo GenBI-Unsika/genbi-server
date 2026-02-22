@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
-// Ensure env parsing succeeds for tests without needing a real .env
 beforeEach(() => {
   process.env.NODE_ENV = 'test';
   process.env.JWT_ACCESS_SECRET = 'test_access_secret_123456';

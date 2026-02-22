@@ -10,6 +10,7 @@ import { notFound, errorHandler } from './lib/errors.js';
 import apiRoutes from './routes/index.js';
 import { appRouter, createContext } from '@genbi/trpc';
 import { initTempStorage } from './storage/temp-storage.js';
+import seoRoutes from './routes/seo.routes.js';
 
 initTempStorage();
 
@@ -57,6 +58,8 @@ app.get('/api/v1/health', (_req, res) => {
   res.json({ ok: true, name: 'genbi-server', env: env.NODE_ENV });
 });
 
+app.use('/', seoRoutes);
+
 app.use(
   '/api/trpc',
   createExpressMiddleware({
@@ -71,16 +74,14 @@ app.use(notFound);
 app.use(errorHandler);
 
 const server = app.listen(env.PORT, env.HOST, () => {
-  // Server is up
 });
 
-// Increase timeout for bulk file uploads (default is 120s)
-// Match with Vite proxy timeout (5 minutes)
 server.timeout = 5 * 60 * 1000; // 5 minutes
-server.keepAliveTimeout = 5 * 60 * 1000 + 1000; // Slightly longer than timeout
-server.headersTimeout = 5 * 60 * 1000 + 2000; // Slightly longer than keepAliveTimeout
+server.keepAliveTimeout = 5 * 60 * 1000 + 1000; // Sengaja dilebihin dikit dr timeout default
+server.headersTimeout = 5 * 60 * 1000 + 2000; // Sengaja dilebihin dikit dr keepAlive biar ga tabrakan
 
 server.on('error', (err) => {
+  console.error("SERVER ERROR:", err);
   if (err?.code === 'EADDRINUSE') {
     process.exit(1);
   }
@@ -100,7 +101,6 @@ const gracefulShutdown = () => {
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
 
-// Handle nodemon restart signal
 process.on('SIGUSR2', () => {
   server.close(() => {
     process.kill(process.pid, 'SIGUSR2');

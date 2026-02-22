@@ -105,11 +105,9 @@ export async function sendVerifyEmail({ toEmail, token, expiresAt }) {
       throw new HttpError(500, 'SMTP belum dikonfigurasi di server.');
     }
 
-    // dev fallback: log link to server console
     // eslint-disable-next-line no-console
 
     if (env.NODE_ENV === 'development') {
-      // Dev mode: verification link is returned in API response for testing ease
     }
 
     return { ok: true, skipped: true, link };
@@ -145,7 +143,6 @@ export async function sendNewsletterSubscribedEmail({ toEmail, name }) {
       throw new HttpError(500, 'SMTP belum dikonfigurasi di server.');
     }
     if (env.NODE_ENV === 'development') {
-      // Dev mode: subscription skipped but handled
     }
     return { ok: true, skipped: true };
   }

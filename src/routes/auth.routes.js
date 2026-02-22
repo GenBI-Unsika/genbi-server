@@ -179,7 +179,6 @@ router.post(
 
     if (!user || !user.isActive) throw new HttpError(401, 'Email atau password salah.');
 
-    // Check role manually since assertIsAdmin expects role string
     const roleName = user.role?.name;
     if (!ADMIN_ROLES.includes(roleName)) {
       throw new HttpError(403, 'Akses ditolak. Akun ini tidak memiliki hak admin.');
@@ -212,7 +211,6 @@ router.post(
     const tokenHash = hashToken(token);
     const expiresAt = verifyExpiresAt();
 
-    // Default role for new registration is user
     const defaultRole = await prisma.role.findUnique({ where: { name: 'user' } });
     if (!defaultRole) throw new HttpError(500, 'Konfigurasi role belum di-seed.');
 
@@ -247,8 +245,6 @@ router.post(
     res.status(201).json({ data: { ok: true } });
   }),
 );
-
-// ... (resend-verification and verify-email stay same roughly, verify-email just updates user)
 
 router.get(
   '/verify-email',
@@ -336,7 +332,6 @@ router.post(
         if (!user.isActive) throw new HttpError(401, 'Akun dinonaktifkan. Hubungi admin.');
         if (user.googleSub && user.googleSub !== sub) throw new HttpError(409, 'Akun Google tidak cocok dengan akun ini.');
 
-        // Update user dan profile dengan semua info Google
         user = await prisma.user.update({
           where: { id: user.id },
           data: {
@@ -402,7 +397,6 @@ router.post(
         throw new HttpError(401, 'Akun admin tidak ditemukan atau tidak aktif.');
       }
 
-      // Manual check for debugging
       const roleName = user0.role?.name;
       if (!ADMIN_ROLES.includes(roleName)) {
         throw new HttpError(403, `Akses ditolak. Role anda (${roleName}) tidak memiliki hak akses admin.`);
@@ -499,7 +493,6 @@ router.post(
     assertAllowedEmailDomain(user.email);
     assertEmailVerified(user);
 
-
     const { token: nextRefreshToken, jti: nextJti } = signRefreshToken({ userId: user.id });
 
     await prisma.$transaction([
@@ -559,7 +552,6 @@ router.post(
           });
         }
       } catch {
-        // abaikan refresh token tidak valid
       }
     }
 

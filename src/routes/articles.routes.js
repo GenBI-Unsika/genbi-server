@@ -9,7 +9,6 @@ import { FOLDER_ARTICLE_COVERS, FOLDER_ARTICLE_PHOTOS, FOLDER_ARTICLE_DOCUMENTS 
 
 const router = Router();
 
-// Generate slug dari judul
 function generateSlug(title) {
   return title
     .toLowerCase()
@@ -19,17 +18,15 @@ function generateSlug(title) {
     .trim();
 }
 
-// Ambil semua artikel yang dipublikasikan (publik)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     const { category, page = 1, limit = 10, search, status, startDate, endDate, sortBy, sortOrder, popularFirst } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Filter dasar
     const where = { isActive: true };
 
-    // Default ke PUBLISHED untuk akses publik
+    // Setelan awalnya yg udah rilis aja yg disodorin ke publik
     if (status) {
       where.status = status;
     } else {
@@ -40,28 +37,22 @@ router.get(
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }, { content: { contains: search } }];
     }
 
-    // Filter tanggal
     if (startDate || endDate) {
       where.publishedAt = {};
       if (startDate) where.publishedAt.gte = new Date(startDate);
       if (endDate) where.publishedAt.lte = new Date(endDate);
     }
 
-    // Sorting
     const orderBy = [];
 
     if (popularFirst === 'true') {
-      // Prioritaskan artikel populer (> 50 views)
-      // Sayangnya Prisma tidak support CASE WHEN di orderBy, 
-      // jadi kita gunakan viewCount desc sebagai proxy atau sort manual di route ini.
-      // Kita gunakan viewCount desc dahulu jika popularFirst diminta.
+      // Sortirin by jumlah klik (viewCount) dl kl nanya yg populer
       orderBy.push({ viewCount: 'desc' });
     }
 
     if (sortBy) {
       orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
     } else {
-      // Default sort
       orderBy.push({ publishedAt: 'desc' });
     }
 
@@ -118,19 +109,17 @@ router.get(
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }, { content: { contains: search } }];
     }
 
-    // Filter tanggal
     if (startDate || endDate) {
-      where.createdAt = {}; // Admin usually filters by creation date or update date
+      where.createdAt = {}; // Admin biasanya nyari rute dr tgl dibikin / di-update
       if (startDate) where.createdAt.gte = new Date(startDate);
       if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    // Sorting
     const orderBy = [];
     if (sortBy) {
       orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
     } else {
-      orderBy.push({ updatedAt: 'desc' }); // Order by recently updated for admin
+      orderBy.push({ updatedAt: 'desc' }); // Urutin dr yg paling baru di-utak-atik buat mas admin
     }
 
     const [articles, total] = await Promise.all([
@@ -168,7 +157,6 @@ router.get(
   }),
 );
 
-// Ambil satu artikel berdasarkan slug (publik)
 router.get(
   '/slug/:slug',
   asyncHandler(async (req, res) => {
@@ -189,7 +177,6 @@ router.get(
       throw new HttpError(404, 'Artikel tidak ditemukan');
     }
 
-    // Tambah jumlah tampilan
     await prisma.article.update({
       where: { id: article.id },
       data: { viewCount: { increment: 1 } },
@@ -199,7 +186,6 @@ router.get(
   }),
 );
 
-// Ambil satu artikel berdasarkan ID (admin)
 router.get(
   '/:id',
   requireAuth,
@@ -228,7 +214,6 @@ router.get(
   }),
 );
 
-// Buat artikel (hanya admin)
 router.post(
   '/',
   requireAuth,
@@ -239,7 +224,7 @@ router.post(
         name: z.string().optional(),
         url: z.string().min(1),
         fileId: z.number().int().optional(),
-        tempId: z.string().optional(), // Support for staged files
+        tempId: z.string().optional(), // Support file yg masih ngungsi di staging
       })
       .passthrough();
 
@@ -265,7 +250,7 @@ router.post(
       excerpt: z.string().optional(),
       content: z.string().optional(),
       coverImage: z.string().nullable().optional(),
-      coverImageTempId: z.string().optional(), // NEW: Accept staged cover image
+      coverImageTempId: z.string().optional(), // BARU: Nangkep cover dr staging upload
       status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
       attachments: attachmentsSchema.optional(),
     });
@@ -275,7 +260,6 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Handle staged cover image - finalize if tempId provided
     let coverImageUrl = body.data.coverImage;
     if (body.data.coverImageTempId) {
       try {
@@ -290,7 +274,6 @@ router.post(
       }
     }
 
-    // Handle staged attachment photos
     const attachments = body.data.attachments || {};
     if (attachments.photos && Array.isArray(attachments.photos)) {
       const processedPhotos = [];
@@ -308,7 +291,6 @@ router.post(
               fileId: finalizedFile.id,
             });
           } catch (e) {
-            // Silent fail for photo upload in loop
           }
         } else {
           processedPhotos.push(photo);
@@ -317,7 +299,6 @@ router.post(
       attachments.photos = processedPhotos;
     }
 
-    // Handle staged attachment documents
     if (attachments.documents && Array.isArray(attachments.documents)) {
       const processedDocs = [];
       for (const doc of attachments.documents) {
@@ -334,7 +315,6 @@ router.post(
               fileId: finalizedFile.id,
             });
           } catch (e) {
-            // Silent fail for doc upload in loop
           }
         } else {
           processedDocs.push(doc);
@@ -343,7 +323,6 @@ router.post(
       attachments.documents = processedDocs;
     }
 
-    // Generate slug unik
     let slug = generateSlug(body.data.title);
     const existing = await prisma.article.findUnique({ where: { slug } });
     if (existing) {
@@ -368,7 +347,6 @@ router.post(
   }),
 );
 
-// Update artikel (hanya admin)
 router.patch(
   '/:id',
   requireAuth,
@@ -384,7 +362,6 @@ router.patch(
       throw new HttpError(404, 'Artikel tidak ditemukan');
     }
 
-    // Handle staged cover image - finalize if tempId provided
     let finalCoverImage = coverImage;
     if (coverImageTempId) {
       try {
@@ -399,7 +376,6 @@ router.patch(
       }
     }
 
-    // Handle staged attachment photos
     let processedAttachments = attachments;
     if (attachments) {
       processedAttachments = { ...attachments };
@@ -420,7 +396,6 @@ router.patch(
                 fileId: finalizedFile.id,
               });
             } catch (e) {
-              // Silent fail for photo upload in loop
             }
           } else {
             processedPhotos.push(photo);
@@ -445,7 +420,6 @@ router.patch(
                 fileId: finalizedFile.id,
               });
             } catch (e) {
-              // Silent fail for doc upload in loop
             }
           } else {
             processedDocs.push(doc);
@@ -478,7 +452,6 @@ router.patch(
   }),
 );
 
-// Hapus artikel (soft delete)
 router.delete(
   '/:id',
   requireAuth,

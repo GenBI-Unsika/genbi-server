@@ -13,7 +13,6 @@ const formatDate = (date) => {
   return new Date(date).toISOString().split('T')[0];
 };
 
-// Ambil leaderboard dengan aktivitas (publik)
 router.get(
   '/',
   asyncHandler(async (req, res) => {
@@ -88,7 +87,6 @@ router.get(
   }),
 );
 
-// Ambil rincian poin berdasarkan kategori
 router.get(
   '/breakdown/:memberId',
   asyncHandler(async (req, res) => {
@@ -112,7 +110,6 @@ router.get(
   }),
 );
 
-// Tambah poin (perlu admin) - bekerja dengan endpoint /points dari frontend
 router.post(
   '/points',
   requireAuth,
@@ -139,7 +136,6 @@ router.post(
   }),
 );
 
-// Update record poin (perlu admin)
 router.patch(
   '/points/:memberId/:pointId',
   requireAuth,
@@ -177,7 +173,6 @@ router.patch(
   }),
 );
 
-// Hapus record poin (perlu admin)
 router.delete(
   '/points/:memberId/:pointId',
   requireAuth,
@@ -189,7 +184,6 @@ router.delete(
     if (isNaN(memberId)) throw new HttpError(400, 'Member ID tidak valid');
     if (isNaN(pointId)) throw new HttpError(400, 'Point ID tidak valid');
 
-    // Cari record poin
     const pointRecord = await prisma.memberPoint.findUnique({
       where: { id: pointId },
     });
@@ -206,7 +200,6 @@ router.delete(
   }),
 );
 
-// Legacy: Tambah poin (perlu admin)
 router.post(
   '/',
   requireAuth,

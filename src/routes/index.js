@@ -24,12 +24,11 @@ import subscribersRoutes from './subscribers.routes.js';
 
 const router = Router();
 
-// Route publik (tanpa auth) - untuk genbi-client
+// Rute jalanan umum (gk butuh login) - khusus genbi-client
 router.use('/public', publicRoutes);
 
 router.use('/auth', authRoutes);
 router.use('/files', filesRoutes);
-// Alias kompatibilitas mundur digunakan oleh beberapa frontend (misal admin-genbi)
 router.use('/upload', filesRoutes);
 router.use('/me', meRoutes);
 router.use('/scholarships', scholarshipsRoutes);

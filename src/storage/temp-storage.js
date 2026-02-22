@@ -7,16 +7,13 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Direktori penyimpanan sementara (dibuat otomatis saat startup)
 const TEMP_DIR = path.resolve(__dirname, '../../temp-uploads');
 
-// Simpan metadata file sementara (di-memori, kadaluarsa setelah TTL)
 const tempFileMap = new Map();
 
 // TTL Default: 30 menit (cukup waktu untuk preview dan submit)
 const DEFAULT_TTL_MS = 30 * 60 * 1000;
 
-// Interval pembersihan: setiap 5 menit
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 function getMetaPath(tempId) {
@@ -42,9 +39,7 @@ function tryLoadMetadataFromDisk(tempId) {
   }
 }
 
-/**
- * Inisialisasi direktori penyimpanan sementara
- */
+// Inisialisasi direktori penyimpanan sementara
 export async function initTempStorage() {
   try {
     await fs.mkdir(TEMP_DIR, { recursive: true });
@@ -55,23 +50,12 @@ export async function initTempStorage() {
   }
 }
 
-/**
- * Hasilkan ID file sementara yang unik
- */
+// Hasilkan ID file sementara yang unik
 function generateTempId() {
   return `temp_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
 }
 
-/**
- * Simpan file ke penyimpanan sementara
- * @param {Object} params
- * @param {Buffer} params.buffer - Buffer file
- * @param {string} params.originalName - Nama file asli
- * @param {string} params.mimeType - Tipe MIME
- * @param {number} params.userId - User yang mengupload
- * @param {number} [params.ttlMs] - Waktu hidup (TTL) dalam milidetik
- * @returns {Promise<Object>} Metadata file sementara
- */
+// Simpan file ke penyimpanan sementara
 export async function saveTempFile({ buffer, originalName, mimeType, userId, ttlMs = DEFAULT_TTL_MS }) {
   const tempId = generateTempId();
   const ext = path.extname(originalName) || '';
@@ -94,12 +78,9 @@ export async function saveTempFile({ buffer, originalName, mimeType, userId, ttl
 
   tempFileMap.set(tempId, metadata);
 
-  // Persist metadata so temp files still work after server restarts
   try {
     await fs.writeFile(getMetaPath(tempId), JSON.stringify(metadata), 'utf8');
   } catch (e) {
-    // Non-fatal, but will cause temp file to be lost on restart.
-    // Failed to persist metadata
   }
 
   return {
@@ -112,11 +93,7 @@ export async function saveTempFile({ buffer, originalName, mimeType, userId, ttl
   };
 }
 
-/**
- * Dapatkan metadata file sementara
- * @param {string} tempId
- * @returns {Object|null}
- */
+// Dapatkan metadata file sementara
 export function getTempFile(tempId) {
   let metadata = tempFileMap.get(tempId);
   if (!metadata) {
@@ -133,7 +110,6 @@ export function getTempFile(tempId) {
     return null;
   }
 
-  // File missing on disk -> treat as expired/not found
   if (metadata.filePath && !fsSync.existsSync(metadata.filePath)) {
     deleteTempFile(tempId).catch(() => { });
     return null;
@@ -142,11 +118,7 @@ export function getTempFile(tempId) {
   return metadata;
 }
 
-/**
- * Baca buffer file sementara
- * @param {string} tempId
- * @returns {Promise<Buffer|null>}
- */
+// Baca buffer file sementara
 export async function readTempFile(tempId) {
   const metadata = getTempFile(tempId);
   if (!metadata) return null;
@@ -158,10 +130,7 @@ export async function readTempFile(tempId) {
   }
 }
 
-/**
- * Hapus file sementara
- * @param {string} tempId
- */
+// Hapus file sementara
 export async function deleteTempFile(tempId) {
   const metadata = tempFileMap.get(tempId) || tryLoadMetadataFromDisk(tempId);
   const metaPath = getMetaPath(tempId);
@@ -170,33 +139,28 @@ export async function deleteTempFile(tempId) {
     try {
       await fs.unlink(metadata.filePath);
     } catch {
-      // ignore
+      // Sengaja biarin errornya (di-ignore)
     }
   } else {
-    // best-effort cleanup if metadata is missing
     try {
       const entries = await fs.readdir(TEMP_DIR);
       const candidates = entries.filter((name) => name.startsWith(tempId) && !name.endsWith('.meta.json'));
       await Promise.all(candidates.map((name) => fs.unlink(path.join(TEMP_DIR, name)).catch(() => { })));
     } catch {
-      // ignore
+      // Sengaja biarin errornya (di-ignore)
     }
   }
 
   try {
     await fs.unlink(metaPath);
   } catch {
-    // ignore
+    // Sengaja biarin errornya (di-ignore)
   }
 
   tempFileMap.delete(tempId);
 }
 
-/**
- * Dapatkan stream file sementara untuk disajikan
- * @param {string} tempId
- * @returns {Promise<{stream: ReadStream, metadata: Object}|null>}
- */
+// Dapatkan stream file sementara untuk disajikan
 export async function getTempFileStream(tempId) {
   const metadata = getTempFile(tempId);
   if (!metadata) return null;
@@ -207,12 +171,8 @@ export async function getTempFileStream(tempId) {
   return { stream, metadata };
 }
 
-/**
- * Konsumsi file sementara (dapatkan buffer dan hapus)
- * Digunakan saat finalisasi upload ke Drive
- * @param {string} tempId
- * @returns {Promise<{buffer: Buffer, metadata: Object}|null>}
- */
+// Konsumsi file sementara (dapatkan buffer dan hapus)
+// Digunakan saat finalisasi upload ke Drive
 export async function consumeTempFile(tempId) {
   const metadata = getTempFile(tempId);
   if (!metadata) return null;
@@ -226,9 +186,7 @@ export async function consumeTempFile(tempId) {
   }
 }
 
-/**
- * Bersihkan file sementara yang kadaluarsa
- */
+// Bersihkan file sementara yang kadaluarsa
 async function cleanupExpiredFiles() {
   const now = Date.now();
   const expiredIds = [];
@@ -243,7 +201,6 @@ async function cleanupExpiredFiles() {
     await deleteTempFile(tempId);
   }
 
-  // Also scan persisted metadata on disk (handles server restarts)
   try {
     const entries = await fs.readdir(TEMP_DIR);
     const metaFiles = entries.filter((name) => name.endsWith('.meta.json'));
@@ -258,22 +215,18 @@ async function cleanupExpiredFiles() {
           await deleteTempFile(tempId);
         }
       } catch {
-        // ignore broken meta
+        // Sengaja biarin errornya (di-ignore) broken meta
       }
     }
   } catch {
-    // ignore
+    // Sengaja biarin errornya (di-ignore)
   }
 
   if (expiredIds.length > 0) {
   }
 }
 
-/**
- * Dapatkan semua file sementara untuk user (untuk pembersihan saat logout dll)
- * @param {number} userId
- * @returns {string[]} Array tempId
- */
+// Dapatkan semua file sementara untuk user (untuk pembersihan saat logout dll)
 export function getUserTempFiles(userId) {
   const tempIds = [];
   for (const [tempId, metadata] of tempFileMap) {
@@ -284,10 +237,7 @@ export function getUserTempFiles(userId) {
   return tempIds;
 }
 
-/**
- * Hapus semua file sementara untuk user
- * @param {number} userId
- */
+// Hapus semua file sementara untuk user
 export async function deleteUserTempFiles(userId) {
   const tempIds = getUserTempFiles(userId);
   await Promise.all(tempIds.map(deleteTempFile));

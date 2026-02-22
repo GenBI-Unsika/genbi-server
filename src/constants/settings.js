@@ -3,7 +3,7 @@ export const APP_SETTING_KEYS = Object.freeze({
   SCHOLARSHIP_REGISTRATION_OPEN: 'scholarship_registration_open',
   SCHOLARSHIP_BATCH: 'scholarship_batch',
   SCHOLARSHIP_PERIOD: 'scholarship_period', // { year: number, batch: number }
-  SCHOLARSHIP_DOCUMENTS: 'scholarship_documents', // Custom document config (array)
+  SCHOLARSHIP_DOCUMENTS: 'scholarship_documents', // Settingan custom buat dokumen apaan aja yg hrs diupload pas daftar
 });
 
 export const CMS_SETTING_KEYS = Object.freeze([
@@ -18,5 +18,5 @@ export const CMS_SETTING_KEYS = Object.freeze([
   'cms_footer',
   'cms_scholarship',
   'cms_hero_avatars',
-  'cms_scholarship_page', // Halaman persyaratan beasiswa
+  'cms_scholarship_page', // Halaman syarat & ketentuan daftar beasiswa
 ]);

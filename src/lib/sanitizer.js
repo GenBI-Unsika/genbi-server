@@ -1,7 +1,5 @@
-/**
- * Sanitizes a profile for general private use (e.g., login response, session info).
- * Usually strips very sensitive fields like bank info unless specifically needed.
- */
+// Sanitizes a profile for general private use (e.g., login response, session info).
+// Usually strips very sensitive fields like bank info unless specifically needed.
 export function sanitizeProfile(profile) {
     if (!profile) return null;
     const {
@@ -13,10 +11,8 @@ export function sanitizeProfile(profile) {
     return safeProfile;
 }
 
-/**
- * Sanitizes a member object for public display (e.g., teams page).
- * Strictly removes PII (Personally Identifiable Information).
- */
+// Sanitizes a member object for public display (e.g., teams page).
+// Strictly removes PII (Personally Identifiable Information).
 export function sanitizePublicMember(user) {
     if (!user) return null;
 
@@ -29,16 +25,15 @@ export function sanitizePublicMember(user) {
         division: profile.division?.name || null,
         divisionKey: profile.division?.key || null,
         photo: profile.avatar || null,
-        avatar: profile.avatar || null, // Compatibility
+        avatar: profile.avatar || null, // Biar tetep jalan sama kode lama (backward compatibility)
         faculty: profile.faculty?.name || null,
         major: profile.studyProgram?.name || null,
         studyProgram: profile.studyProgram?.name || null,
         semester: profile.semester || null,
-        cohort: profile.semester || null, // Compatibility
+        cohort: profile.semester || null, // Biar tetep jalan sama kode lama (backward compatibility)
         socials: profile.socials || null,
         role: user.role?.name || 'awardee',
         isActive: user.isActive,
         sortOrder: profile.sortOrder || 0,
-        // EXCLUDED: email, phone, npm, nik, birthDate, bank info
     };
 }

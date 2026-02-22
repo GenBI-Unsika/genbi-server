@@ -5,8 +5,6 @@ import { requireAuth, requireAdminAccess } from '../middleware/auth.js';
 
 const router = Router();
 
-// Admin: list member dari akun user asli (dibuat via Kelola User)
-// Role yang disertakan secara default: awardee/member/alumni
 router.get(
   '/admin/all',
   requireAuth,
@@ -15,10 +13,6 @@ router.get(
     const { role, search, isActive } = req.query;
 
     const allowedRoles = ['super_admin', 'admin', 'awardee'];
-
-    // Logic: if role is specific, use it. if not, allow allowedRoles.
-    // Querying related table in Prisma:
-    // where: { role: { name: ... } }
 
     const where = {};
     if (role) {

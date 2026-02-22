@@ -10,9 +10,6 @@ import { sanitizePublicMember } from '../lib/sanitizer.js';
 
 const router = Router();
 
-// Member transformation is handled by central sanitizer for consistency.
-
-// Public: get users with specific roles
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
@@ -38,7 +35,6 @@ router.get(
   }),
 );
 
-// Admin: get all users
 router.get(
   '/admin/all',
   requireAuth,
@@ -64,7 +60,6 @@ router.get(
   }),
 );
 
-// Admin: create user
 router.post(
   '/',
   requireAuth,
@@ -93,7 +88,6 @@ router.post(
     const body = schema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data tidak valid', body.error.flatten());
 
-    // Resolve Division
     let divisionId = body.data.divisionId;
     if (!divisionId && body.data.division) {
       const div = await prisma.division.findFirst({
@@ -103,15 +97,12 @@ router.post(
     }
     if (!divisionId) throw new HttpError(400, 'Divisi wajib dipilih');
 
-    // Create User (with dummy password if new)
-    // Cek email exists
     let user = null;
     if (body.data.email) {
       user = await prisma.user.findUnique({ where: { email: body.data.email } });
     }
 
     if (user) {
-      // Update existing user to awardee
       const updateRoleName = body.data.role || 'awardee';
       const updateRoleRecord = await prisma.role.findUnique({ where: { name: updateRoleName } });
       if (!updateRoleRecord) throw new HttpError(400, 'Role tidak valid');
@@ -124,7 +115,6 @@ router.post(
         },
       });
     } else {
-      // Create new user
       if (!body.data.email) throw new HttpError(400, 'Email wajib diisi untuk anggota baru');
 
       const email = body.data.email;
@@ -143,7 +133,6 @@ router.post(
       });
     }
 
-    // Finalize photo if staged
     let photo = body.data.photo;
     if (body.data.photoTempId) {
       const finalized = await finalizeUpload({
@@ -154,7 +143,6 @@ router.post(
       photo = finalized.publicUrl;
     }
 
-    // Upsert Profile
     const profile = await prisma.userProfile.upsert({
       where: { userId: user.id },
       create: {
@@ -168,7 +156,6 @@ router.post(
         birthDate: body.data.birthDate ? new Date(body.data.birthDate) : null,
         sortOrder: body.data.sortOrder || 0,
         socials: body.data.socials || undefined,
-        // Faculty/Major handling omitted for brevity/complexity, user can update profile later
       },
       update: {
         name: body.data.name,
@@ -183,7 +170,6 @@ router.post(
       },
     });
 
-    // Re-fetch full object
     const fullUser = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
@@ -196,7 +182,6 @@ router.post(
   }),
 );
 
-// Admin: update anggota (User + Profile)
 router.patch(
   '/:id',
   requireAuth,
@@ -231,7 +216,6 @@ router.patch(
     const existingUser = await prisma.user.findUnique({ where: { id } });
     if (!existingUser) throw new HttpError(404, 'User tidak ditemukan');
 
-    // Resolve Division
     let divisionId = body.data.divisionId;
     if (!divisionId && body.data.division) {
       const div = await prisma.division.findFirst({
@@ -240,7 +224,6 @@ router.patch(
       if (div) divisionId = div.id;
     }
 
-    // Update User
     const updateData = {
       email: body.data.email,
       isActive: body.data.isActive,
@@ -258,7 +241,6 @@ router.patch(
       data: updateData,
     });
 
-    // Finalize photo if staged
     let finalPhoto = body.data.photo;
     if (body.data.photoTempId) {
       const finalized = await finalizeUpload({
@@ -269,13 +251,11 @@ router.patch(
       finalPhoto = finalized.publicUrl;
     }
 
-    // Update Profile
     await prisma.userProfile.upsert({
       where: { userId: id },
       create: {
         userId: id,
         name: body.data.name,
-        // ... other defaults
       },
       update: {
         name: body.data.name,
@@ -302,12 +282,6 @@ router.patch(
   }),
 );
 
-// Admin: hapus anggota (Soft delete / Deactivate or Hard Delete?)
-// Assuming hard delete for "hapus anggota" context, or just remove role/profile info?
-// For now: Deactivate user or Delete user?
-// Let's just delete the user record to be consistent with previous "Delete TeamMember" behavior,
-// BUT this is dangerous if they have other data.
-// Better: Clear Profile Division info and set role to 'member' (regular user) instead of deleting Account.
 router.delete(
   '/:id',
   requireAuth,
@@ -316,10 +290,6 @@ router.delete(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    // Option 1: Hard Delete User (Destructive)
-    // await prisma.user.delete({ where: { id } });
-
-    // Option 2: Downgrade to regular member (Safe)
     const memberRole = await prisma.role.findUnique({ where: { name: 'member' } });
     if (!memberRole) throw new HttpError(500, 'Role member tidak ditemukan');
 
@@ -331,14 +301,10 @@ router.delete(
       },
     });
 
-    // Also clear specific profile fields? Maybe not needed.
-
     res.json({ message: 'Anggota berhasil dinonaktifkan (Downgrade ke member biasa)' });
   }),
 );
 
-// users-available endpoint not needed anymore since we just create/search users directly in the form
-// But kept for compatibility if needed, or returning empty
 router.get(
   '/users-available',
   requireAuth,

@@ -10,7 +10,6 @@ export const SCHOLARSHIP_ANNOUNCEMENT_TOKEN_AUDIENCE = 'genbi-scholarship-announ
 export function signAccessToken({ userId, role }) {
   const subject = String(userId);
   return jwt.sign({ role }, env.JWT_ACCESS_SECRET, {
-    // jsonwebtoken requires subject to be a string
     subject,
     expiresIn: env.JWT_ACCESS_TTL_SECONDS,
     audience: ACCESS_TOKEN_AUDIENCE,
@@ -22,7 +21,6 @@ export function signRefreshToken({ userId }) {
   const subject = String(userId);
   const jti = crypto.randomUUID();
   const token = jwt.sign({}, env.JWT_REFRESH_SECRET, {
-    // jsonwebtoken requires subject to be a string
     subject,
     jwtid: jti,
     expiresIn: env.JWT_REFRESH_TTL_SECONDS,
@@ -78,10 +76,8 @@ function publicAnnouncementSecret() {
   return s || env.JWT_ACCESS_SECRET;
 }
 
-/**
- * Token publik untuk membuka halaman pengumuman beasiswa tanpa login.
- * Payload dibuat minimal: appId + subject userId.
- */
+// Bikin token sakti biar bisa intip pengumuman beasiswa walau ga login.
+// Isian tokennya dibikin irit aja: cuma ada appId sama userId orangnya.
 export function signScholarshipAnnouncementToken({ userId, appId }) {
   const subject = String(userId);
   const aid = Number(appId);

@@ -38,27 +38,15 @@ export function getDriveClient() {
   return google.drive({ version: 'v3', auth });
 }
 
-// ============================================================================
-// FOLDER MANAGEMENT - Organized GDrive folder structure
-// ============================================================================
-
-// In-memory cache of folder IDs to avoid redundant API calls.
-// Map<string, string> where key = "parentId/folderName" and value = folderId
 const folderCache = new Map();
 
-/**
- * Find an existing folder by name inside a parent folder, or create it if not found.
- * @param {string} folderName - The name of the folder to find/create
- * @param {string} parentFolderId - The parent folder ID
- * @returns {Promise<string>} The folder ID
- */
+// Find an existing folder by name inside a parent folder, or create it if not found.
 export async function getOrCreateDriveFolder(folderName, parentFolderId) {
   const cacheKey = `${parentFolderId}/${folderName}`;
   if (folderCache.has(cacheKey)) return folderCache.get(cacheKey);
 
   const drive = getDriveClient();
 
-  // Search for existing folder
   const query = [`name = '${folderName.replace(/'/g, "\\'")}'`, `'${parentFolderId}' in parents`, `mimeType = 'application/vnd.google-apps.folder'`, `trashed = false`].join(' and ');
 
   const list = await drive.files.list({
@@ -76,7 +64,6 @@ export async function getOrCreateDriveFolder(folderName, parentFolderId) {
     return folderId;
   }
 
-  // Create folder
   const created = await drive.files.create({
     requestBody: {
       name: folderName,
@@ -92,13 +79,8 @@ export async function getOrCreateDriveFolder(folderName, parentFolderId) {
   return folderId;
 }
 
-/**
- * Resolve a nested folder path (e.g. "Beasiswa/Periode-2026/NPM-Nama")
- * creating each segment if it doesn't exist.
- * @param {string[]} pathSegments - Array of folder names from root to leaf
- * @param {string} [rootFolderId] - Starting parent folder (defaults to GDRIVE_FOLDER_ID)
- * @returns {Promise<string>} The deepest folder's ID
- */
+// Resolve a nested folder path (e.g. "Beasiswa/Periode-2026/NPM-Nama")
+// creating each segment if it doesn't exist.
 export async function getOrCreateDriveFolderPath(pathSegments, rootFolderId = env.GDRIVE_FOLDER_ID) {
   let currentParent = rootFolderId;
   for (const segment of pathSegments) {
@@ -107,12 +89,8 @@ export async function getOrCreateDriveFolderPath(pathSegments, rootFolderId = en
   return currentParent;
 }
 
-/**
- * Build the GDrive folder path segments for a scholarship applicant.
- * Structure: Beasiswa / Periode-{year} / {NPM}-{Nama}
- * @param {{ npm: string, name: string, year?: number }} applicant
- * @returns {string[]}
- */
+// Build the GDrive folder path segments for a scholarship applicant.
+// Susunan foldernya: Beasiswa / Periode-{year} / {NPM}-{Nama}
 export function buildScholarshipFolderPath({ npm, name, year }) {
   const y = year || new Date().getFullYear();
   const safeName = (name || 'Unknown')
@@ -123,14 +101,9 @@ export function buildScholarshipFolderPath({ npm, name, year }) {
   return ['Beasiswa', `Periode-${y}`, `${npm}-${safeName}`];
 }
 
-/**
- * Build folder path for general upload categories.
- * Structure: {category} / optional sub-folders
- * Categories: Artikel, Profil, Dispensasi, Kegiatan, etc.
- * @param {string} category - Top-level folder name
- * @param {string[]} [subFolders] - Additional sub-folder segments
- * @returns {string[]}
- */
+// Build folder path for general upload categories.
+// Susunan foldernya: {category} / optional sub-folders
+// Categories: Artikel, Profil, Dispensasi, Kegiatan, etc.
 export function buildUploadFolderPath(category, subFolders = []) {
   return [category, ...subFolders];
 }

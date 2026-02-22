@@ -17,25 +17,20 @@ const SETTING_KEY_BATCH = APP_SETTING_KEYS.SCHOLARSHIP_BATCH;
 const SETTING_KEY_PERIOD = APP_SETTING_KEYS.SCHOLARSHIP_PERIOD;
 const SETTING_KEY_DOCUMENTS = APP_SETTING_KEYS.SCHOLARSHIP_DOCUMENTS;
 
-/**
- * Get the current scholarship document config.
- * Returns custom config from DB if available, otherwise falls back to hardcoded defaults.
- */
+// Get the current scholarship document config.
+// Returns custom config from DB if available, otherwise falls back to hardcoded defaults.
 async function getDocumentConfig() {
   const row = await prisma.appSetting.findUnique({ where: { key: SETTING_KEY_DOCUMENTS } });
   const docs = row?.value;
   if (Array.isArray(docs) && docs.length > 0) {
-    // Validate each doc has at least key + title
     const valid = docs.every((d) => d && typeof d.key === 'string' && typeof d.title === 'string');
     if (valid) return docs;
   }
   return SCHOLARSHIP_DOCUMENTS;
 }
 
-/**
- * Get current scholarship period (year + batch).
- * Returns { year: number, batch: number }
- */
+// Get current scholarship period (year + batch).
+// Returns { year: number, batch: number }
 async function getCurrentPeriod() {
   const currentYear = new Date().getFullYear();
 
@@ -44,13 +39,11 @@ async function getCurrentPeriod() {
   const batch = Number(row?.value?.batch);
   if (Number.isInteger(year) && year > 2000 && Number.isInteger(batch) && batch > 0) return { year, batch };
 
-  // Race-safe initialization: multiple concurrent requests may try to create the row.
   try {
     await prisma.appSetting.create({
       data: { key: SETTING_KEY_PERIOD, value: { year: currentYear, batch: 1 } },
     });
   } catch (e) {
-    // Another request likely created it first.
     if (!isPrismaUniqueConstraintError(e)) throw e;
   }
 
@@ -63,24 +56,19 @@ async function getCurrentPeriod() {
   };
 }
 
-/**
- * @deprecated Use getCurrentPeriod() instead
- */
+// @deprecated Use getCurrentPeriod() instead
 async function getCurrentBatch() {
   const period = await getCurrentPeriod();
   return period.batch;
 }
 
-/**
- * Bump to next batch or next year (batch 1) if batch >= 2
- * Returns { year: number, batch: number }
- */
+// Bump to next batch or next year (batch 1) if batch >= 2
+// Returns { year: number, batch: number }
 async function bumpPeriod() {
   const current = await getCurrentPeriod();
   let nextYear = current.year;
   let nextBatch = current.batch + 1;
 
-  // If batch > 2, start new year with batch 1
   if (nextBatch > 2) {
     nextYear = current.year + 1;
     nextBatch = 1;
@@ -106,7 +94,6 @@ function coerceAdministrasiStatus(input) {
   const raw = String(input || '').trim();
   if (!raw) return null;
 
-  // Terima nilai enum
   if (['MENUNGGU_VERIFIKASI', 'LOLOS_ADMINISTRASI', 'ADMINISTRASI_DITOLAK'].includes(raw)) return raw;
 
   const s = raw.toLowerCase();
@@ -142,21 +129,17 @@ async function getRegistrationOpen() {
   return open;
 }
 
-/**
- * Resolve facultyId from either numeric ID or faculty name string.
- * Returns the numeric faculty ID or undefined.
- */
+// Resolve facultyId from either numeric ID or faculty name string.
+// Returns the numeric faculty ID or undefined.
 async function resolveFacultyId(facultyIdOrName) {
   if (!facultyIdOrName) return undefined;
 
-  // Already a number
   const num = Number(facultyIdOrName);
   if (!isNaN(num) && Number.isInteger(num) && num > 0) {
     const exists = await prisma.faculty.findUnique({ where: { id: num }, select: { id: true } });
     return exists ? num : undefined;
   }
 
-  // String name — search by name
   const name = String(facultyIdOrName).trim();
   if (!name) return undefined;
   const faculty = await prisma.faculty.findFirst({
@@ -166,10 +149,8 @@ async function resolveFacultyId(facultyIdOrName) {
   return faculty?.id || undefined;
 }
 
-/**
- * Resolve studyProgramId from either numeric ID or study program name string.
- * Returns the numeric studyProgram ID or undefined.
- */
+// Resolve studyProgramId from either numeric ID or study program name string.
+// Returns the numeric studyProgram ID or undefined.
 async function resolveStudyProgramId(studyProgramIdOrName) {
   if (!studyProgramIdOrName) return undefined;
 
@@ -214,7 +195,6 @@ router.patch(
     const body = setRegistrationSchema.safeParse(req.body);
     if (!body.success) throw new HttpError(400, 'Data yang dikirim tidak valid.', body.error.flatten());
 
-    // Admin explicitly sets the period (year+batch). Opening registration should not auto-bump.
     const period = await getCurrentPeriod();
 
     const row = await prisma.appSetting.upsert({
@@ -226,8 +206,6 @@ router.patch(
     res.json({ data: { open: Boolean(row?.value?.open), year: period.year, batch: period.batch } });
   }),
 );
-
-// ─── Admin: Get / Update scholarship document config ───
 
 router.get(
   '/documents',
@@ -247,7 +225,6 @@ router.put(
     const { documents } = req.body;
     if (!Array.isArray(documents)) throw new HttpError(400, 'documents harus berupa array.');
 
-    // Validate each document entry
     for (let i = 0; i < documents.length; i++) {
       const d = documents[i];
       if (!d || typeof d.key !== 'string' || !d.key.trim()) {
@@ -261,14 +238,12 @@ router.put(
       }
     }
 
-    // Check for duplicate keys
     const keys = documents.map((d) => d.key.trim());
     const uniqueKeys = new Set(keys);
     if (uniqueKeys.size !== keys.length) {
       throw new HttpError(400, 'Terdapat key dokumen yang duplikat.');
     }
 
-    // Normalize and store
     const normalized = documents.map((d) => ({
       key: String(d.key).trim(),
       title: String(d.title).trim(),
@@ -298,7 +273,6 @@ router.post(
 
     const period = await getCurrentPeriod();
 
-    // Enforce: user can only apply once per period (year + batch)
     const existingInPeriod = await prisma.scholarshipApplication.findFirst({
       where: { createdById: req.auth.userId, year: period.year, batch: period.batch },
       select: { id: true },
@@ -309,7 +283,6 @@ router.post(
 
     const body = createScholarshipApplicationSchema.safeParse(req.body);
     if (!body.success) {
-      // Extract the first user-friendly error message from Zod validation
       const flat = body.error.flatten();
       const fieldErrors = Object.values(flat.fieldErrors).flat();
       const formErrors = flat.formErrors || [];
@@ -317,7 +290,6 @@ router.post(
       throw new HttpError(400, firstMsg, flat);
     }
 
-    // Additional runtime check: validate required docs against current DB config
     const currentDocs = await getDocumentConfig();
     const requiredKeys = currentDocs.filter((d) => d.required).map((d) => d.key);
     const files = body.data.files || {};
@@ -340,8 +312,6 @@ router.post(
     if (gpa !== null && (Number.isNaN(gpa) || gpa < 0 || gpa > 4)) throw new HttpError(400, 'IPK harus antara 0-4.');
     if (age !== null && (!Number.isInteger(age) || age < 15 || age > 40)) throw new HttpError(400, 'Usia harus antara 15-40 tahun.');
 
-    // Resolve faculty and study program IDs
-    // Accept: numeric ID via facultyId, OR string name via faculty/facultyId
     const resolvedFacultyId = await resolveFacultyId(body.data.facultyId || body.data.faculty || undefined);
     const resolvedStudyProgramId = await resolveStudyProgramId(body.data.studyProgramId || body.data.study || undefined);
 
@@ -381,7 +351,6 @@ router.post(
         throw new HttpError(409, 'Anda sudah terdaftar pada pengajuan beasiswa untuk periode ini.');
       }
       if (isPrismaValueTooLongError(e)) {
-        // Usually means a VARCHAR column is too short for submitted text.
         throw new HttpError(400, 'Teks yang dikirim terlalu panjang untuk disimpan. Coba pendekkan isian deskripsi.');
       }
       throw e;
@@ -397,7 +366,6 @@ router.get(
     const q = String(req.query?.q || '').trim();
     const status = coerceAdministrasiStatus(req.query?.status);
 
-    // Default to current period for professionalism (year+batch-based openings)
     const currentPeriod = await getCurrentPeriod();
     const yearParam = Number(req.query?.year);
     const batchParam = Number(req.query?.batch);
@@ -445,7 +413,6 @@ router.get(
   asyncHandler(async (req, res) => {
     const currentPeriod = await getCurrentPeriod();
 
-    // Prefer current period application; otherwise fall back to latest historical application
     const include = {
       faculty: true,
       studyProgram: true,
@@ -556,7 +523,6 @@ router.patch(
   }),
 );
 
-// PATCH /applications/:id/interview-schedule — admin sets interview schedule
 router.patch(
   '/applications/:id/interview-schedule',
   requireAuth,
@@ -568,7 +534,6 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    // Ensure application exists and is LOLOS_ADMINISTRASI
     const existing = await prisma.scholarshipApplication.findUnique({ where: { id } });
     if (!existing) throw new HttpError(404, 'Data beasiswa tidak ditemukan');
     if (existing.administrasiStatus !== 'LOLOS_ADMINISTRASI') {
@@ -595,7 +560,6 @@ router.patch(
   }),
 );
 
-// PATCH /applications/:id/interview — admin updates interview result
 router.patch(
   '/applications/:id/interview',
   requireAuth,
@@ -610,7 +574,6 @@ router.patch(
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
 
-    // Ensure application exists and has been scheduled
     const existing = await prisma.scholarshipApplication.findUnique({ where: { id } });
     if (!existing) throw new HttpError(404, 'Data beasiswa tidak ditemukan');
     if (existing.administrasiStatus !== 'LOLOS_ADMINISTRASI') {

@@ -27,7 +27,6 @@ const upload = multer({
   },
 });
 
-// Key setting CMS yang valid
 const CMS_KEYS = CMS_SETTING_KEYS;
 
 // Publik: Ambil setting tunggal berdasarkan key (untuk diambil genbi-client)
@@ -48,7 +47,6 @@ router.get(
   }),
 );
 
-// Admin: Ambil semua setting CMS sekaligus
 router.get(
   '/',
   requireAuth,
@@ -68,7 +66,6 @@ router.get(
   }),
 );
 
-// Admin: Update setting berdasarkan key
 router.patch(
   '/:key',
   requireAuth,
@@ -116,7 +113,6 @@ router.post(
       throw new HttpError(400, 'File tidak ditemukan');
     }
 
-    // Resolve CMS folder
     let targetFolderId = env.GDRIVE_FOLDER_ID;
     try {
       targetFolderId = await getOrCreateDriveFolderPath(toFolderSegments(FOLDER_CMS_IMAGES), env.GDRIVE_FOLDER_ID);
@@ -160,7 +156,6 @@ router.post(
   }),
 );
 
-// Admin: Hapus setting berdasarkan key (reset ke default)
 router.delete(
   '/:key',
   requireAuth,
@@ -178,9 +173,7 @@ router.delete(
   }),
 );
 
-/**
- * Validasi struktur value berdasarkan key setting
- */
+// Validasi struktur value berdasarkan key setting
 function validateSettingValue(key, value) {
   if (typeof value !== 'object' || value === null) {
     return 'Value harus berupa object';
@@ -188,19 +181,16 @@ function validateSettingValue(key, value) {
 
   switch (key) {
     case 'cms_hero':
-      // Validate hero content
       if (value.headline !== undefined && typeof value.headline !== 'string') return 'headline harus berupa string';
       if (value.subheadline !== undefined && typeof value.subheadline !== 'string') return 'subheadline harus berupa string';
       break;
 
     case 'cms_about':
-      // Validate about content
       if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
       if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
       break;
 
     case 'cms_history':
-      // Validate history page content
       if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
       if (value.subtitle !== undefined && typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
       if (value.image !== undefined && typeof value.image !== 'string') return 'image harus berupa string';
@@ -208,52 +198,43 @@ function validateSettingValue(key, value) {
       break;
 
     case 'cms_cta':
-      // Validate CTA content
       if (value.text !== undefined && typeof value.text !== 'string') return 'text harus berupa string';
       if (value.buttonText !== undefined && typeof value.buttonText !== 'string') return 'buttonText harus berupa string';
       break;
 
     case 'cms_branding':
-      // Validate branding
       if (value.siteName !== undefined && typeof value.siteName !== 'string') return 'siteName harus berupa string';
       break;
 
     case 'cms_vision_mission':
-      // Validate vision & mission
       if (value.vision !== undefined && typeof value.vision !== 'string') return 'vision harus berupa string';
       if (value.missions !== undefined && !Array.isArray(value.missions)) return 'missions harus berupa array';
       break;
 
     case 'cms_faqs':
-      // Validate FAQs
       if (value.items !== undefined && !Array.isArray(value.items)) return 'items harus berupa array';
       break;
 
     case 'cms_testimonials':
-      // Validate testimonials
       if (value.items !== undefined && !Array.isArray(value.items)) return 'items harus berupa array';
       break;
 
     case 'cms_footer':
-      // Validate footer content
       if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
       if (value.address !== undefined && typeof value.address !== 'string') return 'address harus berupa string';
       if (value.socialLinks !== undefined && !Array.isArray(value.socialLinks)) return 'socialLinks harus berupa array';
       break;
 
     case 'cms_scholarship':
-      // Validate scholarship section
       if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
       if (value.description !== undefined && typeof value.description !== 'string') return 'description harus berupa string';
       break;
 
     case 'cms_hero_avatars':
-      // Validate hero avatars
       if (value.avatars !== undefined && !Array.isArray(value.avatars)) return 'avatars harus berupa array';
       break;
 
     case 'cms_scholarship_page':
-      // Validate scholarship page content (persyaratan beasiswa)
       if (value.title !== undefined && typeof value.title !== 'string') return 'title harus berupa string';
       if (value.subtitle !== undefined && typeof value.subtitle !== 'string') return 'subtitle harus berupa string';
       if (value.requirements !== undefined && !Array.isArray(value.requirements)) return 'requirements harus berupa array';
@@ -262,7 +243,6 @@ function validateSettingValue(key, value) {
       break;
 
     default:
-      // Allow any valid object for unrecognized keys that are still in CMS_KEYS
       break;
   }
 

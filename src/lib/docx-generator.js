@@ -3,29 +3,20 @@ import PizZip from 'pizzip';
 import fs from 'fs/promises';
 import path from 'path';
 
-/**
- * Generate dokumen Word dari template dengan data
- * @param {string} templatePath - Path ke file template
- * @param {object} data - Data untuk mengisi template
- * @returns {Buffer} - Buffer dokumen yang dihasilkan
- */
+// Bikin dokumen ms.Word dr template & data masuk
 export async function generateWordDocument(templatePath, data) {
   try {
-    // Baca file template
     const content = await fs.readFile(templatePath);
     const zip = new PizZip(content);
 
-    // Buat instance docxtemplater
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
       nullGetter: () => '-',
     });
 
-    // Set data template
     doc.render(data);
 
-    // Generate buffer
     const buffer = doc.getZip().generate({
       type: 'nodebuffer',
       compression: 'DEFLATE',
@@ -38,11 +29,7 @@ export async function generateWordDocument(templatePath, data) {
   }
 }
 
-/**
- * Format tanggal untuk lokal Indonesia
- * @param {Date|string} date
- * @returns {string}
- */
+// Rapihin tanggal biar format tgl nyusuaikan Indo
 export function formatDateIndonesian(date) {
   const d = new Date(date);
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -50,11 +37,7 @@ export function formatDateIndonesian(date) {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-/**
- * Siapkan data dispensasi untuk template
- * @param {object} dispensation - Record dispensasi dari database
- * @returns {object} - Data yang diformat untuk template
- */
+// Racik data dispensasi sblm disuntik mrk ke dalem template
 export function prepareDispensationData(dispensation) {
   return {
     nama: dispensation.nama || '-',

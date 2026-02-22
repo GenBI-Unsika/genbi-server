@@ -7,9 +7,7 @@ import { sendNewsletterSubscribedEmail } from '../auth/email.js';
 
 const router = Router();
 
-/**
- * POST /subscribers - Subscribe to newsletter (auth only)
- */
+// POST /subscribers - Subscribe to newsletter (auth only)
 router.post(
   '/',
   requireAuth,
@@ -38,17 +36,14 @@ router.post(
 
     const displayName = String(name || '').trim() || String(user.profile?.name || '').trim() || null;
 
-    // Check if already subscribed
     const existing = await prisma.subscriber.findUnique({
       where: { email: userEmail },
     });
 
     if (existing) {
       if (existing.isActive) {
-        // Already subscribed
         throw new HttpError(409, 'Email sudah berlangganan newsletter');
       }
-      // Re-activate subscription
       await prisma.subscriber.update({
         where: { id: existing.id },
         data: {
@@ -63,7 +58,6 @@ router.post(
       return res.json({ message: 'Selamat datang kembali! Anda berhasil berlangganan newsletter.' });
     }
 
-    // Create new subscriber
     await prisma.subscriber.create({
       data: {
         email: userEmail,
@@ -77,9 +71,7 @@ router.post(
   }),
 );
 
-/**
- * DELETE /subscribers - Unsubscribe from newsletter (auth only)
- */
+// DELETE /subscribers - Unsubscribe from newsletter (auth only)
 router.delete(
   '/',
   requireAuth,
@@ -99,7 +91,6 @@ router.delete(
     });
 
     if (!existing || !existing.isActive) {
-      // Don't reveal if email exists
       return res.json({ message: 'Berhasil berhenti berlangganan.' });
     }
 
@@ -115,9 +106,7 @@ router.delete(
   }),
 );
 
-/**
- * GET /subscribers - List subscribers (admin only)
- */
+// GET /subscribers - List subscribers (admin only)
 router.get(
   '/',
   requireAuth,
@@ -152,9 +141,7 @@ router.get(
   }),
 );
 
-/**
- * DELETE /subscribers/:id - Delete subscriber (admin only)
- */
+// DELETE /subscribers/:id - Delete subscriber (admin only)
 router.delete(
   '/:id',
   requireAuth,

@@ -200,7 +200,6 @@ router.get(
 
     const data = {
       ...(setting?.value || defaultScholarshipPage),
-      // Status pendaftaran ditentukan oleh /scholarships/registration (di-handle admin), bukan CMS.
       isOpen: open,
     };
 
@@ -214,7 +213,6 @@ function scholarshipIsFinal({ administrasiStatus, interviewStatus }) {
   return isPassed || isFailed;
 }
 
-// Public: get scholarship announcement data by signed token (for QR/share link)
 router.get(
   '/scholarship-announcement',
   asyncHandler(async (req, res) => {
@@ -277,14 +275,12 @@ router.get(
       where.OR = [{ title: { contains: search } }, { excerpt: { contains: search } }];
     }
 
-    // Filter tanggal
     if (startDate || endDate) {
       where.publishedAt = {};
       if (startDate) where.publishedAt.gte = new Date(startDate);
       if (endDate) where.publishedAt.lte = new Date(endDate);
     }
 
-    // Sorting
     const orderBy = [];
     if (popularFirst === 'true') {
       orderBy.push({ viewCount: 'desc' });
@@ -354,17 +350,16 @@ router.get(
 
     const where = {
       isActive: true,
+      category: 'event',
       status: { in: ['PLANNED', 'ONGOING'] },
     };
 
-    // Filter tanggal
     if (filterStartDate || filterEndDate) {
       where.startDate = {};
       if (filterStartDate) where.startDate.gte = new Date(filterStartDate);
       if (filterEndDate) where.startDate.lte = new Date(filterEndDate);
     }
 
-    // Sorting
     const orderBy = [];
     if (sortBy) {
       orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
@@ -420,6 +415,7 @@ router.get(
 
     const where = {
       isActive: true,
+      category: 'proker',
     };
 
     if (divisionId) {
@@ -431,14 +427,12 @@ router.get(
       where.OR = [{ title: { contains: search } }, { description: { contains: search } }];
     }
 
-    // Filter tanggal
     if (filterStartDate || filterEndDate) {
       where.startDate = {};
       if (filterStartDate) where.startDate.gte = new Date(filterStartDate);
       if (filterEndDate) where.startDate.lte = new Date(filterEndDate);
     }
 
-    // Sorting
     const orderBy = [];
     if (sortBy) {
       orderBy.push({ [sortBy]: sortOrder === 'asc' ? 'asc' : 'desc' });
@@ -462,7 +456,7 @@ router.get(
       title: a.title,
       description: a.description,
       image: a.coverImage || null,
-      date: a.startDate,
+      date: a.publicationDate || a.createdAt,
       location: a.location,
       division: a.division?.name || null,
       status: a.status,
@@ -535,7 +529,6 @@ router.get(
     }
 
     const [articles, activities, members] = await Promise.all([
-      // Search Articles
       prisma.article.findMany({
         where: {
           isActive: true,
@@ -545,7 +538,6 @@ router.get(
         take: 5,
         select: { id: true, title: true, slug: true, coverImage: true },
       }),
-      // Search Activities (Events/Proker)
       prisma.activity.findMany({
         where: {
           isActive: true,
@@ -554,7 +546,6 @@ router.get(
         take: 5,
         select: { id: true, title: true, coverImage: true, status: true },
       }),
-      // Search Members
       prisma.user.findMany({
         where: {
           isActive: true,
@@ -629,7 +620,6 @@ router.get(
         id: true,
         name: true,
         description: true,
-        icon: true,
         gradient: true,
         textColor: true,
       },

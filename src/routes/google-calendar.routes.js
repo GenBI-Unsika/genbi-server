@@ -3,20 +3,15 @@ import { asyncHandler } from '../lib/async-handler.js';
 
 const router = Router();
 
-/**
- * Endpoint Integrasi Google Calendar
- *
- * Endpoint ini menyediakan integrasi dengan API Google Calendar.
- * Untuk mengaktifkan sepenuhnya, Anda perlu:
- * 1. Create a Google Cloud project
- * 2. Enable Google Calendar API
- * 3. Create OAuth2 credentials or Service Account
- * 4. Set variabel environment: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
- *
- * Untuk saat ini, endpoint ini menyediakan struktur yang dapat ditingkatkan nanti.
- */
+// Endpoint Integrasi Google Calendar
+// Endpoint ini menyediakan integrasi dengan API Google Calendar.
+// Untuk mengaktifkan sepenuhnya, Anda perlu:
+// 1. Create a Google Cloud project
+// 2. Enable Google Calendar API
+// 3. Create OAuth2 credentials or Service Account
+// 4. Set variabel environment: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+// Untuk saat ini, endpoint ini menyediakan struktur yang dapat ditingkatkan nanti.
 
-// Status konfigurasi
 router.get(
   '/config',
   asyncHandler(async (req, res) => {
@@ -35,7 +30,7 @@ router.get(
   }),
 );
 
-// Generate file iCal (.ics) untuk satu acara
+// Bikin file jadwalan (.ics) cm buat satu acara aja
 router.get(
   '/export/:eventId',
   asyncHandler(async (req, res) => {
@@ -62,7 +57,7 @@ router.get(
   }),
 );
 
-// Generate file iCal (.ics) untuk semua acara
+// Bikin rmbongan jadwalan (.ics) buat seluruh acara
 router.get(
   '/export',
   asyncHandler(async (req, res) => {
@@ -81,7 +76,7 @@ router.get(
   }),
 );
 
-// Generate URL Google Calendar untuk menambah acara
+// Nyiptain link sakti nambah acara lari ke G-Calendar lu
 router.get(
   '/google-url/:eventId',
   asyncHandler(async (req, res) => {
@@ -105,7 +100,7 @@ router.get(
   }),
 );
 
-// Helper: Generate konten ICS untuk satu acara
+// Ngebantu rakit isian file ICS buat sebiji acara
 function generateICS(event) {
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 3600000);
@@ -134,7 +129,7 @@ END:VEVENT
 END:VCALENDAR`;
 }
 
-// Helper: Generate ICS untuk banyak acara
+// Ngebantu rakit isian file ICS buat bnyk prt
 function generateICSMultiple(events) {
   const eventBlocks = events
     .map((event) => {
@@ -170,7 +165,6 @@ ${eventBlocks}
 END:VCALENDAR`;
 }
 
-// Helper: Generate URL Google Calendar
 function generateGoogleCalendarUrl(event) {
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : new Date(startDate.getTime() + 3600000);
@@ -193,7 +187,7 @@ function generateGoogleCalendarUrl(event) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-// Helper: Escape karakter khusus untuk ICS
+// Bersihin karakter aneh-aneh sblm disimpen n nt masuk ICS
 function escapeICS(text) {
   if (!text) return '';
   return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');

@@ -225,8 +225,6 @@ router.post(
 
     if (!env.GDRIVE_FOLDER_ID) throw new HttpError(500, 'Upload belum tersedia. Hubungi admin.');
 
-    // Upload ke Google Drive
-    // Resolve Dispensasi folder
     let targetFolderId = env.GDRIVE_FOLDER_ID;
     try {
       targetFolderId = await getOrCreateDriveFolderPath(toFolderSegments(FOLDER_DISPENSATION_TEMPLATES), env.GDRIVE_FOLDER_ID);
@@ -246,13 +244,11 @@ router.post(
       throw new HttpError(503, toDriveUploadHttpErrorMessage(e));
     }
 
-    // Nonaktifkan template lama
     await prisma.dispensationTemplate.updateMany({
       where: { isActive: true },
       data: { isActive: false },
     });
 
-    // Buat record template baru
     const template = await prisma.dispensationTemplate.create({
       data: {
         fileName: req.file.originalname,
@@ -298,7 +294,6 @@ router.post(
       throw new HttpError(400, 'Hanya dispensasi yang disetujui yang bisa digenerate suratnya');
     }
 
-    // Ambil template aktif
     const template = await prisma.dispensationTemplate.findFirst({
       where: { isActive: true },
       orderBy: { uploadedAt: 'desc' },
@@ -308,8 +303,6 @@ router.post(
       throw new HttpError(400, 'Template surat belum diupload');
     }
 
-    // Download template dari Google Drive (implementasi sementara)
-    // Di produksi, Anda harus mendownload file template itu sendiri
     throw new HttpError(500, 'Fitur generate letter memerlukan template file di server. Silakan hubungi administrator.');
   }),
 );

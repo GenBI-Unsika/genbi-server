@@ -218,7 +218,6 @@ router.post(
       throw new HttpError(409, 'Email sudah digunakan');
     }
 
-    // Find role ID
     const roleRecord = await prisma.role.findUnique({ where: { name: body.data.role } });
     if (!roleRecord) throw new HttpError(400, 'Role tidak valid');
 
@@ -266,7 +265,6 @@ router.post(
       },
     });
 
-    // Create verification token and send email (mirrors /auth/register behavior)
     const token = makeVerifyToken();
     const tokenHash = hashToken(token);
     const expiresAt = verifyExpiresAt();
@@ -280,16 +278,15 @@ router.post(
     try {
       await sendVerifyEmail({ toEmail: email, token, expiresAt });
     } catch {
-      // Keep DB clean if email sending fails
       try {
         await prisma.emailVerificationToken.delete({ where: { userId: user.id } });
       } catch {
-        // ignore
+        // Sengaja biarin errornya (di-ignore)
       }
       try {
         await prisma.user.delete({ where: { id: user.id } });
       } catch {
-        // ignore
+        // Sengaja biarin errornya (di-ignore)
       }
       throw new HttpError(500, 'Gagal mengirim email verifikasi. Periksa konfigurasi SMTP.');
     }

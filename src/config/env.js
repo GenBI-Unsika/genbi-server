@@ -3,16 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
-// Di monorepo/workspace, backend mungkin dijalankan dari root repo.
-// Muat .env lokal backend secara eksplisit agar variabel yang diperlukan (misal GOOGLE_CLIENT_ID)
-// tersedia terlepas dari direktori kerja saat ini.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 1) Muat .env lokal backend (genbi-server/.env)
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-// 2) Muat .env root monorepo (genbiunsika/.env) agar backend tetap dapat
-//    berjalan walau dijalankan dari folder yang berbeda.
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 // 3) Juga muat default .env berdasarkan CWD (no-op jika sudah dimuat).
 dotenv.config();
@@ -56,7 +50,6 @@ const envSchema = z.object({
   // Token publik untuk halaman pengumuman beasiswa (dipakai untuk QR/share URL tanpa login)
   // Disarankan gunakan secret terpisah; jika kosong akan fallback ke JWT_ACCESS_SECRET.
   JWT_PUBLIC_ANNOUNCEMENT_SECRET: z.string().optional().default(''),
-  // Default 30 hari agar QR yang dicetak tidak cepat mati.
   JWT_PUBLIC_ANNOUNCEMENT_TTL_SECONDS: z.coerce
     .number()
     .int()
@@ -69,11 +62,7 @@ const envSchema = z.object({
   GDRIVE_CLIENT_EMAIL: z.string().optional().default(''),
   GDRIVE_PRIVATE_KEY: z.string().optional().default(''),
   GDRIVE_SERVICE_ACCOUNT_KEY_BASE64: z.string().optional().default(''),
-  // Opsional: Domain-Wide Delegation (impersonate user Workspace)
-  // Contoh: "admin@yourdomain.com"
   GDRIVE_IMPERSONATE_USER: z.string().optional().default(''),
-  // Opsional: Konsem OAuth end-user (bekerja tanpa admin Workspace / Shared Drive)
-  // Gunakan akun Google dengan kuota Drive normal.
   GDRIVE_OAUTH_CLIENT_ID: z.string().optional().default(''),
   GDRIVE_OAUTH_CLIENT_SECRET: z.string().optional().default(''),
   GDRIVE_OAUTH_REFRESH_TOKEN: z.string().optional().default(''),
@@ -88,15 +77,12 @@ const envSchema = z.object({
   SEED_ADMIN_EMAIL: z.string().optional().default(''),
   SEED_ADMIN_PASSWORD: z.string().optional().default(''),
 
-  // Batasan Auth
-  // List dipisahkan koma, misal "unsika.ac.id,student.unsika.ac.id"
   AUTH_ALLOWED_EMAIL_DOMAIN: z.string().default('unsika.ac.id,student.unsika.ac.id'),
   AUTH_REQUIRE_EMAIL_VERIFIED: z
     .string()
     .default('true')
     .transform((v) => v === 'true' || v === '1'),
 
-  // Verifikasi Email
   SMTP_HOST: z.string().optional().default(''),
   SMTP_PORT: z.coerce.number().int().positive().optional().default(587),
   SMTP_SECURE: z
@@ -109,14 +95,12 @@ const envSchema = z.object({
 
   FRONTEND_CLIENT_BASE_URL: z.string().optional().default(''),
 
-  // Google Sign-In
-  // Bisa berupa client ID tunggal atau list dipisahkan koma.
-  // Contoh: "xxx.apps.googleusercontent.com,yyy.apps.googleusercontent.com"
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
+  console.error('❌ Environment validation failed:', JSON.stringify(parsed.error.flatten().fieldErrors, null, 2));
   process.exit(1);
 }
 

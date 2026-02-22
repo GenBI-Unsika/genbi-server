@@ -8,7 +8,6 @@ import { isPrismaMissingTableError } from '../lib/prisma-errors.js';
 
 const router = Router();
 
-// Publik: ambil semua divisi aktif
 router.get(
   '/',
   asyncHandler(async (_req, res) => {
@@ -35,7 +34,6 @@ router.get(
   }),
 );
 
-// Admin: ambil semua divisi (termasuk yang tidak aktif)
 router.get(
   '/admin/all',
   requireAuth,
@@ -53,7 +51,6 @@ router.get(
   }),
 );
 
-// Publik: ambil divisi berdasarkan key
 router.get(
   '/:key',
   asyncHandler(async (req, res) => {
@@ -75,12 +72,10 @@ router.get(
   }),
 );
 
-// Admin: buat divisi
 const createSchema = z.object({
   key: z.string().min(1).max(50),
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  icon: z.string().optional(),
   gradient: z.string().optional(),
   bgLight: z.string().optional(),
   textColor: z.string().optional(),
@@ -99,7 +94,6 @@ router.post(
       throw new HttpError(400, 'Data tidak valid', body.error.flatten());
     }
 
-    // Cek duplikasi key
     const existing = await prisma.division.findUnique({
       where: { key: body.data.key },
     });
@@ -112,7 +106,6 @@ router.post(
         key: body.data.key,
         name: body.data.name,
         description: body.data.description,
-        icon: body.data.icon || '👥',
         gradient: body.data.gradient || 'from-neutral-400 to-neutral-500',
         bgLight: body.data.bgLight || 'bg-neutral-50',
         textColor: body.data.textColor || 'text-neutral-600',
@@ -126,12 +119,10 @@ router.post(
   }),
 );
 
-// Admin: update divisi
 const updateSchema = z.object({
   key: z.string().min(1).max(50).optional(),
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional().nullable(),
-  icon: z.string().optional(),
   gradient: z.string().optional(),
   bgLight: z.string().optional(),
   textColor: z.string().optional(),
@@ -175,7 +166,6 @@ router.put(
   }),
 );
 
-// Admin: hapus divisi
 router.delete(
   '/:id',
   requireAuth,

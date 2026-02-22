@@ -15,8 +15,6 @@ function getClient() {
     .filter(Boolean);
   if (clientIds.length === 0) throw new HttpError(500, 'Konfigurasi login Google belum tersedia di server.');
 
-  // OAuth2Client can be instantiated with any valid client ID.
-  // We verify the token against all configured audiences.
   if (!cachedClient) cachedClient = new OAuth2Client(clientIds[0]);
   return cachedClient;
 }
@@ -42,7 +40,6 @@ export async function verifyGoogleIdToken(idToken) {
   } catch (err) {
     const msg = String(err?.message || 'Token Google tidak valid.');
 
-    // Common cases from google-auth-library / Google token verification
     if (/audience|Wrong recipient|wrong recipient/i.test(msg)) {
       throw new HttpError(401, 'Token Google tidak valid untuk aplikasi ini. Pastikan Google Client ID di frontend sesuai dengan konfigurasi server.');
     }
@@ -69,7 +66,6 @@ export async function verifyGoogleIdToken(idToken) {
     throw new HttpError(403, msg);
   }
 
-  // If Google provides hosted-domain (Workspace), ensure it matches allowed domains.
   if (payload.hd) {
     const hd = String(payload.hd).toLowerCase();
     if (!domains.includes(hd)) {

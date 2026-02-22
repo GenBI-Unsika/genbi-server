@@ -47,7 +47,6 @@ router.get(
         where: {
           role: { name: { in: ['awardee', 'admin', 'super_admin'] } },
           isActive: true,
-          // Optional: filter by those who have profile setup
         },
         include: {
           profile: {
