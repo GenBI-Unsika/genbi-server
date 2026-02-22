@@ -62,7 +62,7 @@ function defaultPasswordFromEmail(email) {
 
 async function issueSession(user, req, res) {
   try {
-    const roleName = user.role?.name || 'awardee';
+    const roleName = user.role?.name || 'user';
     const accessToken = signAccessToken({ userId: user.id, role: roleName });
     const { token: refreshToken, jti } = signRefreshToken({ userId: user.id });
 
@@ -212,8 +212,8 @@ router.post(
     const tokenHash = hashToken(token);
     const expiresAt = verifyExpiresAt();
 
-    // Default role for new registration is awardee (formerly member)
-    const defaultRole = await prisma.role.findUnique({ where: { name: 'awardee' } });
+    // Default role for new registration is user
+    const defaultRole = await prisma.role.findUnique({ where: { name: 'user' } });
     if (!defaultRole) throw new HttpError(500, 'Konfigurasi role belum di-seed.');
 
     const user = await prisma.user.upsert({
@@ -304,7 +304,7 @@ router.post(
         const initialPassword = defaultPasswordFromEmail(email) || makeVerifyToken();
         const passwordHash = await bcrypt.hash(initialPassword, 12);
 
-        const defaultRole = await prisma.role.findUnique({ where: { name: 'awardee' } });
+        const defaultRole = await prisma.role.findUnique({ where: { name: 'user' } });
         if (!defaultRole) {
           throw new HttpError(500, 'Sistem belum siap untuk menerima pendaftaran baru (Role error). Hubungi administrator.');
         }
@@ -345,8 +345,8 @@ router.post(
             profile: user.profile
               ? {
                 update: {
-                  avatar: picture || user.profile.avatar,
-                  name: name || user.profile.name,
+                  avatar: picture ? picture : user.profile.avatar,
+                  name: name ? name : user.profile.name,
                 },
               }
               : name || picture
@@ -420,8 +420,8 @@ router.post(
           profile: user0.profile
             ? {
               update: {
-                avatar: picture || user0.profile.avatar,
-                name: name || user0.profile.name,
+                avatar: picture ? picture : user0.profile.avatar,
+                name: name ? name : user0.profile.name,
               },
             }
             : name || picture
@@ -524,7 +524,7 @@ router.post(
       }),
     ]);
 
-    const accessToken = signAccessToken({ userId: user.id, role: user.role?.name || 'awardee' });
+    const accessToken = signAccessToken({ userId: user.id, role: user.role?.name || 'user' });
 
     res.cookie(REFRESH_COOKIE_NAME, nextRefreshToken, refreshCookieOptions());
 
@@ -534,7 +534,7 @@ router.post(
         user: {
           id: user.id,
           email: user.email,
-          role: user.role?.name || 'awardee',
+          role: user.role?.name || 'user',
           profile: sanitizeProfile(user.profile),
         },
       },

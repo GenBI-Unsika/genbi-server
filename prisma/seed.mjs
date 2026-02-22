@@ -12,10 +12,11 @@ function required(name) {
 
 // 1. Define Roles
 const ROLES = [
-  { name: 'super_admin', displayName: 'Super Admin', description: 'Full access to everything' },
-  { name: 'admin', displayName: 'Admin', description: 'Management access' },
-  { name: 'awardee', displayName: 'Awardee', description: 'Active Scholarship Recipient' },
-  { name: 'alumni', displayName: 'Alumni', description: 'Past Scholarship Recipient' },
+  { name: 'super_admin', displayName: 'Super Admin' },
+  { name: 'admin', displayName: 'Admin' },
+  { name: 'awardee', displayName: 'Awardee' },
+  { name: 'alumni', displayName: 'Alumni' },
+  { name: 'user', displayName: 'User' },
   // 'member' is replaced by 'awardee' conceptually for active members, or generic if needed. 
   // User asked for "member and alumni". We will use 'awardee' as the 'member' equivalent for active GenBI.
 ];
@@ -233,7 +234,7 @@ async function main() {
   for (const role of ROLES) {
     const r = await prisma.role.upsert({
       where: { name: role.name },
-      update: { displayName: role.displayName, description: role.description },
+      update: { displayName: role.displayName },
       create: role,
     });
     roleMap.set(role.name, r.id);

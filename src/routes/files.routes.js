@@ -208,6 +208,11 @@ router.get(
 // Files are streamed from Google Drive with caching headers for performance.
 router.get(
   '/:id/public',
+  (req, res, next) => {
+    // Allow cross-origin embedding even for errors, so frontend doesn't get confusing CORP blocks
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
   asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) throw new HttpError(400, 'ID tidak valid');
@@ -230,8 +235,6 @@ router.get(
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
     res.setHeader('Content-Type', row.mimeType || 'application/octet-stream');
     res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(row.name)}`);
-    // Allow cross-origin embedding (for img tags from different origins)
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
     stream.on('error', () => {
       res.destroy();
@@ -273,6 +276,10 @@ router.post(
 // Ambil/preview file sementara
 router.get(
   '/temp/:tempId',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
   asyncHandler(async (req, res) => {
     const { tempId } = req.params;
     const result = await getTempFileStream(tempId);
@@ -286,9 +293,6 @@ router.get(
     res.setHeader('Content-Type', metadata.mimeType || 'application/octet-stream');
     res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(metadata.originalName)}`);
     res.setHeader('Cache-Control', 'private, max-age=300'); // cache 5 menit
-    // Izinkan preview staged untuk di-embed dari origin lain (berguna saat dev frontend & API beda port).
-    // Helmet mungkin menset CORP ke 'same-origin' secara default yang memblokir load <img> cross-origin.
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
     stream.on('error', () => {
       res.destroy();

@@ -31,6 +31,7 @@ app.use(
   helmet({
     crossOriginOpenerPolicy: { policy: 'unsafe-none' },
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   }),
 );
 app.use(express.json({ limit: '2mb' }));

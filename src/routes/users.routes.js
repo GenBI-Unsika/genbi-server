@@ -181,7 +181,7 @@ router.post(
       email: z.string().email('Email tidak valid'),
       password: z.string().min(8, 'Password minimal 8 karakter'),
       name: z.string().min(1, 'Nama wajib diisi'),
-      role: z.enum(['super_admin', 'admin', 'awardee', 'alumni']).default('admin'),
+      role: z.enum(['super_admin', 'admin', 'awardee', 'alumni', 'user']).default('user'),
       phone: z.string().optional().nullable(),
       npm: z.string().optional().nullable(),
       gender: z.enum(['L', 'P']).optional().nullable(),
@@ -320,7 +320,7 @@ router.patch(
       email: z.string().email().optional(),
       password: z.string().min(8).optional(),
       name: z.string().min(1).optional(),
-      role: z.enum(['super_admin', 'admin', 'awardee', 'alumni']).optional(),
+      role: z.enum(['super_admin', 'admin', 'awardee', 'alumni', 'user']).optional(),
       phone: z.string().optional().nullable(),
       npm: z.string().optional().nullable(),
       gender: z.enum(['L', 'P']).optional().nullable(),
@@ -425,11 +425,11 @@ router.patch(
         profile:
           Object.keys(profileData).length > 0
             ? {
-                upsert: {
-                  create: profileData,
-                  update: profileData,
-                },
-              }
+              upsert: {
+                create: profileData,
+                update: profileData,
+              },
+            }
             : undefined,
       },
       select: {
@@ -481,12 +481,17 @@ router.delete(
       throw new HttpError(404, 'User tidak ditemukan');
     }
 
-    await prisma.user.update({
-      where: { id },
-      data: { isActive: false },
-    });
-
-    res.json({ message: 'User berhasil dinonaktifkan' });
+    try {
+      await prisma.user.delete({
+        where: { id },
+      });
+      res.json({ message: 'User berhasil dihapus secara permanen' });
+    } catch (error) {
+      if (error.code === 'P2003') {
+        throw new HttpError(400, 'User tidak dapat dihapus karena masih memiliki data terkait (artikel, poin, dll). Silakan ubah status menjadi Nonaktif sebagai gantinya.');
+      }
+      throw error;
+    }
   }),
 );
 
