@@ -1,13 +1,13 @@
 import { HttpError } from '../lib/errors.js';
 import { verifyAccessToken } from '../auth/tokens.js';
 
-// Hirarki role - role yang lebih tinggi mencakup izin role yang lebih rendah
 const ROLE_HIERARCHY = {
   super_admin: 5,
   admin: 4,
   awardee: 3,
   member: 3, // alias untuk awardee - anggota aktif GenBI
   alumni: 1,
+  user: 0,
 };
 
 // Role yang dapat mengakses panel admin
@@ -70,8 +70,8 @@ export function requireSuperAdmin(req, _res, next) {
 export function requireMinRole(minRole) {
   return (req, _res, next) => {
     if (!req.auth?.role) return next(new HttpError(401, 'Unauthenticated'));
-    const userLevel = ROLE_HIERARCHY[req.auth.role] || 0;
-    const requiredLevel = ROLE_HIERARCHY[minRole] || 999;
+    const userLevel = ROLE_HIERARCHY[req.auth.role] ?? 0;
+    const requiredLevel = ROLE_HIERARCHY[minRole] ?? 999;
     if (userLevel < requiredLevel) {
       return next(new HttpError(403, 'Insufficient permissions'));
     }

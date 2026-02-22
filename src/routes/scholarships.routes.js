@@ -410,8 +410,8 @@ router.get(
       ...(status ? { administrasiStatus: status } : {}),
       ...(q
         ? {
-            OR: [{ name: { contains: q } }, { email: { contains: q } }, { npm: { contains: q } }, { studyProgram: { name: { contains: q } } }, { faculty: { name: { contains: q } } }],
-          }
+          OR: [{ name: { contains: q } }, { email: { contains: q } }, { npm: { contains: q } }, { studyProgram: { name: { contains: q } } }, { faculty: { name: { contains: q } } }],
+        }
         : {}),
     };
 
@@ -441,7 +441,7 @@ router.get(
 router.get(
   '/my-application',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   asyncHandler(async (req, res) => {
     const currentPeriod = await getCurrentPeriod();
 
@@ -474,7 +474,7 @@ router.get(
 router.get(
   '/my-announcement-token',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   asyncHandler(async (req, res) => {
     const currentPeriod = await getCurrentPeriod();
 

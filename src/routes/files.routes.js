@@ -22,7 +22,7 @@ const upload = multer({
 router.post(
   '/',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     if (!env.GDRIVE_FOLDER_ID) throw new HttpError(500, 'Upload belum tersedia. Hubungi admin.');
@@ -248,7 +248,7 @@ router.get(
 router.post(
   '/staging',
   requireAuth,
-  requireMinRole('member'),
+  requireMinRole('user'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     const file = req.file;

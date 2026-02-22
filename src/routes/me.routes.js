@@ -140,6 +140,58 @@ router.patch(
   }),
 );
 
+// Ambil event yang pernah diikutiku (via MemberPoint)
+router.get(
+  '/events',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const userId = req.auth.userId;
+
+    // We determine attended events by looking at MemberPoint records tagged with an eventId
+    const attendanceRecords = await prisma.memberPoint.findMany({
+      where: {
+        userId,
+        eventId: { not: null },
+      },
+      orderBy: { awardedAt: 'desc' },
+    });
+
+    const eventIds = [...new Set(attendanceRecords.map(r => r.eventId))];
+
+    const attendedEvents = await prisma.event.findMany({
+      where: { id: { in: eventIds } },
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        startDate: true,
+        endDate: true,
+      },
+    });
+
+    // Create a map for quick lookup
+    const eventMap = new Map(attendedEvents.map(e => [e.id, e]));
+
+    const items = attendanceRecords
+      .map((record) => {
+        const evt = eventMap.get(record.eventId);
+        if (!evt) return null;
+
+        return {
+          id: evt.id,
+          title: evt.title,
+          location: evt.location || 'Online/TBA',
+          date: evt.startDate.toISOString(),
+          status: 'Hadir',
+          statusColor: 'bg-emerald-100 text-emerald-800',
+        };
+      })
+      .filter(Boolean);
+
+    res.json({ data: { items } });
+  }),
+);
+
 // Ambil poin saya (perpointan)
 router.get(
   '/points',
