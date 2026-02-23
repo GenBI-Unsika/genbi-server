@@ -9,8 +9,6 @@ const router = Router();
 
 router.get(
   '/',
-  requireAuth,
-  requireAdminAccess,
   asyncHandler(async (_req, res) => {
     const row = await prisma.appSetting.findUnique({ where: { key: APP_SETTING_KEYS.INFO_CENTER } });
     const value = row?.value && typeof row.value === 'object' ? row.value : { sections: [] };
